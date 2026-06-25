@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RJ Lopez — Senior Full Stack Engineer</title>
+<meta name="description" content="Ricardo Rey Crisanto V. Lopez II (RJ) — Senior Full Stack Engineer, 7+ years building scalable SaaS platforms with the JavaScript/TypeScript ecosystem.">
+
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+
+<style type="text/tailwindcss">
+  @theme {
+    --color-bg: #0f172a;
+    --color-bg-elevated: #16213e;
+    --color-border: #1e293b;
+    --color-text: #f8fafc;
+    --color-text-secondary: #94a3b8;
+    --color-accent: #10b981;
+    --color-accent-2: #6366f1;
+  }
+
+  html { scroll-behavior: smooth; }
+  body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; scroll-behavior: auto !important; }
+  }
+</style>
+</head>
+<body class="bg-bg text-text leading-relaxed antialiased">
+
+<!-- ===== SCROLL TO TOP ===== -->
+<button
+  id="scroll-top-btn"
+  aria-label="Scroll to top"
+  onclick="window.scrollTo({top: 0, behavior: 'smooth'})"
+  class="fixed bottom-6 right-6 z-20 w-11 h-11 flex items-center justify-center rounded-full bg-accent text-bg shadow-lg shadow-accent/30 opacity-0 translate-y-2 pointer-events-none transition-all duration-300 hover:bg-accent-2 hover:-translate-y-0.5"
+>
+  <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7"/></svg>
+</button>
+
+<script>
+  const scrollBtn = document.getElementById('scroll-top-btn');
+  window.addEventListener('scroll', () => {
+    const visible = window.scrollY > 400;
+    scrollBtn.classList.toggle('opacity-0', !visible);
+    scrollBtn.classList.toggle('translate-y-2', !visible);
+    scrollBtn.classList.toggle('pointer-events-none', !visible);
+    scrollBtn.classList.toggle('opacity-100', visible);
+    scrollBtn.classList.toggle('translate-y-0', visible);
+  }, { passive: true });
+</script>
+
+<!-- ===== NAV ===== -->
+<nav class="sticky top-0 z-10 bg-bg/90 backdrop-blur border-b border-border" aria-label="Section navigation">
+  <div class="max-w-4xl mx-auto px-6 py-3 flex items-center justify-between">
+    <a href="#top" class="font-bold text-text tracking-tight">RJ<span class="text-accent">.</span>dev</a>
+    <div class="flex gap-5 text-sm font-medium text-text-secondary">
+      <a href="#projects" class="hover:text-accent transition-colors">Projects</a>
+      <a href="#skills" class="hover:text-accent transition-colors">Skills</a>
+      <a href="#experience" class="hover:text-accent transition-colors">Experience</a>
+      <a href="#contact" class="hover:text-accent transition-colors">Contact</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ===== HEADER / HERO ===== -->
+<header id="top" class="border-b border-border">
+  <div class="max-w-4xl mx-auto px-6 py-16 sm:py-20 flex flex-col sm:flex-row items-center sm:items-start gap-8">
+
+    <img
+      src="https://placehold.co/160x160/16213e/10b981?text=RJ&font=roboto"
+      alt="Placeholder avatar for Ricardo Rey Crisanto V. Lopez II"
+      width="160" height="160"
+      class="w-32 h-32 sm:w-40 sm:h-40 rounded-full border-2 border-accent/40 shrink-0 object-cover"
+    >
+
+    <div class="text-center sm:text-left">
+      <h1 class="text-3xl sm:text-4xl font-bold tracking-tight">
+        Ricardo Rey Crisanto V. Lopez II <span class="text-accent">(RJ)</span>
+      </h1>
+      <p class="mt-2 text-base sm:text-lg text-text-secondary font-medium">
+        Senior Full Stack Engineer <span class="text-accent-2">·</span> 7+ Years Experience
+      </p>
+      <p class="mt-4 max-w-xl text-text-secondary">
+        I build scalable, offline-capable SaaS platforms with the modern JavaScript/TypeScript ecosystem, from Next.js front ends to Prisma-backed services. My focus is clean-code architecture: maintainable systems with strict tooling, automated quality gates, and zero unnecessary complexity.
+      </p>
+
+      <div class="mt-6 flex flex-wrap justify-center sm:justify-start gap-3">
+        <a href="mailto:ricardoreylopez06@gmail.com"
+           class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-bg-elevated border border-border text-sm font-medium hover:border-accent hover:text-accent hover:-translate-y-0.5 transition-all">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 0 0 2.22 0L21 8M5 19h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2Z"/></svg>
+          Email
+        </a>
+        <a href="https://github.com/" target="_blank" rel="noopener noreferrer"
+           class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-bg-elevated border border-border text-sm font-medium hover:border-accent hover:text-accent hover:-translate-y-0.5 transition-all">
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.57.1.78-.25.78-.55v-1.94c-3.2.7-3.87-1.36-3.87-1.36-.53-1.34-1.29-1.7-1.29-1.7-1.05-.72.08-.7.08-.7 1.17.08 1.78 1.2 1.78 1.2 1.03 1.77 2.7 1.26 3.36.96.1-.74.4-1.26.72-1.55-2.55-.29-5.23-1.28-5.23-5.7 0-1.26.45-2.29 1.2-3.1-.12-.29-.52-1.46.11-3.04 0 0 .98-.31 3.2 1.18a11.1 11.1 0 0 1 5.83 0c2.22-1.49 3.2-1.18 3.2-1.18.63 1.58.23 2.75.11 3.04.75.81 1.2 1.84 1.2 3.1 0 4.43-2.69 5.41-5.25 5.69.41.36.77 1.07.77 2.15v3.19c0 .3.21.66.79.55A11.51 11.51 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5Z"/></svg>
+          GitHub
+        </a>
+        <a href="https://linkedin.com/" target="_blank" rel="noopener noreferrer"
+           class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-bg-elevated border border-border text-sm font-medium hover:border-accent hover:text-accent hover:-translate-y-0.5 transition-all">
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M20.45 20.45h-3.55v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.36V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.38-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28ZM5.34 7.43a2.06 2.06 0 1 1 0-4.12 2.06 2.06 0 0 1 0 4.12ZM7.12 20.45H3.56V9h3.56v11.45ZM22.22 0H1.77C.8 0 0 .78 0 1.75v20.5C0 23.22.8 24 1.77 24h20.45c.98 0 1.78-.78 1.78-1.75V1.75C24 .78 23.2 0 22.22 0Z"/></svg>
+          LinkedIn
+        </a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="max-w-4xl mx-auto px-6">
+
+  <!-- ===== PROJECTS ===== -->
+  <section id="projects" class="py-14 border-b border-border scroll-mt-16" aria-labelledby="projects-heading">
+    <h2 id="projects-heading" class="flex items-center gap-2 text-xl sm:text-2xl font-bold mb-7">
+      <span class="w-2 h-2 rounded-full bg-accent shrink-0"></span> Featured Projects
+    </h2>
+
+    <div class="grid sm:grid-cols-2 gap-5">
+
+      <article class="flex flex-col bg-bg-elevated border border-border rounded-xl p-6 hover:border-accent hover:-translate-y-1 hover:shadow-xl hover:shadow-accent/10 transition-all">
+        <img
+          src="https://placehold.co/600x320/0f172a/6366f1?text=POS+%26+Inventory+SaaS"
+          alt="Placeholder preview of the multi-tenant POS and inventory SaaS dashboard"
+          class="w-full h-40 object-cover rounded-lg mb-4 border border-border"
+        >
+        <h3 class="font-bold text-lg mb-3">Multi-Tenant Offline-First POS &amp; Inventory SaaS System</h3>
+        <div class="flex flex-wrap gap-1.5 mb-4">
+          <span class="text-[11px] font-semibold uppercase tracking-wide text-accent-2 bg-accent-2/10 border border-accent-2/30 px-2.5 py-1 rounded-full">Next.js 15</span>
+          <span class="text-[11px] font-semibold uppercase tracking-wide text-accent-2 bg-accent-2/10 border border-accent-2/30 px-2.5 py-1 rounded-full">TypeScript</span>
+          <span class="text-[11px] font-semibold uppercase tracking-wide text-accent-2 bg-accent-2/10 border border-accent-2/30 px-2.5 py-1 rounded-full">Prisma</span>
+          <span class="text-[11px] font-semibold uppercase tracking-wide text-accent-2 bg-accent-2/10 border border-accent-2/30 px-2.5 py-1 rounded-full">Serwist</span>
+          <span class="text-[11px] font-semibold uppercase tracking-wide text-accent-2 bg-accent-2/10 border border-accent-2/30 px-2.5 py-1 rounded-full">Biome</span>
+        </div>
+        <ul class="flex flex-col gap-2 text-sm text-text-secondary mb-5">
+          <li class="flex gap-2"><span class="text-accent font-bold">›</span> Architected a multi-tenant SaaS application for food service operations featuring a local-first synchronization layer via advanced service workers.</li>
+          <li class="flex gap-2"><span class="text-accent font-bold">›</span> Integrated automated BIR-compliant inventory reporting using PapaParse for strict CSV mapping.</li>
+          <li class="flex gap-2"><span class="text-accent font-bold">›</span> Established rigid pre-commit quality gates using Biome and Lefthook to automate codebase linting and formatting.</li>
+        </ul>
+        <a href="https://github.com/" target="_blank" rel="noopener noreferrer"
+           class="mt-auto inline-flex items-center gap-1.5 text-sm font-semibold text-accent hover:text-accent-2 transition-colors">
+          View Project
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 17 17 7M7 7h10v10"/></svg>
+        </a>
+      </article>
+
+      <article class="flex flex-col bg-bg-elevated border border-border rounded-xl p-6 hover:border-accent hover:-translate-y-1 hover:shadow-xl hover:shadow-accent/10 transition-all">
+        <img
+          src="https://placehold.co/600x320/0f172a/10b981?text=overlay-manager"
+          alt="Placeholder preview of the overlay-manager open-source npm package"
+          class="w-full h-40 object-cover rounded-lg mb-4 border border-border"
+        >
+        <h3 class="font-bold text-lg mb-3">@rrlopez/overlay-manager</h3>
+        <div class="flex flex-wrap gap-1.5 mb-4">
+          <span class="text-[11px] font-semibold uppercase tracking-wide text-accent-2 bg-accent-2/10 border border-accent-2/30 px-2.5 py-1 rounded-full">React</span>
+          <span class="text-[11px] font-semibold uppercase tracking-wide text-accent-2 bg-accent-2/10 border border-accent-2/30 px-2.5 py-1 rounded-full">TypeScript</span>
+          <span class="text-[11px] font-semibold uppercase tracking-wide text-accent-2 bg-accent-2/10 border border-accent-2/30 px-2.5 py-1 rounded-full">NPM</span>
+        </div>
+        <ul class="flex flex-col gap-2 text-sm text-text-secondary mb-5">
+          <li class="flex gap-2"><span class="text-accent font-bold">›</span> Open-source NPM package. Authored a lightweight global overlay utility to simplify modal, drawer, and toast state management, eliminating context wrapper boilerplate.</li>
+        </ul>
+        <a href="https://www.npmjs.com/" target="_blank" rel="noopener noreferrer"
+           class="mt-auto inline-flex items-center gap-1.5 text-sm font-semibold text-accent hover:text-accent-2 transition-colors">
+          View on NPM
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 17 17 7M7 7h10v10"/></svg>
+        </a>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- ===== SKILLS ===== -->
+  <section id="skills" class="py-14 border-b border-border scroll-mt-16" aria-labelledby="skills-heading">
+    <h2 id="skills-heading" class="flex items-center gap-2 text-xl sm:text-2xl font-bold mb-7">
+      <span class="w-2 h-2 rounded-full bg-accent shrink-0"></span> Technical Skills
+    </h2>
+
+    <div class="grid sm:grid-cols-3 gap-7">
+
+      <div>
+        <h3 class="text-xs uppercase tracking-wider font-semibold text-text-secondary mb-3">Frontend</h3>
+        <div class="flex flex-wrap gap-2">
+          <span class="text-sm bg-bg-elevated border border-border px-3.5 py-1.5 rounded-full hover:border-accent hover:-translate-y-0.5 transition-all">React</span>
+          <span class="text-sm bg-bg-elevated border border-border px-3.5 py-1.5 rounded-full hover:border-accent hover:-translate-y-0.5 transition-all">Next.js</span>
+          <span class="text-sm bg-bg-elevated border border-border px-3.5 py-1.5 rounded-full hover:border-accent hover:-translate-y-0.5 transition-all">TypeScript</span>
+          <span class="text-sm bg-bg-elevated border border-border px-3.5 py-1.5 rounded-full hover:border-accent hover:-translate-y-0.5 transition-all">Tailwind</span>
+        </div>
+      </div>
+
+      <div>
+        <h3 class="text-xs uppercase tracking-wider font-semibold text-text-secondary mb-3">Backend</h3>
+        <div class="flex flex-wrap gap-2">
+          <span class="text-sm bg-bg-elevated border border-border px-3.5 py-1.5 rounded-full hover:border-accent hover:-translate-y-0.5 transition-all">Node.js</span>
+          <span class="text-sm bg-bg-elevated border border-border px-3.5 py-1.5 rounded-full hover:border-accent hover:-translate-y-0.5 transition-all">Bun</span>
+          <span class="text-sm bg-bg-elevated border border-border px-3.5 py-1.5 rounded-full hover:border-accent hover:-translate-y-0.5 transition-all">Deno</span>
+          <span class="text-sm bg-bg-elevated border border-border px-3.5 py-1.5 rounded-full hover:border-accent hover:-translate-y-0.5 transition-all">Prisma ORM</span>
+          <span class="text-sm bg-bg-elevated border border-border px-3.5 py-1.5 rounded-full hover:border-accent hover:-translate-y-0.5 transition-all">GraphQL</span>
+          <span class="text-sm bg-bg-elevated border border-border px-3.5 py-1.5 rounded-full hover:border-accent hover:-translate-y-0.5 transition-all">SQL / NoSQL</span>
+        </div>
+      </div>
+
+      <div>
+        <h3 class="text-xs uppercase tracking-wider font-semibold text-text-secondary mb-3">Tooling</h3>
+        <div class="flex flex-wrap gap-2">
+          <span class="text-sm bg-bg-elevated border border-border px-3.5 py-1.5 rounded-full hover:border-accent hover:-translate-y-0.5 transition-all">Docker</span>
+          <span class="text-sm bg-bg-elevated border border-border px-3.5 py-1.5 rounded-full hover:border-accent hover:-translate-y-0.5 transition-all">Playwright</span>
+          <span class="text-sm bg-bg-elevated border border-border px-3.5 py-1.5 rounded-full hover:border-accent hover:-translate-y-0.5 transition-all">Cypress</span>
+          <span class="text-sm bg-bg-elevated border border-border px-3.5 py-1.5 rounded-full hover:border-accent hover:-translate-y-0.5 transition-all">Biome</span>
+          <span class="text-sm bg-bg-elevated border border-border px-3.5 py-1.5 rounded-full hover:border-accent hover:-translate-y-0.5 transition-all">Lefthook</span>
+          <span class="text-sm bg-bg-elevated border border-border px-3.5 py-1.5 rounded-full hover:border-accent hover:-translate-y-0.5 transition-all">Git</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ===== WORK HISTORY (TIMELINE) ===== -->
+  <section id="experience" class="py-14 scroll-mt-16" aria-labelledby="experience-heading">
+    <h2 id="experience-heading" class="flex items-center gap-2 text-xl sm:text-2xl font-bold mb-7">
+      <span class="w-2 h-2 rounded-full bg-accent shrink-0"></span> Work History
+    </h2>
+
+    <div class="flex flex-col gap-10">
+
+      <div class="relative flex gap-5">
+        <!-- gutter: dot + connecting line, both centered on the same x-axis -->
+        <div class="relative w-3 shrink-0">
+          <span class="absolute left-1.5 top-3 -bottom-10 w-px bg-border"></span>
+          <span class="absolute left-0 top-1 w-3 h-3 rounded-full bg-bg border-2 border-accent"></span>
+        </div>
+        <div class="pb-2">
+          <p class="font-bold">Consultant / Lead Full Stack Engineer · Grandshipper</p>
+          <p class="text-sm font-semibold text-accent-2 mt-0.5 mb-2.5">March 2023 — Present</p>
+          <ul class="flex flex-col gap-2 text-sm text-text-secondary">
+            <li class="flex gap-2"><span class="text-accent font-bold">›</span> Shipping SaaS products end-to-end, including microservices built on Bun and Deno runtimes.</li>
+            <li class="flex gap-2"><span class="text-accent font-bold">›</span> Authored an internal design system, including complex data-table components with TanStack Table.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="relative flex gap-5">
+        <div class="relative w-3 shrink-0">
+          <span class="absolute left-1.5 top-3 -bottom-10 w-px bg-border"></span>
+          <span class="absolute left-0 top-1 w-3 h-3 rounded-full bg-bg border-2 border-accent"></span>
+        </div>
+        <div class="pb-2">
+          <p class="font-bold">Senior Full Stack Developer · iScale</p>
+          <p class="text-sm font-semibold text-accent-2 mt-0.5 mb-2.5">March 2025 — July 2026</p>
+          <ul class="flex flex-col gap-2 text-sm text-text-secondary">
+            <li class="flex gap-2"><span class="text-accent font-bold">›</span> Owned full-stack features end-to-end across the application, from schema to UI.</li>
+            <li class="flex gap-2"><span class="text-accent font-bold">›</span> Led a major database schema refactor leveraging Prisma 7 for improved data integrity and query performance.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="relative flex gap-5">
+        <div class="relative w-3 shrink-0">
+          <span class="absolute left-0 top-1 w-3 h-3 rounded-full bg-bg border-2 border-accent"></span>
+        </div>
+        <div>
+          <p class="font-bold">Mid Full Stack Developer · Penbrothers</p>
+          <p class="text-sm font-semibold text-accent-2 mt-0.5 mb-2.5">June 2022 — March 2023</p>
+          <ul class="flex flex-col gap-2 text-sm text-text-secondary">
+            <li class="flex gap-2"><span class="text-accent font-bold">›</span> Built an enterprise Employee Management System (EMS) dashboard for internal operations.</li>
+            <li class="flex gap-2"><span class="text-accent font-bold">›</span> Drove a 30% boost in UI productivity through reusable component patterns and workflow optimizations.</li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ===== CONTACT ===== -->
+  <section id="contact" class="py-14 border-t border-border scroll-mt-16 text-center" aria-labelledby="contact-heading">
+    <h2 id="contact-heading" class="flex items-center justify-center gap-2 text-xl sm:text-2xl font-bold mb-3">
+      <span class="w-2 h-2 rounded-full bg-accent shrink-0"></span> Get In Touch
+    </h2>
+    <p class="max-w-md mx-auto text-text-secondary mb-7">
+      Open to senior full-stack roles and select consulting engagements. Reach out below and I'll get back to you shortly.
+    </p>
+
+    <div class="flex flex-wrap justify-center gap-3">
+      <a href="mailto:ricardoreylopez06@gmail.com"
+         class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-accent text-bg text-sm font-semibold hover:bg-accent-2 hover:-translate-y-0.5 transition-all">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 0 0 2.22 0L21 8M5 19h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2Z"/></svg>
+        ricardoreylopez06@gmail.com
+      </a>
+    </div>
+
+    <div class="mt-4 flex flex-wrap justify-center gap-3">
+      <a href="https://github.com/" target="_blank" rel="noopener noreferrer"
+         class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-bg-elevated border border-border text-sm font-medium hover:border-accent hover:text-accent hover:-translate-y-0.5 transition-all">
+        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.57.1.78-.25.78-.55v-1.94c-3.2.7-3.87-1.36-3.87-1.36-.53-1.34-1.29-1.7-1.29-1.7-1.05-.72.08-.7.08-.7 1.17.08 1.78 1.2 1.78 1.2 1.03 1.77 2.7 1.26 3.36.96.1-.74.4-1.26.72-1.55-2.55-.29-5.23-1.28-5.23-5.7 0-1.26.45-2.29 1.2-3.1-.12-.29-.52-1.46.11-3.04 0 0 .98-.31 3.2 1.18a11.1 11.1 0 0 1 5.83 0c2.22-1.49 3.2-1.18 3.2-1.18.63 1.58.23 2.75.11 3.04.75.81 1.2 1.84 1.2 3.1 0 4.43-2.69 5.41-5.25 5.69.41.36.77 1.07.77 2.15v3.19c0 .3.21.66.79.55A11.51 11.51 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5Z"/></svg>
+        GitHub
+      </a>
+      <a href="https://linkedin.com/" target="_blank" rel="noopener noreferrer"
+         class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-bg-elevated border border-border text-sm font-medium hover:border-accent hover:text-accent hover:-translate-y-0.5 transition-all">
+        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M20.45 20.45h-3.55v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.36V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.38-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28ZM5.34 7.43a2.06 2.06 0 1 1 0-4.12 2.06 2.06 0 0 1 0 4.12ZM7.12 20.45H3.56V9h3.56v11.45ZM22.22 0H1.77C.8 0 0 .78 0 1.75v20.5C0 23.22.8 24 1.77 24h20.45c.98 0 1.78-.78 1.78-1.75V1.75C24 .78 23.2 0 22.22 0Z"/></svg>
+        LinkedIn
+      </a>
+    </div>
+  </section>
+
+</main>
+
+<footer class="border-t border-border py-8 text-center text-sm text-text-secondary">
+  <p>&copy; 2026 Ricardo Rey Crisanto V. Lopez II. Built with semantic HTML5 &amp; Tailwind CSS v4.</p>
+</footer>
+
+</body>
+</html>
