@@ -22,8 +22,119 @@
   html { scroll-behavior: smooth; }
   body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
 
+  @keyframes pulse-ring {
+    0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5); }
+    100% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+  }
+  .pulse-dot { animation: pulse-ring 1.8s ease-out infinite; }
+
   @media (prefers-reduced-motion: reduce) {
     * { transition: none !important; scroll-behavior: auto !important; }
+    .pulse-dot { animation: none !important; }
+  }
+
+  /* =====================================================
+     PRINT / "DOWNLOAD RESUME" LAYOUT
+     Single source of truth: same markup, paper-first skin.
+     ===================================================== */
+  @media print {
+    @page { margin: 1.4cm; }
+
+    /* ---- Base: pure white canvas, dark slate ink, zero decoration ---- */
+    * {
+      background: #ffffff !important;
+      color: #0f172a !important;
+      box-shadow: none !important;
+      text-shadow: none !important;
+      filter: none !important;
+      transform: none !important;
+      transition: none !important;
+    }
+    html, body { background: #ffffff !important; }
+
+    /* Icons render nothing on paper — plain text handles already replace them */
+    svg { display: none !important; }
+    a { text-decoration: none !important; }
+
+    /* ---- 1. Full-width document canvas (kill the "narrow webpage" look) ---- */
+    .max-w-4xl {
+      max-width: 100% !important;
+      width: 100% !important;
+      padding-left: 0 !important;
+      padding-right: 0 !important;
+      margin-left: 0 !important;
+      margin-right: 0 !important;
+    }
+
+    /* ---- 1. Strip every card/panel chrome: no borders, no fills, no radius ---- */
+    article,
+    #education .rounded-xl {
+      background: none !important;
+      border: none !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+      padding: 0 !important;
+    }
+
+    /* ---- 2. Tech badges & skill pills become bold, comma-separated inline text ---- */
+    [class*="bg-accent-2/10"],
+    [class*="bg-bg-elevated"][class*="rounded-full"] {
+      display: inline !important;
+      background: none !important;
+      border: none !important;
+      border-radius: 0 !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      font-weight: 700 !important;
+      text-transform: none !important;
+      letter-spacing: normal !important;
+      color: #0f172a !important;
+    }
+    [class*="bg-accent-2/10"]:not(:last-child)::after,
+    [class*="bg-bg-elevated"][class*="rounded-full"]:not(:last-child)::after {
+      content: ", ";
+      font-weight: 400 !important;
+    }
+    /* badge/pill wrapper rows flow as a single justified line, not flex chips */
+    article .flex-wrap,
+    #skills .flex-wrap {
+      display: block !important;
+      gap: 0 !important;
+    }
+
+    /* ---- 3. Hide interactive links and web-only scaffolding ---- */
+    article > a { display: none !important; }
+    article img,
+    header img { display: none !important; }
+    #experience .relative.w-3.shrink-0 { display: none !important; }
+
+    /* Section accent dots collapse to a simple ink mark */
+    .bg-accent, .bg-accent-2 { background: #0f172a !important; }
+
+    /* ---- 4. Tight, document-style vertical rhythm ---- */
+    section {
+      padding-top: 0.35rem !important;
+      padding-bottom: 0.35rem !important;
+      border: none !important;
+    }
+    h2 {
+      margin-bottom: 0.4rem !important;
+      font-size: 1.05rem !important;
+    }
+    article, #education .rounded-xl { margin-bottom: 0.6rem !important; }
+    #projects .grid, #skills .grid { gap: 0.75rem !important; }
+    #experience .flex.flex-col.gap-10 { gap: 0.6rem !important; }
+    ul { gap: 0.15rem !important; margin-top: 0.25rem !important; }
+    li { margin: 0 !important; }
+
+    /* ---- Page-break sanity: never split a project or job entry mid-block ---- */
+    article,
+    #education .rounded-xl,
+    #experience .flex.flex-col.gap-10 > div {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+    h2 { break-after: avoid; page-break-after: avoid; }
   }
 </style>
 </head>
@@ -34,7 +145,7 @@
   id="scroll-top-btn"
   aria-label="Scroll to top"
   onclick="window.scrollTo({top: 0, behavior: 'smooth'})"
-  class="fixed bottom-6 right-6 z-20 w-11 h-11 flex items-center justify-center rounded-full bg-accent text-bg shadow-lg shadow-accent/30 opacity-0 translate-y-2 pointer-events-none transition-all duration-300 hover:bg-accent-2 hover:-translate-y-0.5"
+  class="fixed bottom-6 right-6 z-20 w-11 h-11 flex items-center justify-center rounded-full bg-accent text-bg shadow-lg shadow-accent/30 opacity-0 translate-y-2 pointer-events-none transition-all duration-300 hover:bg-accent-2 hover:-translate-y-0.5 print:hidden"
 >
   <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7"/></svg>
 </button>
@@ -52,45 +163,91 @@
 </script>
 
 <!-- ===== NAV ===== -->
-<nav class="sticky top-0 z-10 bg-bg/90 backdrop-blur border-b border-border" aria-label="Section navigation">
+<nav class="sticky top-0 z-10 bg-bg/90 backdrop-blur border-b border-border print:hidden" aria-label="Section navigation">
   <div class="max-w-4xl mx-auto px-6 py-3 flex items-center justify-between">
     <a href="#top" class="font-bold text-text tracking-tight">RJ<span class="text-accent">.</span>dev</a>
-    <div class="flex gap-5 text-sm font-medium text-text-secondary">
+    <div class="flex items-center gap-5 text-sm font-medium text-text-secondary">
       <a href="#projects" class="hover:text-accent transition-colors">Projects</a>
       <a href="#skills" class="hover:text-accent transition-colors">Skills</a>
       <a href="#experience" class="hover:text-accent transition-colors">Experience</a>
       <a href="#contact" class="hover:text-accent transition-colors">Contact</a>
+      <button
+        type="button"
+        onclick="window.print()"
+        aria-label="Download resume as PDF"
+        class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-accent text-bg text-xs font-semibold hover:bg-accent-2 hover:-translate-y-0.5 transition-all"
+      >
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg>
+        Download Resume
+      </button>
     </div>
   </div>
 </nav>
 
 <!-- ===== HEADER / HERO ===== -->
 <header id="top" class="border-b border-border">
-  <div class="max-w-4xl mx-auto px-6 py-16 sm:py-20 flex flex-col sm:flex-row items-center sm:items-start gap-8">
+  <div class="max-w-4xl mx-auto px-6 py-16 sm:py-20 print:py-4 flex flex-col sm:flex-row items-center sm:items-start gap-8 print:gap-0">
 
     <img
       src="https://placehold.co/160x160/16213e/10b981?text=RJ&font=roboto"
       alt="Placeholder avatar for Ricardo Rey Crisanto V. Lopez II"
       width="160" height="160"
-      class="w-32 h-32 sm:w-40 sm:h-40 rounded-full border-2 border-accent/40 shrink-0 object-cover"
+      class="w-32 h-32 sm:w-40 sm:h-40 rounded-full border-2 border-accent/40 shrink-0 object-cover print:hidden"
     >
 
     <div class="text-center sm:text-left">
+      <div class="inline-flex items-center gap-2 mb-3 px-3 py-1 rounded-full bg-bg-elevated border border-border print:hidden">
+        <span class="relative flex w-2 h-2">
+          <span class="absolute inline-flex w-2 h-2 rounded-full bg-accent pulse-dot"></span>
+          <span class="relative inline-flex w-2 h-2 rounded-full bg-accent"></span>
+        </span>
+        <span class="text-xs font-medium text-text-secondary">Open to senior roles & consulting</span>
+      </div>
+
       <h1 class="text-3xl sm:text-4xl font-bold tracking-tight">
         Ricardo Rey Crisanto V. Lopez II <span class="text-accent">(RJ)</span>
       </h1>
       <p class="mt-2 text-base sm:text-lg text-text-secondary font-medium">
         Senior Full Stack Engineer <span class="text-accent-2">·</span> 7+ Years Experience
       </p>
+      <p class="mt-1 text-sm text-text-secondary flex items-center justify-center sm:justify-start gap-1.5">
+        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21c-4.5-4.5-7-8.06-7-11a7 7 0 1 1 14 0c0 2.94-2.5 6.5-7 11Z"/><circle cx="12" cy="10" r="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Bayombong, Nueva Vizcaya, Philippines
+      </p>
+
       <p class="mt-4 max-w-xl text-text-secondary">
         I build scalable, offline-capable SaaS platforms with the modern JavaScript/TypeScript ecosystem, from Next.js front ends to Prisma-backed services. My focus is clean-code architecture: maintainable systems with strict tooling, automated quality gates, and zero unnecessary complexity.
       </p>
+      <p class="mt-3 max-w-xl text-text-secondary italic print:hidden">
+        Off the clock: probably tuning a Biome config nobody asked for, or arguing that a 200-line PR is "actually pretty small."
+      </p>
 
-      <div class="mt-6 flex flex-wrap justify-center sm:justify-start gap-3">
+      <!-- quick stats -->
+      <div class="mt-6 flex justify-center sm:justify-start gap-6 sm:gap-8 print:hidden">
+        <div class="text-center sm:text-left">
+          <p class="text-2xl font-bold text-accent">7+</p>
+          <p class="text-xs text-text-secondary">Years Experience</p>
+        </div>
+        <div class="text-center sm:text-left">
+          <p class="text-2xl font-bold text-accent">5</p>
+          <p class="text-xs text-text-secondary">Companies & Clients</p>
+        </div>
+        <div class="text-center sm:text-left">
+          <p class="text-2xl font-bold text-accent">1</p>
+          <p class="text-xs text-text-secondary">OSS Package Shipped</p>
+        </div>
+      </div>
+
+      <div class="mt-6 flex flex-wrap justify-center sm:justify-start gap-3 print:hidden">
         <a href="mailto:ricardoreylopez06@gmail.com"
            class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-bg-elevated border border-border text-sm font-medium hover:border-accent hover:text-accent hover:-translate-y-0.5 transition-all">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 0 0 2.22 0L21 8M5 19h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2Z"/></svg>
           Email
+        </a>
+        <a href="tel:+639392737849"
+           class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-bg-elevated border border-border text-sm font-medium hover:border-accent hover:text-accent hover:-translate-y-0.5 transition-all">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 0 1 2-2h2.28a1 1 0 0 1 .98.78l.74 3.34a1 1 0 0 1-.27.96l-1.5 1.5a11 11 0 0 0 5.18 5.18l1.5-1.5a1 1 0 0 1 .96-.27l3.34.74a1 1 0 0 1 .78.98V19a2 2 0 0 1-2 2h-1C8.16 21 3 15.84 3 9V8Z"/></svg>
+          +63 939 273 7849
         </a>
         <a href="https://github.com/" target="_blank" rel="noopener noreferrer"
            class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-bg-elevated border border-border text-sm font-medium hover:border-accent hover:text-accent hover:-translate-y-0.5 transition-all">
@@ -103,6 +260,11 @@
           LinkedIn
         </a>
       </div>
+
+      <!-- print-only plain-text contact line: traditional resume header, no icons/buttons -->
+      <p class="hidden print:block print:mt-2 print:text-sm">
+        ricardoreylopez06@gmail.com &nbsp;|&nbsp; +63 939 273 7849 &nbsp;|&nbsp; github.com/rrlopez &nbsp;|&nbsp; linkedin.com/in/rrlopez
+      </p>
     </div>
   </div>
 </header>
@@ -121,9 +283,10 @@
         <img
           src="https://placehold.co/600x320/0f172a/6366f1?text=POS+%26+Inventory+SaaS"
           alt="Placeholder preview of the multi-tenant POS and inventory SaaS dashboard"
-          class="w-full h-40 object-cover rounded-lg mb-4 border border-border"
+          class="w-full h-40 object-cover rounded-lg mb-4 border border-border print:hidden"
         >
-        <h3 class="font-bold text-lg mb-3">Multi-Tenant Offline-First POS &amp; Inventory SaaS System</h3>
+        <h3 class="font-bold text-lg mb-1">Multi-Tenant Offline-First POS &amp; Inventory SaaS System</h3>
+        <p class="text-xs font-semibold text-text-secondary uppercase tracking-wide mb-3">Architect &amp; Lead Developer</p>
         <div class="flex flex-wrap gap-1.5 mb-4">
           <span class="text-[11px] font-semibold uppercase tracking-wide text-accent-2 bg-accent-2/10 border border-accent-2/30 px-2.5 py-1 rounded-full">Next.js 15</span>
           <span class="text-[11px] font-semibold uppercase tracking-wide text-accent-2 bg-accent-2/10 border border-accent-2/30 px-2.5 py-1 rounded-full">TypeScript</span>
@@ -132,9 +295,9 @@
           <span class="text-[11px] font-semibold uppercase tracking-wide text-accent-2 bg-accent-2/10 border border-accent-2/30 px-2.5 py-1 rounded-full">Biome</span>
         </div>
         <ul class="flex flex-col gap-2 text-sm text-text-secondary mb-5">
-          <li class="flex gap-2"><span class="text-accent font-bold">›</span> Architected a multi-tenant SaaS application for food service operations featuring a local-first synchronization layer via advanced service workers.</li>
-          <li class="flex gap-2"><span class="text-accent font-bold">›</span> Integrated automated BIR-compliant inventory reporting using PapaParse for strict CSV mapping.</li>
-          <li class="flex gap-2"><span class="text-accent font-bold">›</span> Established rigid pre-commit quality gates using Biome and Lefthook to automate codebase linting and formatting.</li>
+          <li class="flex gap-2"><span class="text-accent font-bold">›</span> Engineered a high-performance, multi-tenant SaaS web application for food service operations, with a local-first synchronization layer built on modern service workers (Serwist) for seamless offline capability.</li>
+          <li class="flex gap-2"><span class="text-accent font-bold">›</span> Implemented automated BIR-compliant inventory reporting using PapaParse to map transactional data into strict, validated CSV formats.</li>
+          <li class="flex gap-2"><span class="text-accent font-bold">›</span> Established rigid pre-commit quality gates using Biome and Lefthook to automate linting, formatting, and branch-guard constraints.</li>
         </ul>
         <a href="https://github.com/" target="_blank" rel="noopener noreferrer"
            class="mt-auto inline-flex items-center gap-1.5 text-sm font-semibold text-accent hover:text-accent-2 transition-colors">
@@ -147,16 +310,18 @@
         <img
           src="https://placehold.co/600x320/0f172a/10b981?text=overlay-manager"
           alt="Placeholder preview of the overlay-manager open-source npm package"
-          class="w-full h-40 object-cover rounded-lg mb-4 border border-border"
+          class="w-full h-40 object-cover rounded-lg mb-4 border border-border print:hidden"
         >
-        <h3 class="font-bold text-lg mb-3">@rrlopez/overlay-manager</h3>
+        <h3 class="font-bold text-lg mb-1">@rrlopez/overlay-manager</h3>
+        <p class="text-xs font-semibold text-text-secondary uppercase tracking-wide mb-3">Author · Open-Source NPM Package</p>
         <div class="flex flex-wrap gap-1.5 mb-4">
           <span class="text-[11px] font-semibold uppercase tracking-wide text-accent-2 bg-accent-2/10 border border-accent-2/30 px-2.5 py-1 rounded-full">React</span>
           <span class="text-[11px] font-semibold uppercase tracking-wide text-accent-2 bg-accent-2/10 border border-accent-2/30 px-2.5 py-1 rounded-full">TypeScript</span>
           <span class="text-[11px] font-semibold uppercase tracking-wide text-accent-2 bg-accent-2/10 border border-accent-2/30 px-2.5 py-1 rounded-full">NPM</span>
         </div>
         <ul class="flex flex-col gap-2 text-sm text-text-secondary mb-5">
-          <li class="flex gap-2"><span class="text-accent font-bold">›</span> Open-source NPM package. Authored a lightweight global overlay utility to simplify modal, drawer, and toast state management, eliminating context wrapper boilerplate.</li>
+          <li class="flex gap-2"><span class="text-accent font-bold">›</span> Developed and published a lightweight React utility to radically simplify global overlay management — modals, drawers, and toasts — in a single state source.</li>
+          <li class="flex gap-2"><span class="text-accent font-bold">›</span> Leveraged structural design patterns to eliminate boilerplate context wrappers and improve state-rendering efficiency.</li>
         </ul>
         <a href="https://www.npmjs.com/" target="_blank" rel="noopener noreferrer"
            class="mt-auto inline-flex items-center gap-1.5 text-sm font-semibold text-accent hover:text-accent-2 transition-colors">
@@ -174,39 +339,57 @@
       <span class="w-2 h-2 rounded-full bg-accent shrink-0"></span> Technical Skills
     </h2>
 
-    <div class="grid sm:grid-cols-3 gap-7">
+    <div class="grid sm:grid-cols-2 gap-7">
 
       <div>
         <h3 class="text-xs uppercase tracking-wider font-semibold text-text-secondary mb-3">Frontend</h3>
         <div class="flex flex-wrap gap-2">
           <span class="text-sm bg-bg-elevated border border-border px-3.5 py-1.5 rounded-full hover:border-accent hover:-translate-y-0.5 transition-all">React</span>
-          <span class="text-sm bg-bg-elevated border border-border px-3.5 py-1.5 rounded-full hover:border-accent hover:-translate-y-0.5 transition-all">Next.js</span>
+          <span class="text-sm bg-bg-elevated border border-border px-3.5 py-1.5 rounded-full hover:border-accent hover:-translate-y-0.5 transition-all">Next.js (14/15)</span>
           <span class="text-sm bg-bg-elevated border border-border px-3.5 py-1.5 rounded-full hover:border-accent hover:-translate-y-0.5 transition-all">TypeScript</span>
-          <span class="text-sm bg-bg-elevated border border-border px-3.5 py-1.5 rounded-full hover:border-accent hover:-translate-y-0.5 transition-all">Tailwind</span>
+          <span class="text-sm bg-bg-elevated border border-border px-3.5 py-1.5 rounded-full hover:border-accent hover:-translate-y-0.5 transition-all">Tailwind CSS</span>
+          <span class="text-sm bg-bg-elevated border border-border px-3.5 py-1.5 rounded-full hover:border-accent hover:-translate-y-0.5 transition-all">Zustand</span>
+          <span class="text-sm bg-bg-elevated border border-border px-3.5 py-1.5 rounded-full hover:border-accent hover:-translate-y-0.5 transition-all">TanStack Query</span>
+          <span class="text-sm bg-bg-elevated border border-border px-3.5 py-1.5 rounded-full hover:border-accent hover:-translate-y-0.5 transition-all">Redux</span>
+          <span class="text-sm bg-bg-elevated border border-border px-3.5 py-1.5 rounded-full hover:border-accent hover:-translate-y-0.5 transition-all">Context API</span>
+          <span class="text-sm bg-bg-elevated border border-border px-3.5 py-1.5 rounded-full hover:border-accent hover:-translate-y-0.5 transition-all">HTML5 / CSS3</span>
         </div>
       </div>
 
       <div>
-        <h3 class="text-xs uppercase tracking-wider font-semibold text-text-secondary mb-3">Backend</h3>
+        <h3 class="text-xs uppercase tracking-wider font-semibold text-text-secondary mb-3">Backend &amp; Infrastructure</h3>
         <div class="flex flex-wrap gap-2">
           <span class="text-sm bg-bg-elevated border border-border px-3.5 py-1.5 rounded-full hover:border-accent hover:-translate-y-0.5 transition-all">Node.js</span>
           <span class="text-sm bg-bg-elevated border border-border px-3.5 py-1.5 rounded-full hover:border-accent hover:-translate-y-0.5 transition-all">Bun</span>
           <span class="text-sm bg-bg-elevated border border-border px-3.5 py-1.5 rounded-full hover:border-accent hover:-translate-y-0.5 transition-all">Deno</span>
+          <span class="text-sm bg-bg-elevated border border-border px-3.5 py-1.5 rounded-full hover:border-accent hover:-translate-y-0.5 transition-all">Express</span>
           <span class="text-sm bg-bg-elevated border border-border px-3.5 py-1.5 rounded-full hover:border-accent hover:-translate-y-0.5 transition-all">Prisma ORM</span>
           <span class="text-sm bg-bg-elevated border border-border px-3.5 py-1.5 rounded-full hover:border-accent hover:-translate-y-0.5 transition-all">GraphQL</span>
-          <span class="text-sm bg-bg-elevated border border-border px-3.5 py-1.5 rounded-full hover:border-accent hover:-translate-y-0.5 transition-all">SQL / NoSQL</span>
+          <span class="text-sm bg-bg-elevated border border-border px-3.5 py-1.5 rounded-full hover:border-accent hover:-translate-y-0.5 transition-all">RESTful APIs</span>
+          <span class="text-sm bg-bg-elevated border border-border px-3.5 py-1.5 rounded-full hover:border-accent hover:-translate-y-0.5 transition-all">Docker</span>
+          <span class="text-sm bg-bg-elevated border border-border px-3.5 py-1.5 rounded-full hover:border-accent hover:-translate-y-0.5 transition-all">Microservices</span>
         </div>
       </div>
 
       <div>
-        <h3 class="text-xs uppercase tracking-wider font-semibold text-text-secondary mb-3">Tooling</h3>
+        <h3 class="text-xs uppercase tracking-wider font-semibold text-text-secondary mb-3">Databases</h3>
         <div class="flex flex-wrap gap-2">
-          <span class="text-sm bg-bg-elevated border border-border px-3.5 py-1.5 rounded-full hover:border-accent hover:-translate-y-0.5 transition-all">Docker</span>
+          <span class="text-sm bg-bg-elevated border border-border px-3.5 py-1.5 rounded-full hover:border-accent hover:-translate-y-0.5 transition-all">PostgreSQL</span>
+          <span class="text-sm bg-bg-elevated border border-border px-3.5 py-1.5 rounded-full hover:border-accent hover:-translate-y-0.5 transition-all">MySQL</span>
+          <span class="text-sm bg-bg-elevated border border-border px-3.5 py-1.5 rounded-full hover:border-accent hover:-translate-y-0.5 transition-all">MongoDB</span>
+        </div>
+      </div>
+
+      <div>
+        <h3 class="text-xs uppercase tracking-wider font-semibold text-text-secondary mb-3">Testing &amp; Tooling</h3>
+        <div class="flex flex-wrap gap-2">
           <span class="text-sm bg-bg-elevated border border-border px-3.5 py-1.5 rounded-full hover:border-accent hover:-translate-y-0.5 transition-all">Playwright</span>
           <span class="text-sm bg-bg-elevated border border-border px-3.5 py-1.5 rounded-full hover:border-accent hover:-translate-y-0.5 transition-all">Cypress</span>
+          <span class="text-sm bg-bg-elevated border border-border px-3.5 py-1.5 rounded-full hover:border-accent hover:-translate-y-0.5 transition-all">Jest</span>
           <span class="text-sm bg-bg-elevated border border-border px-3.5 py-1.5 rounded-full hover:border-accent hover:-translate-y-0.5 transition-all">Biome</span>
           <span class="text-sm bg-bg-elevated border border-border px-3.5 py-1.5 rounded-full hover:border-accent hover:-translate-y-0.5 transition-all">Lefthook</span>
-          <span class="text-sm bg-bg-elevated border border-border px-3.5 py-1.5 rounded-full hover:border-accent hover:-translate-y-0.5 transition-all">Git</span>
+          <span class="text-sm bg-bg-elevated border border-border px-3.5 py-1.5 rounded-full hover:border-accent hover:-translate-y-0.5 transition-all">Husky</span>
+          <span class="text-sm bg-bg-elevated border border-border px-3.5 py-1.5 rounded-full hover:border-accent hover:-translate-y-0.5 transition-all">Git / GitHub</span>
         </div>
       </div>
 
@@ -214,7 +397,7 @@
   </section>
 
   <!-- ===== WORK HISTORY (TIMELINE) ===== -->
-  <section id="experience" class="py-14 scroll-mt-16" aria-labelledby="experience-heading">
+  <section id="experience" class="py-14 border-b border-border scroll-mt-16" aria-labelledby="experience-heading">
     <h2 id="experience-heading" class="flex items-center gap-2 text-xl sm:text-2xl font-bold mb-7">
       <span class="w-2 h-2 rounded-full bg-accent shrink-0"></span> Work History
     </h2>
@@ -222,7 +405,6 @@
     <div class="flex flex-col gap-10">
 
       <div class="relative flex gap-5">
-        <!-- gutter: dot + connecting line, both centered on the same x-axis -->
         <div class="relative w-3 shrink-0">
           <span class="absolute left-1.5 top-3 -bottom-10 w-px bg-border"></span>
           <span class="absolute left-0 top-1 w-3 h-3 rounded-full bg-bg border-2 border-accent"></span>
@@ -231,8 +413,10 @@
           <p class="font-bold">Consultant / Lead Full Stack Engineer · Grandshipper</p>
           <p class="text-sm font-semibold text-accent-2 mt-0.5 mb-2.5">March 2023 — Present</p>
           <ul class="flex flex-col gap-2 text-sm text-text-secondary">
-            <li class="flex gap-2"><span class="text-accent font-bold">›</span> Shipping SaaS products end-to-end, including microservices built on Bun and Deno runtimes.</li>
-            <li class="flex gap-2"><span class="text-accent font-bold">›</span> Authored an internal design system, including complex data-table components with TanStack Table.</li>
+            <li class="flex gap-2"><span class="text-accent font-bold">›</span> Architected and expanded a high-volume shipping SaaS platform, building multi-tenant admin portals, automated cron jobs, and background financial report generators.</li>
+            <li class="flex gap-2"><span class="text-accent font-bold">›</span> Designed and deployed production-grade microservices on Node.js, Bun, and Deno for deep marketplace integrations with global shipping providers.</li>
+            <li class="flex gap-2"><span class="text-accent font-bold">›</span> Authored a centralized design system of reusable, headless core components (tables, async forms, dynamic modals) using Tailwind CSS, Headless UI, and TanStack Table.</li>
+            <li class="flex gap-2"><span class="text-accent font-bold">›</span> Introduced automated end-to-end testing pipelines with Playwright, Jest, and Husky to eliminate regressions.</li>
           </ul>
         </div>
       </div>
@@ -246,8 +430,41 @@
           <p class="font-bold">Senior Full Stack Developer · iScale</p>
           <p class="text-sm font-semibold text-accent-2 mt-0.5 mb-2.5">March 2025 — July 2026</p>
           <ul class="flex flex-col gap-2 text-sm text-text-secondary">
-            <li class="flex gap-2"><span class="text-accent font-bold">›</span> Owned full-stack features end-to-end across the application, from schema to UI.</li>
-            <li class="flex gap-2"><span class="text-accent font-bold">›</span> Led a major database schema refactor leveraging Prisma 7 for improved data integrity and query performance.</li>
+            <li class="flex gap-2"><span class="text-accent font-bold">›</span> Owned full-stack feature implementations across core company applications, driving data-fetching optimizations and robust schema design.</li>
+            <li class="flex gap-2"><span class="text-accent font-bold">›</span> Refactored legacy relational schemas with Prisma 7, improving query execution times and data consistency.</li>
+            <li class="flex gap-2"><span class="text-accent font-bold">›</span> Integrated custom media-processing workflows, including image cropping with uniform aspect-ratio enforcement.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="relative flex gap-5">
+        <div class="relative w-3 shrink-0">
+          <span class="absolute left-1.5 top-3 -bottom-10 w-px bg-border"></span>
+          <span class="absolute left-0 top-1 w-3 h-3 rounded-full bg-bg border-2 border-accent"></span>
+        </div>
+        <div class="pb-2">
+          <p class="font-bold">Mid Full Stack Developer (MERN) · Penbrothers</p>
+          <p class="text-sm font-semibold text-accent-2 mt-0.5 mb-2.5">June 2022 — March 2023</p>
+          <ul class="flex flex-col gap-2 text-sm text-text-secondary">
+            <li class="flex gap-2"><span class="text-accent font-bold">›</span> Built an enterprise Employee Management System (EMS) dashboard on the MERN stack to capture and visualize employee records.</li>
+            <li class="flex gap-2"><span class="text-accent font-bold">›</span> Created a modular UI design system with React-Bootstrap and Redux, lifting front-end team delivery productivity by 30%.</li>
+            <li class="flex gap-2"><span class="text-accent font-bold">›</span> Maintained product integrity, resolving an average of 15 high-priority bugs and user stories per agile sprint.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="relative flex gap-5">
+        <div class="relative w-3 shrink-0">
+          <span class="absolute left-1.5 top-3 -bottom-10 w-px bg-border"></span>
+          <span class="absolute left-0 top-1 w-3 h-3 rounded-full bg-bg border-2 border-accent"></span>
+        </div>
+        <div class="pb-2">
+          <p class="font-bold">Application Development Senior Analyst · Accenture</p>
+          <p class="text-sm font-semibold text-accent-2 mt-0.5 mb-2.5">August 2021 — June 2022</p>
+          <ul class="flex flex-col gap-2 text-sm text-text-secondary">
+            <li class="flex gap-2"><span class="text-accent font-bold">›</span> Deployed offshore to dual enterprise client initiatives across Telecommunications and Insurance, driving front-end architecture decisions.</li>
+            <li class="flex gap-2"><span class="text-accent font-bold">›</span> Delivered an average of 30 completed user story points per sprint while meeting strict client acceptance criteria.</li>
+            <li class="flex gap-2"><span class="text-accent font-bold">›</span> Facilitated peer code reviews and mentored junior developers on enterprise engineering standards.</li>
           </ul>
         </div>
       </div>
@@ -257,15 +474,33 @@
           <span class="absolute left-0 top-1 w-3 h-3 rounded-full bg-bg border-2 border-accent"></span>
         </div>
         <div>
-          <p class="font-bold">Mid Full Stack Developer · Penbrothers</p>
-          <p class="text-sm font-semibold text-accent-2 mt-0.5 mb-2.5">June 2022 — March 2023</p>
+          <p class="font-bold">Full Stack Software Engineer · Nueva Vizcaya State University</p>
+          <p class="text-sm font-semibold text-accent-2 mt-0.5 mb-2.5">January 2018 — December 2021</p>
           <ul class="flex flex-col gap-2 text-sm text-text-secondary">
-            <li class="flex gap-2"><span class="text-accent font-bold">›</span> Built an enterprise Employee Management System (EMS) dashboard for internal operations.</li>
-            <li class="flex gap-2"><span class="text-accent font-bold">›</span> Drove a 30% boost in UI productivity through reusable component patterns and workflow optimizations.</li>
+            <li class="flex gap-2"><span class="text-accent font-bold">›</span> Conceptualized, designed, and launched a secure internal document-tracking application to automate record management across academic offices.</li>
+            <li class="flex gap-2"><span class="text-accent font-bold">›</span> Transitioned legacy paperwork workflows into an optimized digital indexing system, significantly cutting record-retrieval latency.</li>
           </ul>
         </div>
       </div>
 
+    </div>
+  </section>
+
+  <!-- ===== EDUCATION ===== -->
+  <section id="education" class="py-14 scroll-mt-16" aria-labelledby="education-heading">
+    <h2 id="education-heading" class="flex items-center gap-2 text-xl sm:text-2xl font-bold mb-7">
+      <span class="w-2 h-2 rounded-full bg-accent shrink-0"></span> Education
+    </h2>
+
+    <div class="grid sm:grid-cols-2 gap-5">
+      <div class="bg-bg-elevated border border-border rounded-xl p-5">
+        <p class="font-bold">Bachelor of Science in Computer Science</p>
+        <p class="text-sm text-text-secondary mt-1">Nueva Vizcaya State University · 2017</p>
+      </div>
+      <div class="bg-bg-elevated border border-border rounded-xl p-5">
+        <p class="font-bold">Advanced React &amp; Node Full-Stack Certified</p>
+        <p class="text-sm text-text-secondary mt-1">Code with Mosh · 2019</p>
+      </div>
     </div>
   </section>
 
@@ -274,11 +509,11 @@
     <h2 id="contact-heading" class="flex items-center justify-center gap-2 text-xl sm:text-2xl font-bold mb-3">
       <span class="w-2 h-2 rounded-full bg-accent shrink-0"></span> Get In Touch
     </h2>
-    <p class="max-w-md mx-auto text-text-secondary mb-7">
+    <p class="max-w-md mx-auto text-text-secondary mb-7 print:hidden">
       Open to senior full-stack roles and select consulting engagements. Reach out below and I'll get back to you shortly.
     </p>
 
-    <div class="flex flex-wrap justify-center gap-3">
+    <div class="flex flex-wrap justify-center gap-3 print:hidden">
       <a href="mailto:ricardoreylopez06@gmail.com"
          class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-accent text-bg text-sm font-semibold hover:bg-accent-2 hover:-translate-y-0.5 transition-all">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 0 0 2.22 0L21 8M5 19h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2Z"/></svg>
@@ -286,7 +521,12 @@
       </a>
     </div>
 
-    <div class="mt-4 flex flex-wrap justify-center gap-3">
+    <div class="mt-4 flex flex-wrap justify-center gap-3 print:hidden">
+      <a href="tel:+639392737849"
+         class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-bg-elevated border border-border text-sm font-medium hover:border-accent hover:text-accent hover:-translate-y-0.5 transition-all">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 0 1 2-2h2.28a1 1 0 0 1 .98.78l.74 3.34a1 1 0 0 1-.27.96l-1.5 1.5a11 11 0 0 0 5.18 5.18l1.5-1.5a1 1 0 0 1 .96-.27l3.34.74a1 1 0 0 1 .78.98V19a2 2 0 0 1-2 2h-1C8.16 21 3 15.84 3 9V8Z"/></svg>
+        +63 939 273 7849
+      </a>
       <a href="https://github.com/" target="_blank" rel="noopener noreferrer"
          class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-bg-elevated border border-border text-sm font-medium hover:border-accent hover:text-accent hover:-translate-y-0.5 transition-all">
         <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.57.1.78-.25.78-.55v-1.94c-3.2.7-3.87-1.36-3.87-1.36-.53-1.34-1.29-1.7-1.29-1.7-1.05-.72.08-.7.08-.7 1.17.08 1.78 1.2 1.78 1.2 1.03 1.77 2.7 1.26 3.36.96.1-.74.4-1.26.72-1.55-2.55-.29-5.23-1.28-5.23-5.7 0-1.26.45-2.29 1.2-3.1-.12-.29-.52-1.46.11-3.04 0 0 .98-.31 3.2 1.18a11.1 11.1 0 0 1 5.83 0c2.22-1.49 3.2-1.18 3.2-1.18.63 1.58.23 2.75.11 3.04.75.81 1.2 1.84 1.2 3.1 0 4.43-2.69 5.41-5.25 5.69.41.36.77 1.07.77 2.15v3.19c0 .3.21.66.79.55A11.51 11.51 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5Z"/></svg>
@@ -298,11 +538,16 @@
         LinkedIn
       </a>
     </div>
+
+    <!-- print-only plain-text contact recap -->
+    <p class="hidden print:block print:text-sm">
+      ricardoreylopez06@gmail.com &nbsp;|&nbsp; +63 939 273 7849 &nbsp;|&nbsp; github.com/rrlopez &nbsp;|&nbsp; linkedin.com/in/rrlopez
+    </p>
   </section>
 
 </main>
 
-<footer class="border-t border-border py-8 text-center text-sm text-text-secondary">
+<footer class="border-t border-border py-8 text-center text-sm text-text-secondary print:hidden">
   <p>&copy; 2026 Ricardo Rey Crisanto V. Lopez II. Built with semantic HTML5 &amp; Tailwind CSS v4.</p>
 </footer>
 
