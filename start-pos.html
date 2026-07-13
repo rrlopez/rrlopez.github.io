@@ -429,9 +429,9 @@
         </div>
         <div class="md:order-2">
           <h3 class="text-xl font-bold mb-3">Settings as data, scoped three ways</h3>
-          <p class="text-text-secondary mb-5">Twelve configuration keys — VAT rate, currency, low-stock threshold, feature toggles, and more — can each be set at the business, branch, or user level via a single <code class="text-accent-2">SystemConfig</code> table, instead of one settings column per concern.</p>
+          <p class="text-text-secondary mb-5">Fourteen configuration keys — VAT rate, currency, low-stock threshold, costing strategy, inventory strategy, feature toggles, and more — can each be set at the business, branch, or user level via a single <code class="text-accent-2">SystemConfig</code> table, instead of one settings column per concern.</p>
           <ul class="flex flex-col gap-2 text-sm text-text-secondary">
-            <li class="flex gap-2"><span class="text-accent font-bold">›</span> Five feature flags (order tab, kitchen queue, cash reconciliation, tasks, auto-print) turn modules on per branch without a different build</li>
+            <li class="flex gap-2"><span class="text-accent font-bold">›</span> Five feature flags (<code class="text-accent-2">ENABLE_ORDER_TAB</code>, <code class="text-accent-2">ENABLE_ORDER</code>, <code class="text-accent-2">ENABLE_CASH_RECONCILIATION</code>, <code class="text-accent-2">ENABLE_TASK</code>, <code class="text-accent-2">ENABLE_PRINT_RECEIPT</code>) turn modules on per branch without a different build</li>
             <li class="flex gap-2"><span class="text-accent font-bold">›</span> BIR identifiers (TIN, PTU number, PTU issue date) live in a separate <code class="text-accent-2">ComplianceRegistry</code>, not mixed into operational config</li>
             <li class="flex gap-2"><span class="text-accent font-bold">›</span> A PH branch and a future SG branch can run different VAT/GST rules under the same account</li>
           </ul>
@@ -722,7 +722,7 @@
       </div>
       <div class="border border-border rounded-xl p-6">
         <h3 class="font-semibold mb-2">Configurability without code branches</h3>
-        <p class="text-sm text-text-secondary">Twelve config keys across three scopes (business, branch, user) replace what would otherwise be a settings column per concern. The cost is an extra join to resolve effective settings; the benefit is that adding a new toggle is a data change, not a deploy.</p>
+        <p class="text-sm text-text-secondary">Fourteen config keys across three scopes (business, branch, user) replace what would otherwise be a settings column per concern. The cost is an extra join to resolve effective settings; the benefit is that adding a new toggle is a data change, not a deploy.</p>
       </div>
       <div class="border border-border rounded-xl p-6">
         <h3 class="font-semibold mb-2">Scalability of multi-tenancy</h3>
@@ -730,7 +730,7 @@
       </div>
       <div class="border border-border rounded-xl p-6">
         <h3 class="font-semibold mb-2">Security &amp; developer experience</h3>
-        <p class="text-sm text-text-secondary">Role and branch membership are checked on every route and server action. Sessions log IP and user agent for audit. Soft deletes (21 of 31 models) preserve history for BIR compliance. Biome and Lefthook enforce formatting and lint rules before a commit lands, and Zod plus Prisma's generated types close the gap between database and UI.</p>
+        <p class="text-sm text-text-secondary">Role and branch membership are checked on every route and server action. Sessions log IP and user agent for audit. Soft deletes (12 of 31 models) preserve history for BIR compliance. Biome and Lefthook enforce formatting and lint rules before a commit lands, and Zod plus Prisma's generated types close the gap between database and UI.</p>
       </div>
     </div>
   </section>
@@ -757,11 +757,11 @@
         <p class="text-xs text-text-secondary mt-1">Database indexes</p>
       </div>
       <div class="bg-bg-elevated border border-border rounded-xl p-5 text-center">
-        <p class="text-3xl font-bold text-accent">21</p>
+        <p class="text-3xl font-bold text-accent">12</p>
         <p class="text-xs text-text-secondary mt-1">Models with soft delete</p>
       </div>
       <div class="bg-bg-elevated border border-border rounded-xl p-5 text-center">
-        <p class="text-3xl font-bold text-accent">12 × 3</p>
+        <p class="text-3xl font-bold text-accent">14 × 3</p>
         <p class="text-xs text-text-secondary mt-1">Config keys × scopes</p>
       </div>
     </div>

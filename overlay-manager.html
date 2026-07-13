@@ -139,11 +139,11 @@
 <!-- ===== TECH STRIP ===== -->
 <section class="border-b border-border bg-bg-elevated/40">
   <div class="max-w-6xl mx-auto px-6 py-5 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-xs sm:text-sm font-semibold text-text-secondary">
-    <span>React 16+</span><span class="text-border">/</span>
+    <span>React 18+</span><span class="text-border">/</span>
     <span>TypeScript</span><span class="text-border">/</span>
-    <span>ES6 Generators</span><span class="text-border">/</span>
-    <span>Webpack 4</span><span class="text-border">/</span>
-    <span>Semantic Release</span>
+    <span>MutationObserver</span><span class="text-border">/</span>
+    <span>SafeDialogGuard</span><span class="text-border">/</span>
+    <span>Zero Dependencies</span>
   </div>
 </section>
 
@@ -228,19 +228,18 @@
           <h3 class="text-base font-bold text-text">Mount the Root Container</h3>
         </div>
         <p class="text-sm text-text-secondary mb-3 max-w-3xl">
-          Place the <code class="text-accent-2 bg-bg-elevated px-1 py-0.5 rounded font-mono">ModalManager</code> host component at the root layer of your application layouts (e.g., inside <code class="text-text bg-bg-elevated px-1 py-0.5 rounded font-mono">App.tsx</code> or layout wrappers).
+          Place the <code class="text-accent-2 bg-bg-elevated px-1 py-0.5 rounded font-mono">OverlayManager</code> host component once at the root of your application — the outermost layout that's always mounted.
         </p>
-        <pre class="code-block bg-bg-elevated/30 border border-border rounded-xl p-4 text-xs sm:text-sm text-text-secondary overflow-x-auto"><code>import React from 'react';
-import { ModalManager } from '@rrlopez/overlay-manager';
+        <pre class="code-block bg-bg-elevated/30 border border-border rounded-xl p-4 text-xs sm:text-sm text-text-secondary overflow-x-auto"><code>import OverlayManager from '@rrlopez/overlay-manager';
 
 export default function App() {
   return (
-    &lt;div className="app-container"&gt;
+    &lt;&gt;
       &lt;MainLayout /&gt;
-      
-      {/* Container mounts globally onto the viewport */}
-      &lt;ModalManager name="default_host" /&gt;
-    &lt;/div&gt;
+
+      {/* No name prop needed — single global instance */}
+      &lt;OverlayManager /&gt;
+    &lt;/&gt;
   );
 }</code></pre>
       </div>
@@ -252,25 +251,20 @@ export default function App() {
           <h3 class="text-base font-bold text-text">Trigger Modals Globally From Anywhere</h3>
         </div>
         <p class="text-sm text-text-secondary mb-3 max-w-3xl">
-          Import <code class="text-accent-2 bg-bg-elevated px-1 py-0.5 rounded font-mono">showModal()</code> anywhere inside deeply nested buttons, business helper functions, or async API utility chains to fire an overlay element instantly[cite: 2].
+          Import <code class="text-accent-2 bg-bg-elevated px-1 py-0.5 rounded font-mono">showModal()</code> anywhere — deeply nested buttons, async API handlers, route loaders — and pass your component along with any props it needs. <code class="prose-inline">open</code> and <code class="prose-inline">onClose</code> are injected automatically.
         </p>
-        <pre class="code-block bg-bg-elevated/30 border border-border rounded-xl p-4 text-xs sm:text-sm text-text-secondary overflow-x-auto"><code>import React from 'react';
-import { showModal } from '@rrlopez/overlay-manager';
-import MyCustomDialog from './components/MyCustomDialog';
+        <pre class="code-block bg-bg-elevated/30 border border-border rounded-xl p-4 text-xs sm:text-sm text-text-secondary overflow-x-auto"><code>import { showModal } from '@rrlopez/overlay-manager';
+import WarningPrompt from './components/WarningPrompt';
 
-export function DeeplyNestedButton() {
-  const handleOpenAlert = () => {
-    // Simply fire the target function without passing prop hooks
-    showModal(
-      &lt;MyCustomDialog title="Action Completed Successfully" /&gt;
-    );
-  };
-
-  return (
-    &lt;button onClick={handleOpenAlert}&gt;
-      Trigger Global Overlay
-    &lt;/button&gt;
-  );
+async function handleDelete(id: string) {
+  await showModal(WarningPrompt, {
+    title: 'Delete this item?',
+    description: 'This action cannot be undone.',
+    onConfirm: async () => {
+      await deleteItem(id);
+      return true; // auto-closes the dialog
+    },
+  });
 }</code></pre>
       </div>
     </div>
@@ -279,87 +273,99 @@ export function DeeplyNestedButton() {
   <!-- ===== HOW IT WORKS / CODE BREAKDOWN ===== -->
   <section id="how-it-works" class="py-12 border-b border-border scroll-mt-16">
     <p class="text-sm font-semibold text-accent-2 uppercase tracking-wide mb-2 reveal">Code Deep Dive</p>
-    <h2 class="text-2xl sm:text-3xl font-bold mb-4 reveal">Built in ~70 lines of clean TypeScript.</h2>
-    <p class="max-w-2xl text-text-secondary text-sm sm:text-base mb-12 reveal">No huge state libraries or unnecessary wrapper contexts. Here are the core code blocks driving the entire package:</p>
+    <h2 class="text-2xl sm:text-3xl font-bold mb-4 reveal">Built in ~150 lines of clean TypeScript.</h2>
+    <p class="max-w-2xl text-text-secondary text-sm sm:text-base mb-12 reveal">No state libraries, no context wrappers. Here are the four mechanisms that make it work:</p>
 
     <div class="grid md:grid-cols-2 gap-8 items-start reveal">
       <!-- 1. Global Singleton -->
       <div class="border border-border rounded-xl p-5 bg-bg-elevated/20">
-        <h3 class="text-lg font-bold mb-2">1. Global Instance Management</h3>
+        <h3 class="text-lg font-bold mb-2">1. Global Singleton</h3>
         <p class="text-text-secondary text-sm mb-4 leading-relaxed">
-          The class stores a static list of mounted manager configurations. When you run `showModal()`, it automatically routes your components to the top active manager instance at index 0. This makes global calls possible anywhere in your code without passing React refs.
+          The constructor assigns <code class="text-accent bg-bg px-1 py-0.5 rounded font-mono">OverlayManager.instance = this</code>, making the live React component reachable from any module without context. Hot-reload and StrictMode double-invocation are handled by clearing and re-using the existing instance instead of creating a second one.
         </p>
-        <pre class="code-block bg-bg border border-border rounded-lg p-4 text-xs text-text-secondary/90 overflow-x-auto"><code>static <span class="text-accent">#instanceArray</span>: any = []
-static instance: any
-
-constructor(props: ModalManagerProps) {
+        <pre class="code-block bg-bg border border-border rounded-lg p-4 text-xs text-text-secondary/90 overflow-x-auto"><code>constructor(props) {
   super(props)
-  this.state = defaultState
+  this.state = { overlays: [], isMounted: false }
 
-  const manager = ModalManager.<span class="text-accent">#instanceArray</span>
-    .find(({ name }) => name === props.name)
+  if (OverlayManager.instance) {
+    OverlayManager.instance.clear()
+    OverlayManager.instance.updateProps(props)
+    return OverlayManager.instance  // re-use
+  }
 
-  if (manager) manager.instance = this
-  else ModalManager.<span class="text-accent">#instanceArray</span>.unshift({ name: props.name, instance: this })
-
-  ModalManager.instance = ModalManager.#instanceArray[0].instance
-  return ModalManager.instance
+  OverlayManager.instance = this
 }</code></pre>
       </div>
 
       <!-- 2. Back button guard -->
       <div class="border border-border rounded-xl p-5 bg-bg-elevated/20">
-        <h3 class="text-lg font-bold mb-2">2. Back-Button Animation Guard</h3>
+        <h3 class="text-lg font-bold mb-2">2. Two-Step Close &amp; Animation Guard</h3>
         <p class="text-text-secondary text-sm mb-4 leading-relaxed">
-          If a user hits the browser back button, deleting components instantly can cause layout breaking and kill closing animations. `delDueToBackButton` safely flags `open = false` first, allowing visual transitions to finish smoothly before removing the node completely[cite: 2].
+          Rather than removing the entry immediately, closing sets <code class="text-accent bg-bg px-1 py-0.5 rounded font-mono">open = false</code> and lets the modal primitive (Radix, Base UI) play its exit animation before unmounting itself. The entry lingers in state until the next filter sweep removes it.
         </p>
         <pre class="code-block bg-bg border border-border rounded-lg p-4 text-xs text-text-secondary/90 overflow-x-auto"><code>delDueToBackButton(id: number) {
   this.setState(state => {
-    const modal = state.modals.find(m => m.id === id)
-    if (modal) modal.open = false
+    const overlay = state.overlays.find(o => o.id === id)
+    if (overlay) overlay.open = false
     return { ...state }
   })
+  return id
 }
 
-delModal(id: number) {
-  this.delDueToBackButton(id)
+delOverlay(id: number) {
+  return this.delDueToBackButton(id)
 }</code></pre>
       </div>
     </div>
 
     <div class="grid md:grid-cols-2 gap-8 items-start mt-8 reveal">
-      <!-- 3. Generator IDs -->
+      <!-- 3. SafeDialogGuard -->
       <div class="border border-border rounded-xl p-5 bg-bg-elevated/20">
-        <h3 class="text-lg font-bold mb-2">3. Generator-Driven Unique IDs</h3>
+        <h3 class="text-lg font-bold mb-2">3. SafeDialogGuard — Anti-Tamper</h3>
         <p class="text-text-secondary text-sm mb-4 leading-relaxed">
-          Instead of introducing bulky external UUID dependencies, the package uses an internal ES6 Generator function (`yield`) to generate lightweight, collision-free numeric identification keys on demand.
+          Every rendered overlay is wrapped in <code class="text-accent bg-bg px-1 py-0.5 rounded font-mono">SafeDialogGuard</code>, a component that attaches a <code class="text-accent bg-bg px-1 py-0.5 rounded font-mono">MutationObserver</code> to <code class="text-accent bg-bg px-1 py-0.5 rounded font-mono">document.body</code>. If the DOM node is removed or hidden via inline style, it triggers a forced remount. Global click/keydown listeners provide a second line of defence.
         </p>
-        <pre class="code-block bg-bg border border-border rounded-lg p-4 text-xs text-text-secondary/90 overflow-x-auto"><code>let id = 0
-function* generateId() {
-  while (true) { yield (id += 1) }
+        <pre class="code-block bg-bg border border-border rounded-lg p-4 text-xs text-text-secondary/90 overflow-x-auto"><code>// On tamper detected:
+forceRemountDialog(id: string) {
+  this.setState(state => ({
+    dialogs: state.dialogs.map(d =>
+      d.id === id
+        ? { ...d, id: `${id.split('-')[0]}-${newSegment}` }
+        : d
+    )
+  }))
 }
-const idGenerator = generateId()
 
-// inside showModal execution:
-modals.push({ 
-  open: true, 
-  id: key || idGenerator.next().value 
-})</code></pre>
+// Global fallback on any user interaction:
+handleGlobalInteraction = () => {
+  for (const dialog of activeDialogs) {
+    if (!document.getElementById(`guard-${dialog.id}`))
+      this.forceRemountDialog(dialog.id)
+  }
+}</code></pre>
       </div>
 
-      <!-- 4. Teardown Cleanup -->
+      <!-- 4. Bulk-close exports -->
       <div class="border border-border rounded-xl p-5 bg-bg-elevated/20">
-        <h3 class="text-lg font-bold mb-2">4. Memory Garbage Collection</h3>
+        <h3 class="text-lg font-bold mb-2">4. Bulk-Close: <code class="font-mono text-sm">clearModals</code> &amp; <code class="font-mono text-sm">delChildModals</code></h3>
         <p class="text-text-secondary text-sm mb-4 leading-relaxed">
-          To ensure code safety, when a manager host component is removed from the screen, `componentWillUnmount` automatically triggers a thorough cleanup pass—clearing arrays and discarding old static references so no memory leaks happen.
+          <code class="text-accent bg-bg px-1 py-0.5 rounded font-mono">clearModals()</code> closes the entire stack at once. <code class="text-accent bg-bg px-1 py-0.5 rounded font-mono">delChildModals(id)</code> closes every overlay opened <em>after</em> a given one — useful for multi-step flows where a parent cancel should clean up all child dialogs without knowing they exist.
         </p>
-        <pre class="code-block bg-bg border border-border rounded-lg p-4 text-xs text-text-secondary/90 overflow-x-auto"><code>componentWillUnmount() {
-  const instance = ModalManager.#instanceArray
-    .find(({ name }) => name === this.props.name)
-  const index = ModalManager.#instanceArray.indexOf(instance)
-  
-  if (index > -1) ModalManager.#instanceArray.splice(index, 1)
-  ModalManager.instance = ModalManager.#instanceArray[0]?.instance
+        <pre class="code-block bg-bg border border-border rounded-lg p-4 text-xs text-text-secondary/90 overflow-x-auto"><code>// Close everything
+export const clearModals = () =>
+  OverlayManager.instance?.clear()
+
+// Close only overlays opened after `id`
+deleteChildOverlay(id: number) {
+  const startIndex = this.state.overlays
+    .findIndex(o => id === o.id)
+
+  const overlays = this.state.overlays.map((o, i) =>
+    i > startIndex
+      ? { ...o, open: false, key: undefined }
+      : o
+  )
+  this.setState({ overlays })
 }</code></pre>
       </div>
     </div>
@@ -391,8 +397,8 @@ modals.push({
         <div class="w-9 h-9 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mb-4 text-warn font-bold">
           03
         </div>
-        <h3 class="font-bold text-base mb-2">Modern JS Competency</h3>
-        <p class="text-sm text-text-secondary leading-relaxed">Utilizes advanced JavaScript features exactly where they fit best: including custom ES6 Generators, private fields (`#`), and isolated class context routing maps.</p>
+        <h3 class="font-bold text-base mb-2">DOM Integrity &amp; Defensive Engineering</h3>
+        <p class="text-sm text-text-secondary leading-relaxed">Shows security-minded thinking at the UI layer — using <code class="text-accent bg-bg px-1 rounded font-mono text-xs">MutationObserver</code> and global interaction listeners to detect and recover from DOM tampering, ensuring overlays can't be silently dismissed by external scripts or DevTools manipulation.</p>
       </div>
     </div>
   </section>

@@ -170,6 +170,7 @@
       <a href="#projects" class="hover:text-accent transition-colors">Projects</a>
       <a href="#skills" class="hover:text-accent transition-colors">Skills</a>
       <a href="#experience" class="hover:text-accent transition-colors">Experience</a>
+      <a href="#blog" class="hover:text-accent transition-colors">Blog</a>
       <a href="#contact" class="hover:text-accent transition-colors">Contact</a>
       <button
         type="button"
@@ -277,25 +278,52 @@
       <span class="w-2 h-2 rounded-full bg-accent shrink-0"></span> Featured Projects
     </h2>
 
-    <div class="grid sm:grid-cols-2 gap-5">
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
 
       <article class="flex flex-col bg-bg-elevated border border-border rounded-xl p-6 hover:border-accent hover:-translate-y-1 hover:shadow-xl hover:shadow-accent/10 transition-all">
         <img
-          src="https://placehold.co/600x320/0f172a/6366f1?text=POS+%26+Inventory+SaaS"
-          alt="Placeholder preview of the multi-tenant POS and inventory SaaS dashboard"
+          src="https://placehold.co/600x320/0f172a/10b981?text=NUVELCO+CCA+Portal"
+          alt="Placeholder preview of the NUVELCO CCA call center agent portal"
           class="w-full h-40 object-cover rounded-lg mb-4 border border-border print:hidden"
         >
-        <h3 class="font-bold text-lg mb-1">Multi-Tenant Offline-First POS &amp; Inventory SaaS System</h3>
+        <h3 class="font-bold text-lg mb-1">NUVELCO CCA Portal</h3>
         <p class="text-xs font-semibold text-text-secondary uppercase tracking-wide mb-3">Architect &amp; Lead Developer</p>
         <div class="flex flex-wrap gap-1.5 mb-4">
-          <span class="text-[11px] font-semibold uppercase tracking-wide text-accent-2 bg-accent-2/10 border border-accent-2/30 px-2.5 py-1 rounded-full">Next.js 15</span>
-          <span class="text-[11px] font-semibold uppercase tracking-wide text-accent-2 bg-accent-2/10 border border-accent-2/30 px-2.5 py-1 rounded-full">TypeScript</span>
-          <span class="text-[11px] font-semibold uppercase tracking-wide text-accent-2 bg-accent-2/10 border border-accent-2/30 px-2.5 py-1 rounded-full">Prisma</span>
-          <span class="text-[11px] font-semibold uppercase tracking-wide text-accent-2 bg-accent-2/10 border border-accent-2/30 px-2.5 py-1 rounded-full">Serwist</span>
+          <span class="text-[11px] font-semibold uppercase tracking-wide text-accent-2 bg-accent-2/10 border border-accent-2/30 px-2.5 py-1 rounded-full">TanStack Start</span>
+          <span class="text-[11px] font-semibold uppercase tracking-wide text-accent-2 bg-accent-2/10 border border-accent-2/30 px-2.5 py-1 rounded-full">TanStack DB</span>
+          <span class="text-[11px] font-semibold uppercase tracking-wide text-accent-2 bg-accent-2/10 border border-accent-2/30 px-2.5 py-1 rounded-full">React 19</span>
+          <span class="text-[11px] font-semibold uppercase tracking-wide text-accent-2 bg-accent-2/10 border border-accent-2/30 px-2.5 py-1 rounded-full">Prisma 7</span>
+          <span class="text-[11px] font-semibold uppercase tracking-wide text-accent-2 bg-accent-2/10 border border-accent-2/30 px-2.5 py-1 rounded-full">Better Auth</span>
+        </div>
+        <ul class="flex flex-col gap-2 text-sm text-text-secondary mb-5">
+          <li class="flex gap-2"><span class="text-accent font-bold">›</span> Built a call center agent portal with ticket intake, role-based dashboards, and local-first offline sync so agents never lose work mid-call due to a dropped connection.</li>
+          <li class="flex gap-2"><span class="text-accent font-bold">›</span> Implemented a PWA service worker via Serwist and in-browser SQLite (OPFS) for offline auth persistence — agents stay signed in and functional through network interruptions.</li>
+          <li class="flex gap-2"><span class="text-accent font-bold">›</span> Containerised the dev environment with Docker and <code class="text-accent-2">compose watch</code>, resolving Vite HMR breakage from bind-mount limitations on Windows.</li>
+        </ul>
+        <a href="/nuvelco-cca.html" target="_blank" rel="noopener noreferrer"
+           class="mt-auto inline-flex items-center gap-1.5 text-sm font-semibold text-accent hover:text-accent-2 transition-colors">
+          View Project
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 17 17 7M7 7h10v10"/></svg>
+        </a>
+      </article>
+
+      <article class="flex flex-col bg-bg-elevated border border-border rounded-xl p-6 hover:border-accent hover:-translate-y-1 hover:shadow-xl hover:shadow-accent/10 transition-all">
+        <img
+          src="https://placehold.co/600x320/0f172a/6366f1?text=START+POS"
+          alt="Placeholder preview of the START POS multi-tenant offline-first POS platform"
+          class="w-full h-40 object-cover rounded-lg mb-4 border border-border print:hidden"
+        >
+        <h3 class="font-bold text-lg mb-1">START POS</h3>
+        <p class="text-xs font-semibold text-text-secondary uppercase tracking-wide mb-3">Architect &amp; Lead Developer</p>
+        <div class="flex flex-wrap gap-1.5 mb-4">
+          <span class="text-[11px] font-semibold uppercase tracking-wide text-accent-2 bg-accent-2/10 border border-accent-2/30 px-2.5 py-1 rounded-full">TanStack Start</span>
+          <span class="text-[11px] font-semibold uppercase tracking-wide text-accent-2 bg-accent-2/10 border border-accent-2/30 px-2.5 py-1 rounded-full">React 19</span>
+          <span class="text-[11px] font-semibold uppercase tracking-wide text-accent-2 bg-accent-2/10 border border-accent-2/30 px-2.5 py-1 rounded-full">TanStack DB</span>
+          <span class="text-[11px] font-semibold uppercase tracking-wide text-accent-2 bg-accent-2/10 border border-accent-2/30 px-2.5 py-1 rounded-full">Prisma 7</span>
           <span class="text-[11px] font-semibold uppercase tracking-wide text-accent-2 bg-accent-2/10 border border-accent-2/30 px-2.5 py-1 rounded-full">Biome</span>
         </div>
         <ul class="flex flex-col gap-2 text-sm text-text-secondary mb-5">
-          <li class="flex gap-2"><span class="text-accent font-bold">›</span> Engineered a high-performance, multi-tenant SaaS web application for food service operations, with a local-first synchronization layer built on modern service workers (Serwist) for seamless offline capability.</li>
+          <li class="flex gap-2"><span class="text-accent font-bold">›</span> Engineered a multi-tenant SaaS POS platform for restaurants, grocery, and retail — built local-first on TanStack Start and TanStack DB so cashiers keep ringing up sales through a dropped connection.</li>
           <li class="flex gap-2"><span class="text-accent font-bold">›</span> Implemented automated BIR-compliant inventory reporting using PapaParse to map transactional data into strict, validated CSV formats.</li>
           <li class="flex gap-2"><span class="text-accent font-bold">›</span> Established rigid pre-commit quality gates using Biome and Lefthook to automate linting, formatting, and branch-guard constraints.</li>
         </ul>
@@ -501,6 +529,89 @@
         <p class="font-bold">Advanced React &amp; Node Full-Stack Certified</p>
         <p class="text-sm text-text-secondary mt-1">Code with Mosh · 2019</p>
       </div>
+    </div>
+  </section>
+
+  <!-- ===== BLOG ===== -->
+  <section id="blog" class="py-14 border-b border-border scroll-mt-16 print:hidden" aria-labelledby="blog-heading">
+    <h2 id="blog-heading" class="flex items-center gap-2 text-xl sm:text-2xl font-bold mb-7">
+      <span class="w-2 h-2 rounded-full bg-accent shrink-0"></span> Writing
+    </h2>
+
+    <div class="grid sm:grid-cols-2 gap-5">
+
+      <a href="/blog/offline-app-shell.html"
+         class="group flex flex-col bg-bg-elevated border border-border rounded-xl p-6 hover:border-accent hover:-translate-y-1 hover:shadow-xl hover:shadow-accent/10 transition-all">
+        <div class="flex items-center gap-2 mb-4">
+          <span class="text-[11px] font-semibold uppercase tracking-wide text-accent bg-accent/10 border border-accent/30 px-2.5 py-1 rounded-full">Architecture</span>
+          <span class="text-[11px] font-semibold uppercase tracking-wide text-text-secondary bg-bg-elevated border border-border px-2.5 py-1 rounded-full">PWA</span>
+          <span class="text-[11px] font-semibold uppercase tracking-wide text-text-secondary bg-bg-elevated border border-border px-2.5 py-1 rounded-full">Offline-First</span>
+        </div>
+        <h3 class="font-bold text-lg mb-2 group-hover:text-accent transition-colors">Architecting an Offline App Shell — Service Workers, OPFS, and the SSR Hydration Gap</h3>
+        <p class="text-sm text-text-secondary flex-1">A custom Vite plugin that builds the SW at the right time, a caching strategy that categorically excludes server functions, cross-origin isolation headers that unlock OPFS, and a single component that gates all browser-only code from the server.</p>
+        <div class="mt-5 flex items-center justify-between text-xs text-text-secondary">
+          <span>July 2026 · 14 min read</span>
+          <span class="inline-flex items-center gap-1 font-semibold text-accent group-hover:text-accent-2 transition-colors">
+            Read post
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 17 17 7M7 7h10v10"/></svg>
+          </span>
+        </div>
+      </a>
+
+      <a href="/blog/offline-auth-engine.html"
+         class="group flex flex-col bg-bg-elevated border border-border rounded-xl p-6 hover:border-accent hover:-translate-y-1 hover:shadow-xl hover:shadow-accent/10 transition-all">
+        <div class="flex items-center gap-2 mb-4">
+          <span class="text-[11px] font-semibold uppercase tracking-wide text-accent bg-accent/10 border border-accent/30 px-2.5 py-1 rounded-full">Architecture</span>
+          <span class="text-[11px] font-semibold uppercase tracking-wide text-text-secondary bg-bg-elevated border border-border px-2.5 py-1 rounded-full">Auth</span>
+          <span class="text-[11px] font-semibold uppercase tracking-wide text-text-secondary bg-bg-elevated border border-border px-2.5 py-1 rounded-full">Offline-First</span>
+        </div>
+        <h3 class="font-bold text-lg mb-2 group-hover:text-accent transition-colors">Auth That Works Offline — Building a Credential Cache with Better Auth and SQLite OPFS</h3>
+        <p class="text-sm text-text-secondary flex-1">How NUVELCO CCA handles authentication when there's no network — a dual-mode system where Better Auth owns the online session and a <code class="prose-inline">crypto.subtle</code>-hashed OPFS credential cache handles the offline path.</p>
+        <div class="mt-5 flex items-center justify-between text-xs text-text-secondary">
+          <span>July 2026 · 12 min read</span>
+          <span class="inline-flex items-center gap-1 font-semibold text-accent group-hover:text-accent-2 transition-colors">
+            Read post
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 17 17 7M7 7h10v10"/></svg>
+          </span>
+        </div>
+      </a>
+
+      <a href="/blog/making-db-closer-to-app.html"
+         class="group flex flex-col bg-bg-elevated border border-border rounded-xl p-6 hover:border-accent hover:-translate-y-1 hover:shadow-xl hover:shadow-accent/10 transition-all">
+        <div class="flex items-center gap-2 mb-4">
+          <span class="text-[11px] font-semibold uppercase tracking-wide text-accent bg-accent/10 border border-accent/30 px-2.5 py-1 rounded-full">Architecture</span>
+          <span class="text-[11px] font-semibold uppercase tracking-wide text-text-secondary bg-bg-elevated border border-border px-2.5 py-1 rounded-full">TypeScript</span>
+          <span class="text-[11px] font-semibold uppercase tracking-wide text-text-secondary bg-bg-elevated border border-border px-2.5 py-1 rounded-full">Prisma</span>
+        </div>
+        <h3 class="font-bold text-lg mb-2 group-hover:text-accent transition-colors">Making the Database Feel Like Part of the App — End-to-End Type Safety from Prisma to the UI</h3>
+        <p class="text-sm text-text-secondary flex-1">How NUVELCO CCA keeps TypeScript types intact across five layers — Prisma schema, CRUD API proxy, Transaction API, Collection factory, and the UI — with no manual casts and no <code class="prose-inline">any</code> breaks.</p>
+        <div class="mt-5 flex items-center justify-between text-xs text-text-secondary">
+          <span>July 2026 · 15 min read</span>
+          <span class="inline-flex items-center gap-1 font-semibold text-accent group-hover:text-accent-2 transition-colors">
+            Read post
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 17 17 7M7 7h10v10"/></svg>
+          </span>
+        </div>
+      </a>
+
+      <a href="/blog/overlay-manager-deep-dive.html"
+         class="group flex flex-col bg-bg-elevated border border-border rounded-xl p-6 hover:border-accent hover:-translate-y-1 hover:shadow-xl hover:shadow-accent/10 transition-all">
+        <div class="flex items-center gap-2 mb-4">
+          <span class="text-[11px] font-semibold uppercase tracking-wide text-accent-2 bg-accent-2/10 border border-accent-2/30 px-2.5 py-1 rounded-full">Tutorial</span>
+          <span class="text-[11px] font-semibold uppercase tracking-wide text-text-secondary bg-bg-elevated border border-border px-2.5 py-1 rounded-full">React</span>
+          <span class="text-[11px] font-semibold uppercase tracking-wide text-text-secondary bg-bg-elevated border border-border px-2.5 py-1 rounded-full">OSS</span>
+        </div>
+        <h3 class="font-bold text-lg mb-2 group-hover:text-accent transition-colors">Global Overlays Without the Boilerplate — How @rrlopez/overlay-manager Works</h3>
+        <p class="text-sm text-text-secondary flex-1">A deep-dive into the class-based singleton pattern, ES6 generator IDs, and back-button animation guards that power the package. Includes a step-by-step integration walkthrough.</p>
+        <div class="mt-5 flex items-center justify-between text-xs text-text-secondary">
+          <span>July 2026 · 8 min read</span>
+          <span class="inline-flex items-center gap-1 font-semibold text-accent group-hover:text-accent-2 transition-colors">
+            Read post
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 17 17 7M7 7h10v10"/></svg>
+          </span>
+        </div>
+      </a>
+
     </div>
   </section>
 

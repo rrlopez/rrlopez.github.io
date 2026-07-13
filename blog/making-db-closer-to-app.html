@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Making the Database Feel Like Part of the App — End-to-End Type Safety from Prisma to the UI | RJ Lopez</title>
+<meta name="description" content="A deep-dive into the five-layer architecture in NUVELCO CCA that keeps TypeScript types intact all the way from the Prisma schema to TanStack DB collections, CRUD API, and Transaction API on the client.">
+
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+
+<style type="text/tailwindcss">
+  @theme {
+    --color-bg: #0f172a;
+    --color-bg-elevated: #16213e;
+    --color-border: #1e293b;
+    --color-text: #f8fafc;
+    --color-text-secondary: #94a3b8;
+    --color-accent: #10b981;
+    --color-accent-2: #6366f1;
+    --color-warn: #f59e0b;
+    --color-danger: #f43f5e;
+  }
+
+  html { scroll-behavior: smooth; }
+  body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .reveal { opacity: 0; }
+  .reveal.in-view { animation: fade-up 0.55s ease-out forwards; }
+
+  pre, code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+
+  .prose-inline {
+    background: #16213e; border: 1px solid #1e293b; border-radius: 0.3rem;
+    padding: 0.1rem 0.4rem; font-size: 0.8rem; color: #a5b4fc;
+  }
+
+  .code-block {
+    background: #0d1424; border: 1px solid #1e293b; border-radius: 0.75rem;
+    padding: 1.25rem 1.5rem; overflow-x: auto; font-size: 0.8rem;
+    line-height: 1.7; tab-size: 2;
+  }
+  .token-comment  { color: #4a5568; font-style: italic; }
+  .token-keyword  { color: #c792ea; }
+  .token-string   { color: #c3e88d; }
+  .token-fn       { color: #82aaff; }
+  .token-type     { color: #ffcb6b; }
+  .token-num      { color: #f78c6c; }
+  .token-prop     { color: #89ddff; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; scroll-behavior: auto !important; }
+    .reveal { opacity: 1 !important; animation: none !important; }
+  }
+  @media print {
+    nav, #scroll-top-btn { display: none !important; }
+    * { background: #fff !important; color: #0f172a !important; }
+  }
+</style>
+</head>
+<body class="bg-bg text-text leading-relaxed antialiased">
+
+<!-- SCROLL TO TOP -->
+<button id="scroll-top-btn" aria-label="Scroll to top"
+  onclick="window.scrollTo({top:0,behavior:'smooth'})"
+  class="fixed bottom-6 right-6 z-20 w-11 h-11 flex items-center justify-center rounded-full bg-accent text-bg shadow-lg shadow-accent/30 opacity-0 translate-y-2 pointer-events-none transition-all duration-300 hover:bg-accent-2 hover:-translate-y-0.5">
+  <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7"/></svg>
+</button>
+<script>
+  const sb = document.getElementById('scroll-top-btn');
+  window.addEventListener('scroll', () => {
+    const v = window.scrollY > 400;
+    sb.classList.toggle('opacity-0', !v); sb.classList.toggle('opacity-100', v);
+    sb.classList.toggle('translate-y-2', !v); sb.classList.toggle('translate-y-0', v);
+    sb.classList.toggle('pointer-events-none', !v);
+  }, { passive: true });
+</script>
+
+<!-- NAV -->
+<nav class="sticky top-0 z-30 bg-bg/90 backdrop-blur border-b border-border">
+  <div class="max-w-3xl mx-auto px-6 py-3 flex items-center justify-between gap-4">
+    <a href="/index.html" class="font-bold text-text tracking-tight shrink-0">RJ<span class="text-accent">.</span>dev</a>
+    <div class="flex items-center gap-3 text-sm">
+      <a href="/index.html#blog" class="text-text-secondary hover:text-accent transition-colors">← All posts</a>
+      <a href="/nuvelco-cca.html"
+         class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-bg-elevated border border-border text-xs font-semibold hover:border-accent hover:text-accent transition-all">
+        Project ↗
+      </a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<header id="top" class="border-b border-border">
+  <div class="max-w-3xl mx-auto px-6 py-14 sm:py-20">
+    <div class="flex flex-wrap items-center gap-2 mb-5">
+      <span class="text-[11px] font-semibold uppercase tracking-wide text-accent bg-accent/10 border border-accent/30 px-2.5 py-1 rounded-full">Architecture</span>
+      <span class="text-[11px] font-semibold uppercase tracking-wide text-text-secondary bg-bg-elevated border border-border px-2.5 py-1 rounded-full">TypeScript</span>
+      <span class="text-[11px] font-semibold uppercase tracking-wide text-text-secondary bg-bg-elevated border border-border px-2.5 py-1 rounded-full">Prisma</span>
+      <span class="text-[11px] font-semibold uppercase tracking-wide text-text-secondary bg-bg-elevated border border-border px-2.5 py-1 rounded-full">TanStack</span>
+    </div>
+    <h1 class="text-3xl sm:text-5xl font-bold tracking-tight leading-tight">
+      Making the Database Feel Like Part of the App
+    </h1>
+    <p class="mt-4 text-xl text-text-secondary font-medium">
+      End-to-end type safety from Prisma schema to the UI — no <code class="prose-inline">any</code>, no manual casting, no guessing
+    </p>
+    <div class="mt-6 flex flex-wrap items-center gap-5 text-sm text-text-secondary">
+      <span class="flex items-center gap-2">
+        <img src="https://placehold.co/28x28/16213e/10b981?text=RJ&font=roboto" alt="RJ" class="w-7 h-7 rounded-full border border-accent/30">
+        RJ Lopez
+      </span>
+      <span>July 14, 2026</span>
+      <span>15 min read</span>
+    </div>
+  </div>
+</header>
+
+<div class="max-w-3xl mx-auto px-6 py-14">
+
+  <!-- TABLE OF CONTENTS -->
+  <nav class="reveal mb-14 bg-bg-elevated border border-border rounded-xl p-6" aria-label="Table of contents">
+    <p class="text-xs font-semibold uppercase tracking-wider text-text-secondary mb-4">In this post</p>
+    <ol class="flex flex-col gap-2 text-sm">
+      <li><a href="#the-problem"     class="text-accent-2 hover:text-accent transition-colors">1. The problem — the gap between DB and app</a></li>
+      <li><a href="#layer-1"         class="text-accent-2 hover:text-accent transition-colors">2. Layer 1 — Prisma schema as the single source of truth</a></li>
+      <li><a href="#layer-2"         class="text-accent-2 hover:text-accent transition-colors">3. Layer 2 — The CRUD API: a type-safe Proxy server function</a></li>
+      <li><a href="#layer-3"         class="text-accent-2 hover:text-accent transition-colors">4. Layer 3 — The Transaction API: atomic multi-table writes</a></li>
+      <li><a href="#layer-4"         class="text-accent-2 hover:text-accent transition-colors">5. Layer 4 — Collection factory: bringing the DB to the client</a></li>
+      <li><a href="#layer-5"         class="text-accent-2 hover:text-accent transition-colors">6. Layer 5 — <code class="prose-inline">dbTransaction()</code>: the local write orchestrator</a></li>
+      <li><a href="#ui"              class="text-accent-2 hover:text-accent transition-colors">7. The UI layer — forms, live queries, and the full picture</a></li>
+      <li><a href="#soft-delete"     class="text-accent-2 hover:text-accent transition-colors">8. Bonus: the soft-delete extension</a></li>
+      <li><a href="#diagram"         class="text-accent-2 hover:text-accent transition-colors">9. Everything in one diagram</a></li>
+      <li><a href="#takeaways"       class="text-accent-2 hover:text-accent transition-colors">10. Key takeaways</a></li>
+    </ol>
+  </nav>
+
+  <!-- 1. THE PROBLEM -->
+  <section id="the-problem" class="mb-16 reveal" aria-labelledby="h-problem">
+    <h2 id="h-problem" class="text-2xl font-bold mb-4">1. The problem — the gap between DB and app</h2>
+    <p class="text-text-secondary mb-4">
+      Most full-stack apps have an invisible wall between the database and the client. On one side you have a Prisma schema with precise model types. On the other you have a React component expecting <code class="prose-inline">Ticket[]</code>. Between them there's a REST route that returns <code class="prose-inline">any</code>, a fetch call that returns <code class="prose-inline">unknown</code>, and a chain of manual casts hoping nothing changed since last deploy.
+    </p>
+    <p class="text-text-secondary mb-4">
+      The architecture in this post comes from <strong class="text-text">NUVELCO CCA</strong> — an offline-first customer call and operations management system built for a regional utility provider. Agents log tickets, dispatch field crews, and track consumer accounts from field stations that routinely lose connectivity, so the app needed a local data layer that could operate completely disconnected and reconcile with the primary Postgres database when a connection was restored.
+    </p>
+    <p class="text-text-secondary mb-4">
+      The goal was to close that gap completely — no manually maintained interface files that duplicate the schema, no <code class="prose-inline">as SomeType</code> casts, no silent runtime mismatches. When the Prisma schema changes, TypeScript should tell you every place in the app that needs to catch up.
+    </p>
+    <div class="border-l-2 border-accent pl-5 text-text-secondary italic mb-4">
+      "I want the IDE to autocomplete <code class="prose-inline">ticket.concernCategory</code> in a component the same way it does inside a Prisma query."
+    </div>
+    <p class="text-text-secondary">
+      That required designing a clear five-layer pipeline: schema → CRUD API → Transaction API → Collection factory → UI. Each layer is thin, and the types flow through without any layer introducing an <code class="prose-inline">any</code> break.
+    </p>
+  </section>
+
+  <!-- 2. LAYER 1: PRISMA -->
+  <section id="layer-1" class="mb-16 reveal" aria-labelledby="h-layer1">
+    <h2 id="h-layer1" class="text-2xl font-bold mb-4">2. Layer 1 — Prisma schema as the single source of truth</h2>
+    <p class="text-text-secondary mb-4">
+      Everything starts at <code class="prose-inline">prisma/schema.prisma</code>. The schema defines the domain — <code class="prose-inline">Ticket</code>, <code class="prose-inline">Consumer</code>, <code class="prose-inline">Activity</code>, enums like <code class="prose-inline">TicketStatus</code> and <code class="prose-inline">TicketPriority</code> — and Prisma's generator emits TypeScript types from it. No interface file is ever written by hand.
+    </p>
+    <pre class="code-block mb-4"><code><span class="token-comment">// prisma/schema.prisma (excerpt)</span>
+<span class="token-keyword">enum</span> <span class="token-type">TicketStatus</span> {
+  PENDING
+  IN_PROGRESS
+  RESOLVED
+  CANCELED
+}
+
+<span class="token-keyword">model</span> <span class="token-type">Ticket</span> {
+  id               <span class="token-type">String</span>         @id @default(uuid())
+  channel          <span class="token-type">TicketChannel</span>  @default(CALL)
+  hotline          <span class="token-type">String</span>
+  concernCategory  <span class="token-type">String</span>
+  concernCause     <span class="token-type">String</span>?
+  status           <span class="token-type">TicketStatus</span>   @default(PENDING)
+  priority         <span class="token-type">TicketPriority</span> @default(MEDIUM)
+  agentId          <span class="token-type">String</span>
+  consumerId       <span class="token-type">String</span>?
+  reportDate       <span class="token-type">DateTime</span>       @default(now())
+  <span class="token-comment">// ... other fields</span>
+  @@map(<span class="token-string">"tickets"</span>)
+}</code></pre>
+    <p class="text-text-secondary mb-4">
+      Prisma generates two outputs. The server-side client lives at <code class="prose-inline">prisma/generated/prisma/client.ts</code> and is only imported in server code. The frontend gets a separate, safe export:
+    </p>
+    <pre class="code-block mb-4"><code><span class="token-comment">// prisma/generated/prisma/browser.ts  (auto-generated, do not edit)</span>
+<span class="token-keyword">export type</span> <span class="token-type">Ticket</span>         = <span class="token-type">Prisma</span>.<span class="token-type">TicketModel</span>
+<span class="token-keyword">export type</span> <span class="token-type">Consumer</span>       = <span class="token-type">Prisma</span>.<span class="token-type">ConsumerModel</span>
+<span class="token-keyword">export type</span> <span class="token-type">Activity</span>       = <span class="token-type">Prisma</span>.<span class="token-type">ActivityModel</span>
+<span class="token-comment">// ... all 11 models</span>
+<span class="token-keyword">export</span> * <span class="token-keyword">from</span> <span class="token-string">'./enums'</span>  <span class="token-comment">// TicketStatus, TicketPriority, Role, etc.</span></code></pre>
+    <p class="text-text-secondary">
+      This split matters. The frontend imports from <code class="prose-inline">prisma/generated/prisma/browser</code> — never from the client module, which would bundle Postgres adapters and server-only internals into the client bundle. One generated file, two safe entry points.
+    </p>
+  </section>
+
+</div>
+
+<div class="max-w-3xl mx-auto px-6">
+
+  <!-- 3. LAYER 2: CRUD API -->
+  <section id="layer-2" class="mb-16 reveal" aria-labelledby="h-layer2">
+    <h2 id="h-layer2" class="text-2xl font-bold mb-4">3. Layer 2 — The CRUD API: a type-safe Proxy server function</h2>
+    <p class="text-text-secondary mb-4">
+      The first time you see <code class="prose-inline">crudAPI.ticket('findMany', { where: { status: 'PENDING' } })</code> from a component, it looks like you're calling Prisma directly from the browser. That's the point. Under the hood it's a TanStack server function, but the interface mirrors Prisma's delegate API exactly — including the return type.
+    </p>
+    <p class="text-text-secondary mb-4">
+      The trick is four TypeScript utility types that work together to make the Proxy fully inferred:
+    </p>
+    <pre class="code-block mb-5"><code><span class="token-comment">// src/lib/prisma-client/crud-api.ts</span>
+<span class="token-keyword">type</span> <span class="token-type">DB</span>             = <span class="token-keyword">typeof</span> prisma
+<span class="token-keyword">type</span> <span class="token-type">ModelName</span>      = <span class="token-type">Uncapitalize</span>&lt;<span class="token-type">Prisma</span>.<span class="token-type">ModelName</span>&gt;
+<span class="token-keyword">type</span> <span class="token-type">DelegateMethods</span> = <span class="token-string">'findMany'</span> | <span class="token-string">'findFirst'</span> | <span class="token-string">'findUnique'</span>
+                    | <span class="token-string">'create'</span> | <span class="token-string">'update'</span> | <span class="token-string">'updateMany'</span>
+                    | <span class="token-string">'upsert'</span> | <span class="token-string">'delete'</span> | <span class="token-string">'deleteMany'</span>
+                    | <span class="token-string">'count'</span> | <span class="token-string">'groupBy'</span>
+
+<span class="token-comment">// Flattens intersections to a single readable object type</span>
+<span class="token-keyword">type</span> <span class="token-type">DeepPrettify</span>&lt;<span class="token-type">T</span>&gt; = <span class="token-type">T</span> <span class="token-keyword">extends</span> <span class="token-type">Date</span>
+  ? <span class="token-type">T</span>
+  : <span class="token-type">T</span> <span class="token-keyword">extends</span> <span class="token-keyword">object</span>
+    ? { [<span class="token-type">K</span> <span class="token-keyword">in keyof</span> <span class="token-type">T</span>]: <span class="token-type">DeepPrettify</span>&lt;<span class="token-type">T</span>[<span class="token-type">K</span>]&gt; } & {}
+    : <span class="token-type">T</span>
+
+<span class="token-comment">// The exact args shape that Prisma expects for a given model + method</span>
+<span class="token-keyword">type</span> <span class="token-type">CleanArgs</span>&lt;<span class="token-type">T</span> <span class="token-keyword">extends</span> <span class="token-type">ModelName</span>, <span class="token-type">M</span> <span class="token-keyword">extends</span> <span class="token-type">DelegateMethods</span>&gt;
+  = <span class="token-type">Parameters</span>&lt;<span class="token-type">DB</span>[<span class="token-type">T</span>][<span class="token-type">M</span>]&gt;[<span class="token-num">0</span>]
+
+<span class="token-comment">// The exact return type that Prisma would give back</span>
+<span class="token-keyword">type</span> <span class="token-type">InferResult</span>&lt;<span class="token-type">T</span> <span class="token-keyword">extends</span> <span class="token-type">ModelName</span>, <span class="token-type">M</span> <span class="token-keyword">extends</span> <span class="token-type">DelegateMethods</span>, <span class="token-type">A</span>&gt;
+  = <span class="token-type">Prisma</span>.<span class="token-type">Result</span>&lt;<span class="token-type">DB</span>[<span class="token-type">T</span>], <span class="token-type">A</span>, <span class="token-type">M</span>&gt;</code></pre>
+    <p class="text-text-secondary mb-4">
+      Those four types snap together into a single <code class="prose-inline">CrudProxy</code> mapped type that covers every model and every method:
+    </p>
+    <pre class="code-block mb-5"><code><span class="token-keyword">type</span> <span class="token-type">CrudProxy</span> = {
+  [<span class="token-type">K</span> <span class="token-keyword">in</span> <span class="token-type">ModelName</span>]: &lt;<span class="token-type">M</span> <span class="token-keyword">extends</span> <span class="token-type">DelegateMethods</span>, <span class="token-type">A</span> <span class="token-keyword">extends</span> <span class="token-type">CleanArgs</span>&lt;<span class="token-type">K</span>, <span class="token-type">M</span>&gt;&gt;(
+    action: <span class="token-type">M</span>,
+    args?: <span class="token-type">A</span>
+  ) =&gt; <span class="token-type">Promise</span>&lt;<span class="token-type">Result</span>&lt;<span class="token-type">DeepPrettify</span>&lt;<span class="token-type">InferResult</span>&lt;<span class="token-type">K</span>, <span class="token-type">M</span>, <span class="token-type">A</span>&gt;&gt;, <span class="token-keyword">string</span>&gt;&gt;
+}</code></pre>
+    <p class="text-text-secondary mb-4">
+      The runtime side is a JavaScript <code class="prose-inline">Proxy</code> that intercepts property access, packages the table name, action, and args into a plain <code class="prose-inline">DBPayload</code>, and fires a TanStack server function with an auth middleware guard:
+    </p>
+    <pre class="code-block mb-5"><code><span class="token-comment">// The shared execution engine — used by both CRUD and Transaction APIs</span>
+<span class="token-keyword">export async function</span> <span class="token-fn">executeOperation</span>(dbInstance: <span class="token-keyword">any</span>, payload: <span class="token-type">DBPayload</span>) {
+  <span class="token-keyword">const</span> delegate = dbInstance[payload.table]
+  <span class="token-keyword">if</span> (!delegate?.[payload.action]) {
+    <span class="token-keyword">throw new</span> <span class="token-type">Error</span>(<span class="token-string">`Invalid operation: ${payload.action} on ${payload.table}`</span>)
+  }
+  <span class="token-keyword">return await</span> delegate[payload.action](payload.args)
+}
+
+<span class="token-comment">// Server function — runs on the server only</span>
+<span class="token-keyword">const</span> crudServerFn = <span class="token-fn">createServerFn</span>({ method: <span class="token-string">'POST'</span> })
+  .<span class="token-fn">middleware</span>([authMiddleware])
+  .<span class="token-fn">handler</span>(<span class="token-keyword">async</span> ({ data }) =&gt; {
+    <span class="token-keyword">const</span> result = <span class="token-keyword">await</span> ResultAsync.<span class="token-fn">fromPromise</span>(
+      <span class="token-fn">executeOperation</span>(prisma, data),
+      (e: <span class="token-keyword">any</span>) =&gt; e.message || <span class="token-string">'Database operation failed'</span>
+    )
+    <span class="token-keyword">return</span> result.<span class="token-fn">isOk</span>() ? { value: result.value } : { error: result.error }
+  })
+
+<span class="token-comment">// Public API — the Proxy that makes it feel like calling Prisma</span>
+<span class="token-keyword">export const</span> crudAPI = <span class="token-keyword">new</span> <span class="token-type">Proxy</span>({} <span class="token-keyword">as</span> <span class="token-type">CrudProxy</span>, {
+  <span class="token-fn">get</span>(_, table: <span class="token-keyword">string</span>) {
+    <span class="token-keyword">return async</span> (action: <span class="token-keyword">string</span>, args: <span class="token-keyword">any</span>) =&gt; {
+      <span class="token-keyword">const</span> response = <span class="token-keyword">await</span> <span class="token-fn">crudServerFn</span>({ data: { table, action, args } })
+      <span class="token-keyword">if</span> (<span class="token-string">'error'</span> <span class="token-keyword">in</span> response) <span class="token-keyword">return</span> <span class="token-fn">err</span>(response.error <span class="token-keyword">as string</span>)
+      <span class="token-keyword">return</span> <span class="token-fn">ok</span>(response.value <span class="token-keyword">as any</span>)
+    }
+  },
+})</code></pre>
+    <p class="text-text-secondary mb-4">
+      The result is always a <code class="prose-inline">neverthrow</code> <code class="prose-inline">Result</code> type — no try/catch, no unhandled promise rejections. Callers always handle both <code class="prose-inline">.isOk()</code> and <code class="prose-inline">.isErr()</code> branches explicitly.
+    </p>
+    <div class="bg-bg-elevated border border-border rounded-xl p-5 text-sm text-text-secondary">
+      <p class="font-semibold text-text mb-2">Why <code class="prose-inline">Prisma.Result&lt;&gt;</code> is the key</p>
+      <p>Prisma ships a conditional type called <code class="prose-inline">Prisma.Result&lt;Model, Args, Operation&gt;</code> that computes the return type for any model + method + args combination — including <code class="prose-inline">select</code> and <code class="prose-inline">include</code> shapes. By threading <code class="prose-inline">A</code> (the inferred args generic) through <code class="prose-inline">InferResult</code>, the proxy's return type automatically narrows based on whatever args you pass. Pass <code class="prose-inline">{ select: { id: true, status: true } }</code> and you get back <code class="prose-inline">{ id: string; status: TicketStatus }</code> — not a full <code class="prose-inline">Ticket</code>.</p>
+    </div>
+  </section>
+
+</div>
+
+<div class="max-w-3xl mx-auto px-6">
+
+  <!-- 4. LAYER 3: TRANSACTION API -->
+  <section id="layer-3" class="mb-16 reveal" aria-labelledby="h-layer3">
+    <h2 id="h-layer3" class="text-2xl font-bold mb-4">4. Layer 3 — The Transaction API: atomic multi-table writes</h2>
+    <p class="text-text-secondary mb-4">
+      Creating a ticket isn't one write. It might involve inserting a <code class="prose-inline">Contact</code>, upserting a <code class="prose-inline">Consumer</code>, linking a <code class="prose-inline">ConsumerAddress</code>, and inserting the <code class="prose-inline">Ticket</code> itself — all of which need to either all succeed or all roll back together. The CRUD API handles one operation at a time. The Transaction API handles a batch.
+    </p>
+    <p class="text-text-secondary mb-4">
+      The key design decision was to reuse <code class="prose-inline">executeOperation</code> — the same function that powers the CRUD API — but pass a Prisma <code class="prose-inline">tx</code> client instead of the global <code class="prose-inline">prisma</code> instance:
+    </p>
+    <pre class="code-block mb-5"><code><span class="token-comment">// src/lib/prisma-client/transaction-api.ts</span>
+<span class="token-keyword">const</span> transactionServerFn = <span class="token-fn">createServerFn</span>({ method: <span class="token-string">'POST'</span> })
+  .<span class="token-fn">middleware</span>([authMiddleware])
+  .<span class="token-fn">handler</span>(<span class="token-keyword">async</span> ({ data }) =&gt; {
+    <span class="token-keyword">const</span> txResult = <span class="token-keyword">await</span> ResultAsync.<span class="token-fn">fromPromise</span>(
+      prisma.<span class="token-fn">$transaction</span>(<span class="token-keyword">async</span> tx =&gt; {
+        <span class="token-keyword">const</span> executionResults = []
+        <span class="token-keyword">for</span> (<span class="token-keyword">const</span> op <span class="token-keyword">of</span> data.operations) {
+          <span class="token-comment">// Same engine, different client — tx rolls everything back on failure</span>
+          <span class="token-keyword">const</span> out = <span class="token-keyword">await</span> <span class="token-fn">executeOperation</span>(tx, op)
+          executionResults.<span class="token-fn">push</span>(out)
+        }
+        <span class="token-keyword">return</span> executionResults
+      }),
+      (e: <span class="token-keyword">any</span>) =&gt; e.message || <span class="token-string">'Transaction batch execution failed'</span>
+    )
+    <span class="token-keyword">return</span> txResult.<span class="token-fn">isOk</span>()
+      ? { value: txResult.value }
+      : { error: txResult.error }
+  })
+
+<span class="token-keyword">export const</span> transactionAPI = {
+  execute: <span class="token-keyword">async</span> (operations: <span class="token-type">DBPayload</span>[]): <span class="token-type">Promise</span>&lt;<span class="token-type">Result</span>&lt;<span class="token-keyword">any</span>[], <span class="token-keyword">string</span>&gt;&gt; =&gt; {
+    <span class="token-keyword">const</span> response = <span class="token-keyword">await</span> <span class="token-fn">transactionServerFn</span>({ data: { operations } })
+    <span class="token-keyword">if</span> (<span class="token-string">'error'</span> <span class="token-keyword">in</span> response) <span class="token-keyword">return</span> <span class="token-fn">err</span>(response.error <span class="token-keyword">as string</span>)
+    <span class="token-keyword">return</span> <span class="token-fn">ok</span>(response.value)
+  },
+}</code></pre>
+    <p class="text-text-secondary mb-4">
+      The input is <code class="prose-inline">DBPayload[]</code> — the exact same shape the CRUD API uses internally. That means the client assembles a list of plain objects describing what to do, sends them over in one round-trip, and Prisma wraps the whole batch in a real database transaction. If any operation throws, nothing is committed.
+    </p>
+    <div class="grid sm:grid-cols-2 gap-4 mt-2 mb-2">
+      <div class="bg-bg-elevated border border-accent/20 rounded-xl p-5">
+        <h3 class="font-semibold text-sm mb-3 text-accent">What this gives you</h3>
+        <ul class="flex flex-col gap-2 text-sm text-text-secondary">
+          <li class="flex gap-2"><span class="text-accent">›</span> One HTTP round-trip for multi-table writes</li>
+          <li class="flex gap-2"><span class="text-accent">›</span> True DB-level atomicity via <code class="prose-inline">prisma.$transaction()</code></li>
+          <li class="flex gap-2"><span class="text-accent">›</span> No duplicated validation logic — same <code class="prose-inline">executeOperation</code> engine</li>
+          <li class="flex gap-2"><span class="text-accent">›</span> Server results returned in index order — each operation maps back to its collection</li>
+        </ul>
+      </div>
+      <div class="bg-bg-elevated border border-border rounded-xl p-5">
+        <h3 class="font-semibold text-sm mb-3">What it doesn't do</h3>
+        <ul class="flex flex-col gap-2 text-sm text-text-secondary">
+          <li class="flex gap-2"><span class="text-warn">›</span> It's not a query API — reads go through the CRUD Proxy individually</li>
+          <li class="flex gap-2"><span class="text-warn">›</span> No partial rollback — all-or-nothing per batch</li>
+          <li class="flex gap-2"><span class="text-warn">›</span> Return types are <code class="prose-inline">any[]</code> — the caller knows the shape by position</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<div class="max-w-3xl mx-auto px-6">
+
+  <!-- 5. LAYER 4: COLLECTION FACTORY -->
+  <section id="layer-4" class="mb-16 reveal" aria-labelledby="h-layer4">
+    <h2 id="h-layer4" class="text-2xl font-bold mb-4">5. Layer 4 — Collection factory: bringing the DB to the client</h2>
+    <p class="text-text-secondary mb-4">
+      The CRUD API bridges the server. But components don't call <code class="prose-inline">crudAPI</code> directly — they read from local <em>collections</em>. A collection is an in-memory, SQLite-persisted (via OPFS), reactive store that stays in sync with the server. Think of it as a lightweight local replica of a Prisma table.
+    </p>
+    <p class="text-text-secondary mb-4">
+      It's worth being precise about how that replication actually works, because it's deliberately simple. There is no long-lived WebSocket or CDC stream. Synchronization happens through the same CRUD and Transaction server functions already described — the collection's <code class="prose-inline">queryFn</code> calls <code class="prose-inline">crudAPI.findMany</code> to pull a fresh snapshot from Postgres on demand, and every write path goes through <code class="prose-inline">transactionAPI.execute</code>, which writes to Postgres first and then patches the local SQLite store with the server-confirmed rows. The OPFS layer is purely a persistence cache: it lets the app boot instantly from the last-known state and serve reads while offline, but the server is always the source of truth. Cross-tab consistency is handled by a <code class="prose-inline">BroadcastChannel</code> that signals other open tabs to re-sync when any tab commits a write. If you needed continuous real-time replication — streaming CDC from Postgres to the edge — you would slot in a tool like <a href="https://electric-sql.com" target="_blank" rel="noopener noreferrer" class="text-accent-2 hover:text-accent transition-colors">ElectricSQL</a> or <a href="https://www.powersync.com" target="_blank" rel="noopener noreferrer" class="text-accent-2 hover:text-accent transition-colors">PowerSync</a> at the <code class="prose-inline">queryFn</code> boundary without touching any other layer. For NUVELCO CCA's workload — periodic syncs on connectivity restore, not sub-second live updates — pull-on-demand is the right tradeoff.
+    </p>
+    <p class="text-text-secondary mb-4">
+      The factory function <code class="prose-inline">createSyncableCollection&lt;TRecord&gt;</code> takes a Prisma browser model type as its generic and wires up everything — persistence, query sync, optimistic inserts/updates/deletes, offline detection, and cross-tab sync via <code class="prose-inline">BroadcastChannel</code>:
+    </p>
+    <pre class="code-block mb-5"><code><span class="token-comment">// src/db/index.tsx (simplified)</span>
+<span class="token-keyword">export function</span> <span class="token-fn">createSyncableCollection</span>&lt;<span class="token-type">TRecord</span> <span class="token-keyword">extends</span> { id: <span class="token-keyword">string</span> }&gt;(
+  config: <span class="token-type">CreateSyncableCollectionConfigs</span>
+): <span class="token-type">Collection</span>&lt;<span class="token-type">TRecord</span>&gt; {
+  <span class="token-keyword">const</span> collection = <span class="token-fn">createCollection</span>(
+    <span class="token-fn">persistedCollectionOptions</span>({
+      id: config.apiKey,
+      persistence,          <span class="token-comment">// SQLite OPFS — survives page reload</span>
+      schemaVersion: config.schemaVersion,
+      ...<span class="token-fn">queryCollectionOptions</span>({
+        queryKey: [config.apiKey],
+        syncMode: config.syncMode,   <span class="token-comment">// 'eager' or 'on-demand'</span>
+        getKey: (item: <span class="token-type">TRecord</span>) =&gt; item.id,
+
+        <span class="token-comment">// Fetch from server via the CRUD Proxy</span>
+        queryFn: <span class="token-keyword">async</span> ctx =&gt; {
+          <span class="token-keyword">if</span> (!navigator.onLine) <span class="token-keyword">return</span> []
+          <span class="token-keyword">const</span> result = <span class="token-keyword">await</span> api[config.apiKey](<span class="token-string">'findMany'</span>, { where, orderBy, take })
+          <span class="token-keyword">if</span> (result.<span class="token-fn">isErr</span>()) <span class="token-keyword">throw new</span> <span class="token-type">Error</span>(result.error)
+          <span class="token-keyword">return</span> result.value
+        },
+
+        <span class="token-comment">// Optimistic insert — writes locally, then confirms with server</span>
+        onInsert: <span class="token-keyword">async</span> ({ transaction }) =&gt; {
+          <span class="token-keyword">const</span> results: <span class="token-type">TRecord</span>[] = []
+          <span class="token-keyword">for</span> (<span class="token-keyword">const</span> mutation <span class="token-keyword">of</span> transaction.mutations) {
+            <span class="token-keyword">if</span> (!navigator.onLine) { results.<span class="token-fn">push</span>(mutation.modified); <span class="token-keyword">continue</span> }
+            <span class="token-keyword">const</span> value = <span class="token-keyword">await</span> <span class="token-fn">retryWithBackoff</span>(() =&gt;
+              api[config.apiKey](<span class="token-string">'create'</span>, { data: mutation.modified })
+            )
+            results.<span class="token-fn">push</span>(value <span class="token-keyword">as</span> <span class="token-type">TRecord</span>)
+          }
+          <span class="token-keyword">return</span> results
+        },
+
+        <span class="token-comment">// onUpdate and onDelete follow the same pattern...</span>
+      }),
+    })
+  )
+
+  <span class="token-comment">// Cross-tab sync: broadcast on change, re-sync on receive</span>
+  bc.<span class="token-fn">addEventListener</span>(<span class="token-string">'message'</span>, <span class="token-keyword">async</span> event =&gt; {
+    <span class="token-keyword">if</span> (event.data.apiKey !== config.apiKey) <span class="token-keyword">return</span>
+    <span class="token-keyword">if</span> (event.data.fromTab === dbSyncTabId) <span class="token-keyword">return</span>  <span class="token-comment">// ignore own broadcasts</span>
+    <span class="token-keyword">await</span> collection._sync.<span class="token-fn">startSync</span>()
+  })
+  collection.<span class="token-fn">subscribeChanges</span>(() =&gt; {
+    bc.<span class="token-fn">postMessage</span>({ apiKey: config.apiKey, fromTab: dbSyncTabId })
+  })
+
+  <span class="token-keyword">return</span> collection
+}</code></pre>
+    <p class="text-text-secondary mb-4">
+      Creating a collection for each Prisma model is then just a one-liner. All eleven models live in <code class="prose-inline">src/db/collections.ts</code>:
+    </p>
+    <pre class="code-block mb-5"><code><span class="token-comment">// src/db/collections.ts</span>
+<span class="token-keyword">import type</span> { <span class="token-type">Ticket</span>, <span class="token-type">Consumer</span>, <span class="token-type">Activity</span> <span class="token-comment">/* ... */</span> }
+  <span class="token-keyword">from</span> <span class="token-string">'prisma/generated/prisma/browser'</span>
+<span class="token-keyword">import</span> { <span class="token-fn">createSyncableCollection</span> } <span class="token-keyword">from</span> <span class="token-string">'.'</span>
+
+<span class="token-keyword">const</span> <span class="token-prop">SCHEMA_VERSION</span> = <span class="token-num">14</span>
+
+<span class="token-keyword">export const</span> ticketCollection   = <span class="token-fn">createSyncableCollection</span>&lt;<span class="token-type">Ticket</span>&gt;({
+  apiKey: <span class="token-string">'ticket'</span>, schemaVersion: <span class="token-prop">SCHEMA_VERSION</span>, syncMode: <span class="token-string">'on-demand'</span>,
+})
+<span class="token-keyword">export const</span> consumerCollection = <span class="token-fn">createSyncableCollection</span>&lt;<span class="token-type">Consumer</span>&gt;({
+  apiKey: <span class="token-string">'consumer'</span>, schemaVersion: <span class="token-prop">SCHEMA_VERSION</span>, syncMode: <span class="token-string">'on-demand'</span>,
+})
+<span class="token-keyword">export const</span> activityCollection = <span class="token-fn">createSyncableCollection</span>&lt;<span class="token-type">Activity</span>&gt;({
+  apiKey: <span class="token-string">'activity'</span>, schemaVersion: <span class="token-prop">SCHEMA_VERSION</span>, syncMode: <span class="token-string">'on-demand'</span>,
+})
+<span class="token-comment">// ... 8 more collections, all typed to their Prisma model</span></code></pre>
+    <p class="text-text-secondary">
+      The <code class="prose-inline">syncMode</code> flag lets some collections load eagerly on mount (<code class="prose-inline">user</code>, <code class="prose-inline">address</code>, <code class="prose-inline">operationsTeam</code> — small, shared reference data) while others load on-demand only when a component actually subscribes. The SQLite OPFS layer means the last-fetched data is available instantly even after a hard reload, before any server sync completes.
+    </p>
+  </section>
+
+</div>
+
+<div class="max-w-3xl mx-auto px-6">
+
+  <!-- 6. LAYER 5: dbTransaction -->
+  <section id="layer-5" class="mb-16 reveal" aria-labelledby="h-layer5">
+    <h2 id="h-layer5" class="text-2xl font-bold mb-4">6. Layer 5 — <code class="prose-inline">dbTransaction()</code>: the local write orchestrator</h2>
+    <p class="text-text-secondary mb-4">
+      Individual collection inserts and updates work for simple cases. But creating a ticket touches six or seven collections at once and all of those writes need to be atomic — either they all land in the database or none of them do. That's what <code class="prose-inline">dbTransaction()</code> is for.
+    </p>
+    <p class="text-text-secondary mb-4">
+      It wraps TanStack DB's <code class="prose-inline">createTransaction</code>, which collects all collection mutations made inside the callback into a single <code class="prose-inline">Transaction</code> object. The <code class="prose-inline">mutationFn</code> then serializes those mutations into <code class="prose-inline">DBPayload[]</code> and fires the Transaction API in one shot:
+    </p>
+    <pre class="code-block mb-5"><code><span class="token-comment">// src/db/local-db-transaction.ts</span>
+<span class="token-keyword">function</span> <span class="token-fn">buildOperations</span>(transaction: <span class="token-type">Transaction</span>&lt;<span class="token-keyword">any</span>&gt;): <span class="token-type">DBPayload</span>[] {
+  <span class="token-keyword">return</span> transaction.mutations.<span class="token-fn">map</span>(mutation =&gt; {
+    <span class="token-keyword">if</span> (mutation.type === <span class="token-string">'insert'</span>)
+      <span class="token-keyword">return</span> { table: mutation.collection.id, action: <span class="token-string">'create'</span>, args: { data: mutation.modified } }
+    <span class="token-keyword">if</span> (mutation.type === <span class="token-string">'update'</span>)
+      <span class="token-keyword">return</span> { table: mutation.collection.id, action: <span class="token-string">'update'</span>,
+                args: { where: { id: mutation.original.id }, data: mutation.changes } }
+    <span class="token-keyword">return</span>   { table: mutation.collection.id, action: <span class="token-string">'delete'</span>,
+                args: { where: { id: mutation.original.id } } }
+  })
+}
+
+<span class="token-keyword">export const</span> dbTransaction = (callback: () =&gt; <span class="token-keyword">void</span>): <span class="token-type">ResultAsync</span>&lt;<span class="token-keyword">unknown</span>[], <span class="token-type">Error</span>&gt; =&gt; {
+  <span class="token-keyword">return</span> ResultAsync.<span class="token-fn">fromPromise</span>((<span class="token-keyword">async</span> () =&gt; {
+    <span class="token-keyword">const</span> isOffline = !navigator.onLine
+    <span class="token-keyword">let</span> serverResults: <span class="token-keyword">unknown</span>[] = []
+
+    <span class="token-keyword">const</span> tx = <span class="token-fn">createTransaction</span>({
+      mutationFn: <span class="token-keyword">async</span> ({ transaction }) =&gt; {
+        <span class="token-keyword">if</span> (isOffline) {
+          <span class="token-comment">// Offline: apply mutations locally, queue for later sync</span>
+          serverResults = <span class="token-keyword">await</span> <span class="token-fn">applyLocalTransaction</span>(transaction)
+          <span class="token-keyword">return</span> serverResults
+        }
+
+        <span class="token-comment">// Online: send all ops in one DB transaction</span>
+        <span class="token-keyword">const</span> result = <span class="token-keyword">await</span> transactionAPI.<span class="token-fn">execute</span>(<span class="token-fn">buildOperations</span>(transaction))
+        <span class="token-keyword">if</span> (result.<span class="token-fn">isErr</span>()) <span class="token-keyword">throw new</span> <span class="token-type">Error</span>(result.error)
+
+        <span class="token-comment">// Apply server-returned rows directly to each local collection</span>
+        <span class="token-keyword">await</span> <span class="token-fn">syncCollectionsAfterManualTransaction</span>(transaction, result.value)
+        serverResults = result.value
+        <span class="token-keyword">return</span> result.value
+      },
+    })
+
+    tx.<span class="token-fn">mutate</span>(callback)
+    <span class="token-keyword">await</span> tx.isPersisted.promise
+    <span class="token-keyword">return</span> serverResults
+  })(), error =&gt; error <span class="token-keyword">instanceof</span> <span class="token-type">Error</span> ? error : <span class="token-keyword">new</span> <span class="token-type">Error</span>(<span class="token-type">String</span>(error)))
+}</code></pre>
+    <p class="text-text-secondary mb-4">
+      After the server responds, <code class="prose-inline">syncCollectionsAfterManualTransaction</code> patches each collection directly with the server-returned rows — no extra <code class="prose-inline">findMany</code> round-trip. If a targeted write fails, it falls back to a full collection refetch. Either way, the local store reflects exactly what landed in the database.
+    </p>
+    <div class="border-l-2 border-accent-2 pl-5 text-text-secondary italic mb-4">
+      The callback passed to <code class="prose-inline">dbTransaction()</code> is just plain collection calls — <code class="prose-inline">ticketCollection.insert(…)</code>, <code class="prose-inline">consumerCollection.update(…)</code>. The framework intercepts them, batches them, and handles the rest.
+    </div>
+  </section>
+
+</div>
+
+<div class="max-w-3xl mx-auto px-6">
+
+  <!-- 7. UI LAYER -->
+  <section id="ui" class="mb-16 reveal" aria-labelledby="h-ui">
+    <h2 id="h-ui" class="text-2xl font-bold mb-4">7. The UI layer — forms, live queries, and the full picture</h2>
+    <p class="text-text-secondary mb-4">
+      The outermost layer is the one users interact with. A form validated by Zod, state read via <code class="prose-inline">useLiveQuery</code>, and writes dispatched through <code class="prose-inline">dbTransaction()</code>. No direct <code class="prose-inline">fetch</code>, no manual state management, no <code class="prose-inline">useEffect</code> data loading.
+    </p>
+    <p class="text-text-secondary mb-4">
+      The Zod schema in <code class="prose-inline">-ticket-form-view.tsx</code> defines the form shape and TanStack Form validates against it on change. The inferred type <code class="prose-inline">TicketIntakeFormData</code> drives <code class="prose-inline">handleCreate</code>'s parameter type — which means if you rename a field in the schema, the compiler will complain in the handler before anything ever runs:
+    </p>
+    <pre class="code-block mb-5"><code><span class="token-comment">// src/routes/(private)/(dashboard)/tickets/create/-ticket-form-view.tsx</span>
+<span class="token-keyword">export const</span> ticketIntakeSchema = z.<span class="token-fn">object</span>({
+  reportDate:           z.<span class="token-fn">string</span>().<span class="token-fn">min</span>(<span class="token-num">1</span>),
+  channel:              z.<span class="token-fn">enum</span>(<span class="token-type">TICKET_CHANNELS</span>),
+  concernLeafChoice:    z.<span class="token-fn">string</span>().<span class="token-fn">min</span>(<span class="token-num">1</span>),
+  status:               z.<span class="token-fn">enum</span>([<span class="token-string">'PENDING'</span>, <span class="token-string">'IN_PROGRESS'</span>, <span class="token-string">'RESOLVED'</span>, <span class="token-string">'CANCELED'</span>]),
+  priority:             z.<span class="token-fn">enum</span>([<span class="token-string">'LOW'</span>, <span class="token-string">'MEDIUM'</span>, <span class="token-string">'HIGH'</span>, <span class="token-string">'CRITICAL'</span>]),
+  barangayMunicipality: z.<span class="token-fn">string</span>().<span class="token-fn">min</span>(<span class="token-num">1</span>),
+  <span class="token-comment">// ...other fields</span>
+})
+
+<span class="token-keyword">export type</span> <span class="token-type">TicketIntakeFormData</span> = z.<span class="token-fn">infer</span>&lt;<span class="token-keyword">typeof</span> ticketIntakeSchema&gt;</code></pre>
+    <p class="text-text-secondary mb-4">
+      Reading data in the component is a <code class="prose-inline">useLiveQuery</code> call — reactive, live-updating, typed to the collection's generic parameter:
+    </p>
+    <pre class="code-block mb-5"><code><span class="token-comment">// src/routes/(private)/(dashboard)/tickets/create/-create-ticket-from.tsx</span>
+<span class="token-keyword">const</span> { data: consumers = [] } = <span class="token-fn">useLiveQuery</span>(
+  q =&gt; q.<span class="token-fn">from</span>({ consumers: consumerCollection })
+)
+<span class="token-comment">// consumers: Consumer[]  — typed from Prisma's generated Consumer model</span></code></pre>
+    <p class="text-text-secondary mb-4">
+      And writing is just calling <code class="prose-inline">dbTransaction()</code> with a callback that orchestrates all collection mutations in plain imperative code:
+    </p>
+    <pre class="code-block mb-5"><code><span class="token-keyword">const</span> handleCreate = <span class="token-keyword">async</span> (value: <span class="token-type">TicketIntakeFormData</span>) =&gt; {
+  <span class="token-keyword">const</span> result = <span class="token-keyword">await</span> <span class="token-fn">dbTransaction</span>(() =&gt; {
+    <span class="token-keyword">const</span> ticketId = crypto.<span class="token-fn">randomUUID</span>()
+
+    <span class="token-comment">// Insert or resolve contact</span>
+    <span class="token-keyword">let</span> contactId = contacts.<span class="token-fn">find</span>(c =&gt; c.number === value.phoneNumber)?.id
+    <span class="token-keyword">if</span> (!contactId && value.phoneNumber) {
+      contactId = crypto.<span class="token-fn">randomUUID</span>()
+      contactCollection.<span class="token-fn">insert</span>({ id: contactId, number: value.phoneNumber, createdAt: <span class="token-keyword">new</span> <span class="token-type">Date</span>() })
+    }
+
+    <span class="token-comment">// Upsert consumer</span>
+    <span class="token-keyword">const</span> existingConsumer = consumers.<span class="token-fn">find</span>(c =&gt; c.accountNumber === value.accountNumber)
+    <span class="token-keyword">let</span> consumerId: <span class="token-keyword">string</span>
+    <span class="token-keyword">if</span> (existingConsumer) {
+      consumerId = existingConsumer.id
+      consumerCollection.<span class="token-fn">update</span>(consumerId, draft =&gt; {
+        <span class="token-keyword">if</span> (value.firstName) draft.firstName = value.firstName
+        draft.updatedAt = <span class="token-keyword">new</span> <span class="token-type">Date</span>()
+      })
+    } <span class="token-keyword">else</span> {
+      consumerId = crypto.<span class="token-fn">randomUUID</span>()
+      consumerCollection.<span class="token-fn">insert</span>({ id: consumerId, <span class="token-comment">/* ...fields */</span> })
+    }
+
+    <span class="token-comment">// Insert the ticket — typed to the Ticket model via ticketCollection's generic</span>
+    ticketCollection.<span class="token-fn">insert</span>({
+      id: ticketId,
+      agentId: user.id,
+      consumerId,
+      contactId: contactId || <span class="token-keyword">null</span>,
+      status: value.status,
+      priority: value.priority,
+      concernCategory: category,
+      hotline: user.assignedHotline,
+      <span class="token-comment">// ...all fields fully typed — the compiler will catch any mismatch</span>
+    })
+  })
+
+  <span class="token-keyword">if</span> (result.<span class="token-fn">isErr</span>()) toast.<span class="token-fn">error</span>(result.error.message)
+}</code></pre>
+    <p class="text-text-secondary">
+      Notice there's no explicit type annotation on the <code class="prose-inline">insert</code> call — TypeScript already knows the shape because <code class="prose-inline">ticketCollection</code> is <code class="prose-inline">Collection&lt;Ticket&gt;</code>. Pass the wrong field name or the wrong value for <code class="prose-inline">status</code> and the IDE flags it immediately, before any server round-trip.
+    </p>
+  </section>
+
+</div>
+
+<div class="max-w-3xl mx-auto px-6">
+
+  <!-- 8. SOFT DELETE -->
+  <section id="soft-delete" class="mb-16 reveal" aria-labelledby="h-soft">
+    <h2 id="h-soft" class="text-2xl font-bold mb-4">8. Bonus: the soft-delete extension</h2>
+    <p class="text-text-secondary mb-4">
+      One more piece worth calling out. Some models — <code class="prose-inline">User</code> and <code class="prose-inline">Activity</code> — have a <code class="prose-inline">deletedAt</code> field. Rather than rely on every developer to remember to filter soft-deleted records and to never call <code class="prose-inline">.delete()</code>, the Prisma client itself enforces the policy via an extension:
+    </p>
+    <pre class="code-block mb-5"><code><span class="token-comment">// src/lib/prisma-client/soft-delete-extension.ts</span>
+<span class="token-keyword">export const</span> softDeleteExtension = <span class="token-type">Prisma</span>.<span class="token-fn">defineExtension</span>({
+  name: <span class="token-string">'softDelete'</span>,
+  query: {
+    $allModels: {
+      <span class="token-keyword">async</span> $allOperations({ model, operation, args, query }) {
+        <span class="token-keyword">const</span> hasDeletedAtField = <span class="token-string">'deletedAt'</span> <span class="token-keyword">in</span> <span class="token-type">Prisma</span>[`${model}ScalarFieldEnum`]
+
+        <span class="token-comment">// If the model doesn't have deletedAt, pass through untouched</span>
+        <span class="token-keyword">if</span> (!hasDeletedAtField) <span class="token-keyword">return</span> <span class="token-fn">query</span>(args)
+
+        <span class="token-comment">// Hard deletes are forbidden — must use .update({ deletedAt: new Date() })</span>
+        <span class="token-keyword">if</span> (operation === <span class="token-string">'delete'</span> || operation === <span class="token-string">'deleteMany'</span>) {
+          <span class="token-keyword">throw new</span> <span class="token-type">Error</span>(
+            `[Prisma Error]: Hard deletes are FORBIDDEN on model "${model}". ` +
+            `Use .update() to set "deletedAt: new Date()" instead.`
+          )
+        }
+
+        <span class="token-comment">// Reads automatically exclude soft-deleted rows</span>
+        <span class="token-keyword">const</span> readOps = [<span class="token-string">'findMany'</span>, <span class="token-string">'findFirst'</span>, <span class="token-string">'findUnique'</span>, <span class="token-string">'count'</span>]
+        <span class="token-keyword">if</span> (readOps.<span class="token-fn">includes</span>(operation)) {
+          args.where = { ...args.where, deletedAt: <span class="token-keyword">null</span> }
+        }
+
+        <span class="token-keyword">return</span> <span class="token-fn">query</span>(args)
+      },
+    },
+  },
+})</code></pre>
+    <p class="text-text-secondary mb-4">
+      The extension is applied once at client instantiation using <code class="prose-inline">ReturnType</code> to keep the complex extension types intact:
+    </p>
+    <pre class="code-block mb-5"><code><span class="token-comment">// src/lib/prisma-client/index.ts</span>
+<span class="token-keyword">const</span> createBaseClient = () =&gt;
+  <span class="token-keyword">new</span> <span class="token-type">PrismaClient</span>({ adapter }).<span class="token-fn">$extends</span>(softDeleteExtension)
+
+<span class="token-comment">// ReturnType preserves the full extended type — don't use PrismaClient directly here</span>
+<span class="token-keyword">type</span> <span class="token-type">BasePrismaClient</span> = <span class="token-type">ReturnType</span>&lt;<span class="token-keyword">typeof</span> createBaseClient&gt;
+
+<span class="token-keyword">const</span> globalForPrisma = global <span class="token-keyword">as unknown as</span> { prisma: <span class="token-type">BasePrismaClient</span> }
+<span class="token-keyword">export const</span> prisma = globalForPrisma.prisma || <span class="token-fn">createBaseClient</span>()</code></pre>
+    <p class="text-text-secondary">
+      From this point, every read operation anywhere in the app — whether called directly, through the CRUD Proxy, or through the Transaction API — is guaranteed to exclude soft-deleted records. The policy is structural, not documented.
+    </p>
+  </section>
+
+</div>
+
+<div class="max-w-3xl mx-auto px-6">
+
+  <!-- 9. DIAGRAM -->
+  <section id="diagram" class="mb-16 reveal" aria-labelledby="h-diagram">
+    <h2 id="h-diagram" class="text-2xl font-bold mb-4">9. Everything in one diagram</h2>
+    <p class="text-text-secondary mb-6">
+      Here's the full pipeline — from a user clicking "Save" to a row persisted in Postgres, with TypeScript holding the hand of every step along the way.
+    </p>
+
+    <div class="bg-bg-elevated border border-border rounded-xl p-6 text-sm font-mono text-text-secondary leading-loose mb-6">
+      <p class="text-text font-bold mb-1">SCHEMA LAYER</p>
+      <p class="ml-4">prisma/schema.prisma</p>
+      <p class="ml-4">└── <span class="text-accent">prisma generate</span> → browser.ts + client.ts</p>
+      <p class="ml-8">Ticket, Consumer, Activity, TicketStatus, …</p>
+      <br>
+      <p class="text-text font-bold mb-1">SERVER LAYER</p>
+      <p class="ml-4">src/lib/prisma-client/index.ts</p>
+      <p class="ml-4">└── PrismaClient.$extends(softDeleteExtension)</p>
+      <p class="ml-8">→ auto-filters deletedAt on reads</p>
+      <p class="ml-8">→ throws on hard deletes</p>
+      <br>
+      <p class="ml-4">src/lib/prisma-client/crud-api.ts</p>
+      <p class="ml-4">└── <span class="text-accent-2">CrudProxy</span> (Proxy + CleanArgs + InferResult)</p>
+      <p class="ml-8">→ createServerFn (authMiddleware)</p>
+      <p class="ml-8">→ executeOperation(prisma, payload)</p>
+      <p class="ml-8">→ returns Result&lt;DeepPrettify&lt;InferResult&gt;, string&gt;</p>
+      <br>
+      <p class="ml-4">src/lib/prisma-client/transaction-api.ts</p>
+      <p class="ml-4">└── <span class="text-accent-2">transactionAPI.execute(DBPayload[])</span></p>
+      <p class="ml-8">→ createServerFn (authMiddleware)</p>
+      <p class="ml-8">→ prisma.$transaction(tx => executeOperation(tx, op) × N)</p>
+      <p class="ml-8">→ returns Result&lt;any[], string&gt;</p>
+      <br>
+      <p class="text-text font-bold mb-1">CLIENT LAYER</p>
+      <p class="ml-4">src/db/index.tsx</p>
+      <p class="ml-4">└── <span class="text-accent">createSyncableCollection&lt;TRecord&gt;()</span></p>
+      <p class="ml-8">→ TanStack DB collection + SQLite OPFS persistence</p>
+      <p class="ml-8">→ queryFn → crudAPI.findMany (online) / [] (offline)</p>
+      <p class="ml-8">→ onInsert/onUpdate/onDelete → crudAPI with retryWithBackoff</p>
+      <p class="ml-8">→ BroadcastChannel cross-tab sync</p>
+      <br>
+      <p class="ml-4">src/db/collections.ts</p>
+      <p class="ml-4">└── ticketCollection: Collection&lt;Ticket&gt;</p>
+      <p class="ml-4">└── consumerCollection: Collection&lt;Consumer&gt;  … ×11</p>
+      <br>
+      <p class="ml-4">src/db/local-db-transaction.ts</p>
+      <p class="ml-4">└── <span class="text-accent">dbTransaction(callback)</span></p>
+      <p class="ml-8">→ createTransaction → collects mutations</p>
+      <p class="ml-8">→ buildOperations → DBPayload[]</p>
+      <p class="ml-8">→ transactionAPI.execute() (online) / applyLocalTransaction (offline)</p>
+      <p class="ml-8">→ syncCollectionsAfterManualTransaction → patch local store</p>
+      <br>
+      <p class="text-text font-bold mb-1">UI LAYER</p>
+      <p class="ml-4">src/routes/.../create/-create-ticket-from.tsx</p>
+      <p class="ml-4">└── useLiveQuery(q =&gt; q.from({ tickets: ticketCollection }))</p>
+      <p class="ml-8">→ reactive, typed to Ticket[]</p>
+      <p class="ml-4">└── dbTransaction(() =&gt; { ticketCollection.insert(…) })</p>
+      <p class="ml-8">→ one call, multi-table, atomic, offline-capable</p>
+      <br>
+      <p class="ml-4">-ticket-form-view.tsx</p>
+      <p class="ml-4">└── ticketIntakeSchema (Zod) → TicketIntakeFormData</p>
+      <p class="ml-8">→ TanStack Form validates on change</p>
+      <p class="ml-8">→ onSubmit receives TicketIntakeFormData (fully typed)</p>
+    </div>
+  </section>
+
+</div>
+
+<div class="max-w-3xl mx-auto px-6">
+
+  <!-- 10. TAKEAWAYS -->
+  <section id="takeaways" class="mb-16 reveal" aria-labelledby="h-takeaways">
+    <h2 id="h-takeaways" class="text-2xl font-bold mb-4">10. Key takeaways</h2>
+
+    <div class="flex flex-col gap-5 mb-10">
+      <div class="bg-bg-elevated border border-border rounded-xl p-5">
+        <h3 class="font-semibold text-sm text-accent uppercase tracking-wide mb-2">One source of truth</h3>
+        <p class="text-sm text-text-secondary">The Prisma schema is the only place types are defined by hand. Every layer — server functions, collections, form schemas, components — derives its types from the generated output. Add a field to the schema, run <code class="prose-inline">prisma generate</code>, and TypeScript tells you everywhere that needs to update.</p>
+      </div>
+
+      <div class="bg-bg-elevated border border-border rounded-xl p-5">
+        <h3 class="font-semibold text-sm text-accent uppercase tracking-wide mb-2">One execution engine</h3>
+        <p class="text-sm text-text-secondary"><code class="prose-inline">executeOperation()</code> is a twelve-line function. Both the CRUD API and Transaction API use it. The CRUD path passes the global <code class="prose-inline">prisma</code> instance; the transaction path passes a <code class="prose-inline">tx</code> client. Validation, error handling, and formatting are never duplicated.</p>
+      </div>
+
+      <div class="bg-bg-elevated border border-border rounded-xl p-5">
+        <h3 class="font-semibold text-sm text-accent uppercase tracking-wide mb-2">Policy is structural, not documented</h3>
+        <p class="text-sm text-text-secondary">The soft-delete extension makes it <em>impossible</em> to hard-delete a protected model or forget to filter deleted records on a read. Auth is enforced at the server function boundary via middleware — not scattered across individual handlers. These constraints cannot be accidentally bypassed.</p>
+      </div>
+
+      <div class="bg-bg-elevated border border-border rounded-xl p-5">
+        <h3 class="font-semibold text-sm text-accent uppercase tracking-wide mb-2">Offline is a first-class concern</h3>
+        <p class="text-sm text-text-secondary">SQLite OPFS persistence means the app loads with data from last session before the first server sync. Every write path has an explicit <code class="prose-inline">navigator.onLine</code> check — offline mutations are applied locally and queued. The UI never blocks on connectivity.</p>
+      </div>
+
+      <div class="bg-bg-elevated border border-border rounded-xl p-5">
+        <h3 class="font-semibold text-sm text-accent uppercase tracking-wide mb-2">Components stay clean</h3>
+        <p class="text-sm text-text-secondary">Components don't import <code class="prose-inline">crudAPI</code>, don't call <code class="prose-inline">fetch</code>, don't manage loading state for mutations. They read from collections with <code class="prose-inline">useLiveQuery</code> and write with <code class="prose-inline">dbTransaction()</code>. The infrastructure is invisible until something goes wrong — and <code class="prose-inline">neverthrow</code>'s <code class="prose-inline">Result</code> type ensures errors are always handled explicitly.</p>
+      </div>
+    </div>
+
+    <div class="mt-8 flex flex-wrap gap-4">
+      <a href="/nuvelco-cca.html"
+         class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-accent text-bg text-sm font-semibold hover:bg-accent-2 hover:-translate-y-0.5 transition-all">
+        View NUVELCO CCA project
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 17 17 7M7 7h10v10"/></svg>
+      </a>
+      <a href="/blog/overlay-manager-deep-dive.html"
+         class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-bg-elevated border border-border text-sm font-medium hover:border-accent hover:text-accent transition-all">
+        Also: Global Overlays Without the Boilerplate ↗
+      </a>
+    </div>
+  </section>
+
+</div>
+
+<footer class="border-t border-border py-10 text-center text-sm text-text-secondary">
+  <p>&copy; 2026 Ricardo Rey Crisanto V. Lopez II. Built with semantic HTML5 &amp; Tailwind CSS v4.</p>
+  <a href="/index.html#blog" class="inline-block mt-3 text-accent hover:text-accent-2 transition-colors">&larr; Back to writing</a>
+</footer>
+
+<script>
+  const revealEls = document.querySelectorAll('.reveal');
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) { e.target.classList.add('in-view'); io.unobserve(e.target); }
+    });
+  }, { threshold: 0.1 });
+  revealEls.forEach(el => io.observe(el));
+</script>
+</body>
+</html>

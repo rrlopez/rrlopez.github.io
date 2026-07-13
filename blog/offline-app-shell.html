@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Architecting an Offline App Shell — Service Workers, OPFS, and the SSR Hydration Gap | RJ Lopez</title>
+<meta name="description" content="How NUVELCO CCA builds an offline-capable app shell in TanStack Start: a custom Vite-Serwist plugin, a prod/dev split caching strategy that never caches server functions, cross-origin isolation headers for OPFS, and an AppWrapper SSR gate that prevents browser-only code from running on the server.">
+
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+
+<style type="text/tailwindcss">
+  @theme {
+    --color-bg: #0f172a;
+    --color-bg-elevated: #16213e;
+    --color-border: #1e293b;
+    --color-text: #f8fafc;
+    --color-text-secondary: #94a3b8;
+    --color-accent: #10b981;
+    --color-accent-2: #6366f1;
+    --color-warn: #f59e0b;
+    --color-danger: #f43f5e;
+  }
+
+  html { scroll-behavior: smooth; }
+  body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .reveal { opacity: 0; }
+  .reveal.in-view { animation: fade-up 0.55s ease-out forwards; }
+
+  pre, code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+
+  .prose-inline {
+    background: #16213e; border: 1px solid #1e293b; border-radius: 0.3rem;
+    padding: 0.1rem 0.4rem; font-size: 0.8rem; color: #a5b4fc;
+  }
+
+  .code-block {
+    background: #0d1424; border: 1px solid #1e293b; border-radius: 0.75rem;
+    padding: 1.25rem 1.5rem; overflow-x: auto; font-size: 0.8rem;
+    line-height: 1.7; tab-size: 2;
+  }
+  .token-comment  { color: #4a5568; font-style: italic; }
+  .token-keyword  { color: #c792ea; }
+  .token-string   { color: #c3e88d; }
+  .token-fn       { color: #82aaff; }
+  .token-type     { color: #ffcb6b; }
+  .token-num      { color: #f78c6c; }
+  .token-prop     { color: #89ddff; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; scroll-behavior: auto !important; }
+    .reveal { opacity: 1 !important; animation: none !important; }
+  }
+  @media print {
+    nav, #scroll-top-btn { display: none !important; }
+    * { background: #fff !important; color: #0f172a !important; }
+  }
+</style>
+</head>
+<body class="bg-bg text-text leading-relaxed antialiased">
+
+<!-- SCROLL TO TOP -->
+<button id="scroll-top-btn" aria-label="Scroll to top"
+  onclick="window.scrollTo({top:0,behavior:'smooth'})"
+  class="fixed bottom-6 right-6 z-20 w-11 h-11 flex items-center justify-center rounded-full bg-accent text-bg shadow-lg shadow-accent/30 opacity-0 translate-y-2 pointer-events-none transition-all duration-300 hover:bg-accent-2 hover:-translate-y-0.5">
+  <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7"/></svg>
+</button>
+<script>
+  const sb = document.getElementById('scroll-top-btn');
+  window.addEventListener('scroll', () => {
+    const v = window.scrollY > 400;
+    sb.classList.toggle('opacity-0', !v); sb.classList.toggle('opacity-100', v);
+    sb.classList.toggle('translate-y-2', !v); sb.classList.toggle('translate-y-0', v);
+    sb.classList.toggle('pointer-events-none', !v);
+  }, { passive: true });
+</script>
+
+<!-- NAV -->
+<nav class="sticky top-0 z-30 bg-bg/90 backdrop-blur border-b border-border">
+  <div class="max-w-3xl mx-auto px-6 py-3 flex items-center justify-between gap-4">
+    <a href="/index.html" class="font-bold text-text tracking-tight shrink-0">RJ<span class="text-accent">.</span>dev</a>
+    <div class="flex items-center gap-3 text-sm">
+      <a href="/index.html#blog" class="text-text-secondary hover:text-accent transition-colors">← All posts</a>
+      <a href="/nuvelco-cca.html"
+         class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-bg-elevated border border-border text-xs font-semibold hover:border-accent hover:text-accent transition-all">
+        Project ↗
+      </a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<header id="top" class="border-b border-border">
+  <div class="max-w-3xl mx-auto px-6 py-14 sm:py-20">
+    <div class="flex flex-wrap items-center gap-2 mb-5">
+      <span class="text-[11px] font-semibold uppercase tracking-wide text-accent bg-accent/10 border border-accent/30 px-2.5 py-1 rounded-full">Architecture</span>
+      <span class="text-[11px] font-semibold uppercase tracking-wide text-text-secondary bg-bg-elevated border border-border px-2.5 py-1 rounded-full">PWA</span>
+      <span class="text-[11px] font-semibold uppercase tracking-wide text-text-secondary bg-bg-elevated border border-border px-2.5 py-1 rounded-full">Offline-First</span>
+      <span class="text-[11px] font-semibold uppercase tracking-wide text-text-secondary bg-bg-elevated border border-border px-2.5 py-1 rounded-full">TanStack</span>
+    </div>
+    <h1 class="text-3xl sm:text-5xl font-bold tracking-tight leading-tight">
+      Architecting an Offline App Shell
+    </h1>
+    <p class="mt-4 text-xl text-text-secondary font-medium">
+      Service workers, OPFS headers, SSR hydration gates, and a connectivity probe that doesn't lie
+    </p>
+    <div class="mt-6 flex flex-wrap items-center gap-5 text-sm text-text-secondary">
+      <span class="flex items-center gap-2">
+        <img src="https://placehold.co/28x28/16213e/10b981?text=RJ&font=roboto" alt="RJ" class="w-7 h-7 rounded-full border border-accent/30">
+        RJ Lopez
+      </span>
+      <span>July 14, 2026</span>
+      <span>14 min read</span>
+    </div>
+  </div>
+</header>
+
+<div class="max-w-3xl mx-auto px-6 py-14">
+
+  <!-- TABLE OF CONTENTS -->
+  <nav class="reveal mb-14 bg-bg-elevated border border-border rounded-xl p-6" aria-label="Table of contents">
+    <p class="text-xs font-semibold uppercase tracking-wider text-text-secondary mb-4">In this post</p>
+    <ol class="flex flex-col gap-2 text-sm">
+      <li><a href="#context"       class="text-accent-2 hover:text-accent transition-colors">1. Context — what "offline" actually means here</a></li>
+      <li><a href="#layers"        class="text-accent-2 hover:text-accent transition-colors">2. The five layers of the shell</a></li>
+      <li><a href="#coi"           class="text-accent-2 hover:text-accent transition-colors">3. Cross-origin isolation — the prerequisite for OPFS</a></li>
+      <li><a href="#plugin"        class="text-accent-2 hover:text-accent transition-colors">4. The custom Vite plugin — building the SW at the right time</a></li>
+      <li><a href="#sw"            class="text-accent-2 hover:text-accent transition-colors">5. The service worker — a caching strategy that knows what it can't cache</a></li>
+      <li><a href="#registration"  class="text-accent-2 hover:text-accent transition-colors">6. SW registration — skipping dev, guarding SSR</a></li>
+      <li><a href="#online-probe"  class="text-accent-2 hover:text-accent transition-colors">7. <code class="prose-inline">useIsOnline</code> — why <code class="prose-inline">navigator.onLine</code> isn't enough</a></li>
+      <li><a href="#app-wrapper"   class="text-accent-2 hover:text-accent transition-colors">8. <code class="prose-inline">AppWrapper</code> — the SSR hydration gate</a></li>
+      <li><a href="#root"          class="text-accent-2 hover:text-accent transition-colors">9. The root shell — wiring it all together</a></li>
+      <li><a href="#diagram"       class="text-accent-2 hover:text-accent transition-colors">10. Everything in one diagram</a></li>
+      <li><a href="#tradeoffs"     class="text-accent-2 hover:text-accent transition-colors">11. Tradeoffs and known limitations</a></li>
+    </ol>
+  </nav>
+
+  <!-- 1. CONTEXT -->
+  <section id="context" class="mb-16 reveal" aria-labelledby="h-context">
+    <h2 id="h-context" class="text-2xl font-bold mb-4">1. Context — what "offline" actually means here</h2>
+    <p class="text-text-secondary mb-4">
+      NUVELCO CCA is an offline-first operations management system for a regional utility provider. Field agents log service tickets, manage consumer records, and dispatch field crews from substations that lose their uplink without warning. "Offline support" isn't a nice-to-have — it's the baseline.
+    </p>
+    <p class="text-text-secondary mb-4">
+      The previous posts in this series covered the <a href="/blog/making-db-closer-to-app.html" class="text-accent-2 hover:text-accent transition-colors">data layer</a> (Prisma → CRUD API → TanStack DB collections with SQLite OPFS persistence) and the <a href="/blog/offline-auth-engine.html" class="text-accent-2 hover:text-accent transition-colors">auth layer</a> (dual-mode credential system with a locally-cached SHA-256 hash). This post covers the layer below both of those: the app shell — the infrastructure that makes the app loadable, navigable, and functional with no network at all.
+    </p>
+    <p class="text-text-secondary">
+      Specifically: how the service worker is built and configured, why the server function routes are excluded from every cache strategy, what cross-origin isolation headers are and why OPFS won't work without them, how the SSR boundary is managed to stop browser-only code from running on the server, and how a simple connectivity probe avoids lying to the rest of the app about the network state.
+    </p>
+  </section>
+
+  <!-- 2. THE FIVE LAYERS -->
+  <section id="layers" class="mb-16 reveal" aria-labelledby="h-layers">
+    <h2 id="h-layers" class="text-2xl font-bold mb-4">2. The five layers of the shell</h2>
+    <div class="flex flex-col gap-3 mb-6">
+      <div class="bg-bg-elevated border border-border rounded-xl p-5 flex gap-4 items-start">
+        <span class="text-accent font-bold font-mono text-sm shrink-0 mt-0.5">01</span>
+        <div>
+          <p class="font-semibold text-sm mb-1">Cross-origin isolation headers</p>
+          <p class="text-sm text-text-secondary">Required by the browser before it will grant access to <code class="prose-inline">SharedArrayBuffer</code> and OPFS. Set at the Vite dev server and Nitro preview server level.</p>
+        </div>
+      </div>
+      <div class="bg-bg-elevated border border-border rounded-xl p-5 flex gap-4 items-start">
+        <span class="text-accent font-bold font-mono text-sm shrink-0 mt-0.5">02</span>
+        <div>
+          <p class="font-semibold text-sm mb-1">Custom Vite plugin</p>
+          <p class="text-sm text-text-secondary">Builds the service worker at the right moment — during <code class="prose-inline">buildStart</code> for dev (so the file exists immediately), during <code class="prose-inline">closeBundle</code> for production (after hashed assets are known, so the precache manifest is accurate).</p>
+        </div>
+      </div>
+      <div class="bg-bg-elevated border border-border rounded-xl p-5 flex gap-4 items-start">
+        <span class="text-accent font-bold font-mono text-sm shrink-0 mt-0.5">03</span>
+        <div>
+          <p class="font-semibold text-sm mb-1">Service worker (<code class="prose-inline">sw.ts</code>)</p>
+          <p class="text-sm text-text-secondary">A Serwist-powered SW with a hard prod/dev split. In dev: <code class="prose-inline">NetworkOnly</code> for everything. In prod: <code class="prose-inline">NetworkFirst</code> for navigation, <code class="prose-inline">CacheFirst</code> for static assets, and <code class="prose-inline">NetworkOnly</code> for <code class="prose-inline">/_serverFn</code> — always.</p>
+        </div>
+      </div>
+      <div class="bg-bg-elevated border border-border rounded-xl p-5 flex gap-4 items-start">
+        <span class="text-accent font-bold font-mono text-sm shrink-0 mt-0.5">04</span>
+        <div>
+          <p class="font-semibold text-sm mb-1"><code class="prose-inline">useIsOnline</code></p>
+          <p class="text-sm text-text-secondary">A hook that doesn't trust <code class="prose-inline">navigator.onLine</code>. It performs a real <code class="prose-inline">HEAD</code> request to <code class="prose-inline">/favicon.ico</code> with a cache-busting timestamp to confirm actual connectivity.</p>
+        </div>
+      </div>
+      <div class="bg-bg-elevated border border-border rounded-xl p-5 flex gap-4 items-start">
+        <span class="text-accent font-bold font-mono text-sm shrink-0 mt-0.5">05</span>
+        <div>
+          <p class="font-semibold text-sm mb-1"><code class="prose-inline">AppWrapper</code></p>
+          <p class="text-sm text-text-secondary">A thin component that gates all browser-only code behind a client-side hydration check. Nothing that touches <code class="prose-inline">navigator</code>, OPFS, or <code class="prose-inline">sessionStorage</code> renders on the server.</p>
+        </div>
+      </div>
+    </div>
+    <p class="text-text-secondary">Each layer is independent. You could swap out Serwist for a hand-rolled service worker, or replace the Vite plugin with a separate build step, without touching anything else. The contracts between layers are narrow: headers are an HTTP concern, the SW is a separate process, the online probe is a hook, the hydration gate is a React component.</p>
+  </section>
+
+</div>
+
+<div class="max-w-3xl mx-auto px-6">
+
+  <!-- 3. CROSS-ORIGIN ISOLATION -->
+  <section id="coi" class="mb-16 reveal" aria-labelledby="h-coi">
+    <h2 id="h-coi" class="text-2xl font-bold mb-4">3. Cross-origin isolation — the prerequisite for OPFS</h2>
+    <p class="text-text-secondary mb-4">
+      The SQLite OPFS persistence layer used by TanStack DB requires <code class="prose-inline">SharedArrayBuffer</code>, which browsers only allow in cross-origin isolated contexts. Without the right HTTP headers, the SQLite WASM module will throw and no offline storage will work — silently, depending on the error boundary setup.
+    </p>
+    <p class="text-text-secondary mb-4">
+      Three headers are required, set on every response from both the dev server and the production preview server:
+    </p>
+    <pre class="code-block mb-5"><code><span class="token-comment">// vite.config.ts — applied to dev server and preview</span>
+<span class="token-keyword">const</span> crossOriginIsolationHeaders = {
+  <span class="token-string">'Cross-Origin-Opener-Policy'</span>:    <span class="token-string">'same-origin'</span>,
+  <span class="token-string">'Cross-Origin-Embedder-Policy'</span>:  <span class="token-string">'require-corp'</span>,
+  <span class="token-string">'Cross-Origin-Resource-Policy'</span>: <span class="token-string">'cross-origin'</span>,
+}
+
+<span class="token-keyword">export default</span> <span class="token-fn">defineConfig</span>({
+  server:  { ...serverConfig, headers: crossOriginIsolationHeaders },
+  preview: { headers: crossOriginIsolationHeaders, host: <span class="token-keyword">true</span>, port },
+})</code></pre>
+    <p class="text-text-secondary mb-4">
+      What each header does:
+    </p>
+    <ul class="flex flex-col gap-3 text-sm text-text-secondary mb-6">
+      <li class="flex gap-3">
+        <span class="text-accent font-bold shrink-0 mt-0.5">›</span>
+        <div><code class="prose-inline">Cross-Origin-Opener-Policy: same-origin</code> — isolates the browsing context from cross-origin popups. Required for <code class="prose-inline">SharedArrayBuffer</code> re-enablement after Spectre mitigations.</div>
+      </li>
+      <li class="flex gap-3">
+        <span class="text-accent font-bold shrink-0 mt-0.5">›</span>
+        <div><code class="prose-inline">Cross-Origin-Embedder-Policy: require-corp</code> — requires all sub-resources to either be same-origin or explicitly opt in with a <code class="prose-inline">Cross-Origin-Resource-Policy</code> header. This is the policy that actually gates <code class="prose-inline">SharedArrayBuffer</code>.</div>
+      </li>
+      <li class="flex gap-3">
+        <span class="text-accent font-bold shrink-0 mt-0.5">›</span>
+        <div><code class="prose-inline">Cross-Origin-Resource-Policy: cross-origin</code> — allows this origin's resources to be loaded by other origins. Prevents the embedder policy above from blocking legitimate cross-origin assets like fonts or CDN scripts.</div>
+      </li>
+    </ul>
+    <div class="bg-bg-elevated border border-warn/20 rounded-xl p-5 text-sm text-text-secondary">
+      <p class="font-semibold text-warn mb-2">Production note</p>
+      <p>These headers must also be set by your production host (Vercel, Cloudflare, Nginx, etc.) — Vite's config only covers dev and the local preview server. If you deploy to Vercel, add them to <code class="prose-inline">vercel.json</code> under <code class="prose-inline">headers</code>. Missing them in production means OPFS silently fails to initialise and every collection falls back to an empty in-memory state on load.</p>
+    </div>
+  </section>
+
+  <!-- 4. VITE PLUGIN -->
+  <section id="plugin" class="mb-16 reveal" aria-labelledby="h-plugin">
+    <h2 id="h-plugin" class="text-2xl font-bold mb-4">4. The custom Vite plugin — building the SW at the right time</h2>
+    <p class="text-text-secondary mb-4">
+      Standard Serwist/Workbox Vite plugins are designed for SPA build pipelines. TanStack Start uses Nitro as its server, which emits output to <code class="prose-inline">.output/public</code> rather than <code class="prose-inline">dist</code>. The plugin ecosystem doesn't handle this out of the box, so the project ships a custom Vite plugin: <code class="prose-inline">tanstackSerwistPlugin</code>.
+    </p>
+    <p class="text-text-secondary mb-4">
+      The plugin hooks into two Vite lifecycle events with different responsibilities:
+    </p>
+    <pre class="code-block mb-5"><code><span class="token-comment">// vite-plugin.ts</span>
+<span class="token-keyword">export function</span> <span class="token-fn">tanstackSerwistPlugin</span>(): <span class="token-type">Plugin</span> {
+  <span class="token-keyword">return</span> {
+    name: <span class="token-string">'tanstack-serwist'</span>,
+
+    <span class="token-fn">configResolved</span>(config) {
+      rootDir      = config.root
+      isProduction = config.command === <span class="token-string">'build'</span>
+    },
+
+    <span class="token-keyword">async</span> <span class="token-fn">buildStart</span>() {
+      <span class="token-comment">// DEV: build the SW immediately so the browser has a /sw.js to register</span>
+      <span class="token-comment">// Output goes to /public — served by Vite's dev server</span>
+      <span class="token-keyword">if</span> (!isProduction) <span class="token-keyword">await</span> <span class="token-fn">buildServiceWorker</span>(rootDir, <span class="token-keyword">false</span>)
+    },
+
+    <span class="token-keyword">async</span> <span class="token-fn">closeBundle</span>() {
+      <span class="token-comment">// PROD: wait until the full app bundle is complete</span>
+      <span class="token-comment">// Only then do we know the hashed asset filenames for the precache manifest</span>
+      <span class="token-comment">// Output goes to .output/public — Nitro's static asset directory</span>
+      <span class="token-keyword">if</span> (isProduction) <span class="token-keyword">await</span> <span class="token-fn">buildServiceWorker</span>(rootDir, <span class="token-keyword">true</span>)
+    },
+  }
+}</code></pre>
+    <p class="text-text-secondary mb-4">
+      The <code class="prose-inline">buildServiceWorker</code> function runs in two steps for production: first it bundles <code class="prose-inline">src/sw.ts</code> as an ES module library with Vite, then it calls <code class="prose-inline">injectManifest</code> from <code class="prose-inline">@serwist/build</code> to replace the <code class="prose-inline">self.__SW_MANIFEST</code> placeholder with the actual list of hashed asset URLs:
+    </p>
+    <pre class="code-block mb-5"><code><span class="token-keyword">async function</span> <span class="token-fn">buildServiceWorker</span>(rootDir: <span class="token-keyword">string</span>, production: <span class="token-keyword">boolean</span>) {
+  <span class="token-keyword">const</span> outDir  = production
+    ? path.<span class="token-fn">resolve</span>(rootDir, <span class="token-string">'.output'</span>, <span class="token-string">'public'</span>)  <span class="token-comment">// Nitro's output dir</span>
+    : path.<span class="token-fn">resolve</span>(rootDir, <span class="token-string">'public'</span>)              <span class="token-comment">// Vite's dev server root</span>
+
+  <span class="token-comment">// Step 1: bundle sw.ts → sw.js</span>
+  <span class="token-keyword">await</span> <span class="token-fn">build</span>({
+    configFile: <span class="token-keyword">false</span>,
+    define: { <span class="token-string">'process.env.NODE_ENV'</span>: <span class="token-type">JSON</span>.<span class="token-fn">stringify</span>(production ? <span class="token-string">'production'</span> : <span class="token-string">'development'</span>) },
+    build: {
+      lib:     { entry: swSrc, formats: [<span class="token-string">'es'</span>], fileName: () =&gt; outName },
+      outDir,  emptyOutDir: <span class="token-keyword">false</span>,  minify: production,
+    },
+  })
+
+  <span class="token-comment">// Step 2 (prod only): inject the precache manifest into the bundled sw.js</span>
+  <span class="token-keyword">if</span> (production) {
+    <span class="token-keyword">const</span> result = <span class="token-keyword">await</span> <span class="token-fn">injectManifest</span>({
+      swSrc: swDest, swDest,
+      globDirectory: outDir,
+      globPatterns: [<span class="token-string">'**/*.{js,css,html,png,svg,ico,json,woff,woff2}'</span>],
+      injectionPoint: <span class="token-string">'self.__SW_MANIFEST'</span>,
+    })
+    console.<span class="token-fn">info</span>(`✅ [SERWIST] Precached ${result.count} files`)
+  }
+}</code></pre>
+    <p class="text-text-secondary">
+      The two-step approach matters: if you inject the manifest before bundling, the asset list won't include the hashed filenames Vite generates. If you bundle after the app is built but before <code class="prose-inline">closeBundle</code> fires, the output directory may not exist yet. The hook timing is the entire point of writing a custom plugin rather than using an off-the-shelf one.
+    </p>
+  </section>
+
+</div>
+
+<div class="max-w-3xl mx-auto px-6">
+
+  <!-- 5. SERVICE WORKER -->
+  <section id="sw" class="mb-16 reveal" aria-labelledby="h-sw">
+    <h2 id="h-sw" class="text-2xl font-bold mb-4">5. The service worker — a caching strategy that knows what it can't cache</h2>
+    <p class="text-text-secondary mb-4">
+      The service worker is written in TypeScript (<code class="prose-inline">src/sw.ts</code>) and compiled by the Vite plugin above. The core of the strategy is a hard environment split controlled by a single <code class="prose-inline">isProd</code> flag, with a deliberate rule at the center: server functions (<code class="prose-inline">/_serverFn/*</code>) are always <code class="prose-inline">NetworkOnly</code> in every environment.
+    </p>
+    <pre class="code-block mb-5"><code><span class="token-keyword">const</span> isProd = <span class="token-keyword">typeof</span> process !== <span class="token-string">'undefined'</span>
+  ? process.env[<span class="token-string">'NODE_ENV'</span>] === <span class="token-string">'production'</span>
+  : import.meta.env?.MODE === <span class="token-string">'production'</span>
+
+<span class="token-keyword">const</span> serwist = <span class="token-keyword">new</span> <span class="token-type">Serwist</span>({
+  precacheEntries: isProd ? (self.__SW_MANIFEST ?? []) : [],  <span class="token-comment">// dev: no precache</span>
+  skipWaiting:     <span class="token-keyword">true</span>,   <span class="token-comment">// new SW activates immediately, no waiting</span>
+  clientsClaim:    <span class="token-keyword">true</span>,   <span class="token-comment">// immediately controls all open tabs</span>
+  navigationPreload: isProd, <span class="token-comment">// disabled in dev to avoid 500 errors on SW startup</span>
+
+  runtimeCaching: isProd
+    ? [
+        <span class="token-comment">// Navigation: try network first, fall back to cache</span>
+        <span class="token-comment">// Handles hard reload when offline — serves last-cached HTML shell</span>
+        {
+          matcher: ({ request }) =&gt; request.mode === <span class="token-string">'navigate'</span>,
+          handler: <span class="token-keyword">new</span> <span class="token-type">NetworkFirst</span>({ cacheName: <span class="token-string">'pages-cache'</span> }),
+        },
+        <span class="token-comment">// Static assets: cache first, zero network cost on repeat visits</span>
+        {
+          matcher: ({ request }) =&gt;
+            request.destination === <span class="token-string">'style'</span>  ||
+            request.destination === <span class="token-string">'image'</span>  ||
+            request.destination === <span class="token-string">'font'</span>,
+          handler: <span class="token-keyword">new</span> <span class="token-type">CacheFirst</span>({ cacheName: <span class="token-string">'static-assets'</span> }),
+        },
+        <span class="token-comment">// Server functions: NEVER cache — always go to the network</span>
+        <span class="token-comment">// Caching a server function response would be catastrophically wrong</span>
+        {
+          matcher: ({ url }) =&gt; url.pathname.<span class="token-fn">startsWith</span>(<span class="token-string">'/_serverFn'</span>),
+          handler: <span class="token-keyword">new</span> <span class="token-type">NetworkOnly</span>(),
+        },
+      ]
+    : [
+        <span class="token-comment">// Dev: pass everything through — no caching at all</span>
+        <span class="token-comment">// Eliminates the class of bugs where a stale cached response</span>
+        <span class="token-comment">// is served during active development</span>
+        { matcher: () =&gt; <span class="token-keyword">true</span>, handler: <span class="token-keyword">new</span> <span class="token-type">NetworkOnly</span>() },
+      ],
+})</code></pre>
+    <p class="text-text-secondary mb-4">
+      Three design decisions are worth examining individually.
+    </p>
+    <div class="flex flex-col gap-4 mb-6">
+      <div class="bg-bg-elevated border border-border rounded-xl p-5">
+        <h3 class="font-semibold text-sm mb-2">Why <code class="prose-inline">NetworkOnly</code> for <code class="prose-inline">/_serverFn</code>?</h3>
+        <p class="text-sm text-text-secondary">TanStack Start server functions are POST requests that hit <code class="prose-inline">/_serverFn</code>. Caching a server function response would mean a stale authentication check, a stale database read, or worse — a cached write response that the server never actually executed. The rule is non-negotiable: if it talks to the server, the SW never intercepts it.</p>
+      </div>
+      <div class="bg-bg-elevated border border-border rounded-xl p-5">
+        <h3 class="font-semibold text-sm mb-2">Why <code class="prose-inline">NetworkFirst</code> for navigation (not <code class="prose-inline">CacheFirst</code>)?</h3>
+        <p class="text-sm text-text-secondary">The HTML shell returned by a navigation request is server-rendered and may contain fresh data. <code class="prose-inline">CacheFirst</code> would serve a stale HTML response even when online, which could show outdated <code class="prose-inline">beforeLoad</code> data. <code class="prose-inline">NetworkFirst</code> tries the network and only falls back to the cache when the network is genuinely unreachable — giving you offline navigation without trading away freshness when you're connected.</p>
+      </div>
+      <div class="bg-bg-elevated border border-border rounded-xl p-5">
+        <h3 class="font-semibold text-sm mb-2">Why disable <code class="prose-inline">navigationPreload</code> in dev?</h3>
+        <p class="text-sm text-text-secondary">Navigation Preload sends the navigation request to the server in parallel with SW startup, then the SW decides whether to use the preloaded response or fetch fresh. In dev the SW is rebuilt on every <code class="prose-inline">buildStart</code>, which means there's a window where the SW is activating but not yet ready. Navigation Preload during that window can produce a <code class="prose-inline">500</code>. Disabling it in dev means navigations wait for the SW but that's fine — in prod it's re-enabled and the handlers are stable.</p>
+      </div>
+    </div>
+    <p class="text-text-secondary">
+      Finally, the <code class="prose-inline">NavigationRoute</code> registration gates precaching to production only. In dev there are no precache entries and no navigation route — the SW is essentially a transparent pass-through that exists solely so the browser's "service worker installed" flag is set, enabling OPFS access.
+    </p>
+    <pre class="code-block mt-5"><code><span class="token-comment">// Only register the precache navigation handler in production</span>
+<span class="token-keyword">if</span> (isProd) {
+  <span class="token-keyword">const</span> navigationRoute = <span class="token-keyword">new</span> <span class="token-type">NavigationRoute</span>(serwist.precacheStrategy, {
+    allowlist: [<span class="token-comment">/^(?!\/__).*/</span>],      <span class="token-comment">// all paths except Nitro internals (/__...)</span>
+    denylist:  [<span class="token-comment">/^\/_serverFn/</span>],    <span class="token-comment">// belt-and-suspenders: never precache server functions</span>
+  })
+  serwist.<span class="token-fn">registerCapture</span>(navigationRoute)
+}
+
+serwist.<span class="token-fn">addEventListeners</span>()</code></pre>
+  </section>
+
+</div>
+
+<div class="max-w-3xl mx-auto px-6">
+
+  <!-- 6. REGISTRATION -->
+  <section id="registration" class="mb-16 reveal" aria-labelledby="h-reg">
+    <h2 id="h-reg" class="text-2xl font-bold mb-4">6. SW registration — skipping dev, guarding SSR</h2>
+    <p class="text-text-secondary mb-4">
+      The service worker is registered from the root route's shell component via a <code class="prose-inline">useSw</code> hook. Two guards keep it clean:
+    </p>
+    <pre class="code-block mb-5"><code><span class="token-comment">// src/hooks/use-sw.ts</span>
+<span class="token-keyword">export const</span> useSw = () =&gt; {
+  <span class="token-fn">useEffect</span>(() =&gt; {
+    <span class="token-keyword">if</span> (import.meta.env.DEV) <span class="token-keyword">return</span>          <span class="token-comment">// skip in dev entirely</span>
+    <span class="token-keyword">if</span> (!(<span class="token-string">'serviceWorker'</span> <span class="token-keyword">in</span> navigator)) <span class="token-keyword">return</span>  <span class="token-comment">// guard for unsupported browsers</span>
+
+    <span class="token-keyword">const</span> serwist = <span class="token-keyword">new</span> <span class="token-type">Serwist</span>(<span class="token-string">'/sw.js'</span>, { scope: <span class="token-string">'/'</span>, type: <span class="token-string">'module'</span> })
+    serwist.<span class="token-fn">register</span>().<span class="token-fn">catch</span>(console.error)
+  }, [])
+}</code></pre>
+    <p class="text-text-secondary mb-4">
+      The <code class="prose-inline">import.meta.env.DEV</code> guard deserves explanation. The SW file <em>does</em> exist in dev (the <code class="prose-inline">buildStart</code> hook creates it) and the browser would happily register it. But the dev SW uses <code class="prose-inline">NetworkOnly</code> for everything, so registering it adds latency (all requests now go through a SW that immediately passes them through) with zero benefit. Skipping registration in dev means the SW is never in the critical path during active development.
+    </p>
+    <p class="text-text-secondary mb-4">
+      The <code class="prose-inline">useEffect</code> wrapper also implicitly handles the SSR boundary — <code class="prose-inline">useEffect</code> never runs on the server, so <code class="prose-inline">navigator</code> is never accessed during SSR. The explicit <code class="prose-inline">'serviceWorker' in navigator</code> check is a belt-and-suspenders guard for environments where <code class="prose-inline">navigator</code> exists but the SW API doesn't (older browsers, some WebViews).
+    </p>
+    <p class="text-text-secondary">
+      The hook is called once in <code class="prose-inline">RootDocument</code> — the TanStack Start shell component that renders on every page load:
+    </p>
+    <pre class="code-block mt-5"><code><span class="token-comment">// src/routes/__root.tsx</span>
+<span class="token-keyword">function</span> <span class="token-fn">RootDocument</span>({ children }) {
+  <span class="token-keyword">const</span> { user } = Route.<span class="token-fn">useRouteContext</span>()
+  <span class="token-fn">useSw</span>()  <span class="token-comment">// registers the SW once, no-ops in dev and SSR</span>
+
+  <span class="token-keyword">return</span> (
+    &lt;<span class="token-type">html</span> <span class="token-prop">lang</span>=<span class="token-string">'en'</span> suppressHydrationWarning&gt;
+      &lt;<span class="token-type">head</span>&gt;&lt;<span class="token-type">HeadContent</span> /&gt;&lt;/<span class="token-type">head</span>&gt;
+      &lt;<span class="token-type">body</span>&gt;
+        &lt;<span class="token-type">ThemeProvider</span>&gt;
+          &lt;<span class="token-type">NavigationProgress</span> /&gt;
+          &lt;<span class="token-type">Overlay</span> /&gt;          <span class="token-comment">// modal manager — always mounted</span>
+          {children}
+          &lt;<span class="token-type">Toaster</span> /&gt;          <span class="token-comment">// toast notifications</span>
+          &lt;<span class="token-type">Scripts</span> /&gt;          <span class="token-comment">// TanStack Start's script injector</span>
+        &lt;/<span class="token-type">ThemeProvider</span>&gt;
+      &lt;/<span class="token-type">body</span>&gt;
+    &lt;/<span class="token-type">html</span>&gt;
+  )
+}</code></pre>
+  </section>
+
+  <!-- 7. useIsOnline -->
+  <section id="online-probe" class="mb-16 reveal" aria-labelledby="h-probe">
+    <h2 id="h-probe" class="text-2xl font-bold mb-4">7. <code class="prose-inline">useIsOnline</code> — why <code class="prose-inline">navigator.onLine</code> isn't enough</h2>
+    <p class="text-text-secondary mb-4">
+      <code class="prose-inline">navigator.onLine</code> is notoriously unreliable. It returns <code class="prose-inline">true</code> when the device has a network interface up — which includes a connected WiFi with no actual internet routing, a VPN tunnel with a broken remote endpoint, or a captive portal that hasn't been dismissed. A device "online" according to <code class="prose-inline">navigator.onLine</code> may be completely unable to reach any real server.
+    </p>
+    <p class="text-text-secondary mb-4">
+      The hook adds a real connectivity check on top:
+    </p>
+    <pre class="code-block mb-5"><code><span class="token-comment">// src/hooks/use-is-online.ts</span>
+<span class="token-keyword">export function</span> <span class="token-fn">useIsOnline</span>() {
+  <span class="token-keyword">const</span> [isOnline, setIsOnline] = <span class="token-fn">useState</span>(
+    <span class="token-keyword">typeof</span> navigator !== <span class="token-string">'undefined'</span> ? navigator.onLine : <span class="token-keyword">true</span>
+  )
+
+  <span class="token-fn">useEffect</span>(() =&gt; {
+    <span class="token-keyword">const</span> updateStatus = <span class="token-keyword">async</span> () =&gt; {
+      <span class="token-keyword">if</span> (!navigator.onLine) {
+        <span class="token-fn">setIsOnline</span>(<span class="token-keyword">false</span>)
+        <span class="token-keyword">return</span>
+      }
+
+      <span class="token-keyword">try</span> {
+        <span class="token-comment">// Real probe: HEAD request to /favicon.ico</span>
+        <span class="token-comment">// Cache-busted with ?t=timestamp to bypass the service worker cache</span>
+        <span class="token-keyword">const</span> response = <span class="token-keyword">await</span> <span class="token-fn">fetch</span>(`/favicon.ico?t=${Date.<span class="token-fn">now</span>()}`, {
+          method: <span class="token-string">'HEAD'</span>,
+          mode:   <span class="token-string">'no-cors'</span>,
+        })
+        <span class="token-comment">// With no-cors, response.ok will be false but response itself is truthy</span>
+        <span class="token-fn">setIsOnline</span>(response.ok || !!response)
+      } <span class="token-keyword">catch</span> {
+        <span class="token-fn">setIsOnline</span>(<span class="token-keyword">false</span>)
+      }
+    }
+
+    window.<span class="token-fn">addEventListener</span>(<span class="token-string">'online'</span>,  updateStatus)
+    window.<span class="token-fn">addEventListener</span>(<span class="token-string">'offline'</span>, updateStatus)
+    <span class="token-fn">updateStatus</span>()  <span class="token-comment">// run immediately on mount</span>
+
+    <span class="token-keyword">return</span> () =&gt; {
+      window.<span class="token-fn">removeEventListener</span>(<span class="token-string">'online'</span>,  updateStatus)
+      window.<span class="token-fn">removeEventListener</span>(<span class="token-string">'offline'</span>, updateStatus)
+    }
+  }, [])
+
+  <span class="token-keyword">return</span> isOnline
+}</code></pre>
+    <p class="text-text-secondary mb-4">
+      The probe fetches <code class="prose-inline">/favicon.ico</code> with a <code class="prose-inline">?t=timestamp</code> cache buster. The timestamp is critical: without it, the service worker's <code class="prose-inline">CacheFirst</code> handler for images would serve the cached favicon even when offline, making the probe always succeed. The cache buster forces a new URL that has no cached entry, so the request always hits the network.
+    </p>
+    <p class="text-text-secondary mb-4">
+      The <code class="prose-inline">mode: 'no-cors'</code> flag means the response will be opaque — <code class="prose-inline">response.ok</code> is always <code class="prose-inline">false</code> for opaque responses, so the check is <code class="prose-inline">response.ok || !!response</code>. An opaque response that doesn't throw is still evidence that the network is reachable. A thrown error means it isn't.
+    </p>
+    <div class="bg-bg-elevated border border-border rounded-xl p-5 text-sm text-text-secondary">
+      <p class="font-semibold text-text mb-2">Where <code class="prose-inline">useIsOnline</code> is used</p>
+      <ul class="flex flex-col gap-1.5 mt-2">
+        <li class="flex gap-2"><span class="text-accent">›</span> <strong class="text-text">Login page</strong> — switches between <code class="prose-inline">AuthEngine.loginOnline</code> and <code class="prose-inline">AuthEngine.loginOffline</code>, changes the status badge and the form description</li>
+        <li class="flex gap-2"><span class="text-accent">›</span> <strong class="text-text">Private route guard</strong> — determines whether to resolve identity from the server context or the local auth store</li>
+        <li class="flex gap-2"><span class="text-accent">›</span> <strong class="text-text">Collection factory</strong> — every <code class="prose-inline">queryFn</code>, <code class="prose-inline">onInsert</code>, <code class="prose-inline">onUpdate</code>, and <code class="prose-inline">onDelete</code> checks <code class="prose-inline">navigator.onLine</code> before attempting a server call</li>
+      </ul>
+    </div>
+  </section>
+
+</div>
+
+<div class="max-w-3xl mx-auto px-6">
+
+  <!-- 8. APP WRAPPER -->
+  <section id="app-wrapper" class="mb-16 reveal" aria-labelledby="h-wrapper">
+    <h2 id="h-wrapper" class="text-2xl font-bold mb-4">8. <code class="prose-inline">AppWrapper</code> — the SSR hydration gate</h2>
+    <p class="text-text-secondary mb-4">
+      TanStack Start is a full-stack SSR framework. The root <code class="prose-inline">beforeLoad</code> runs on the server. Every route component is server-rendered before hydration. This creates a problem: a significant portion of the app — anything that touches <code class="prose-inline">navigator</code>, <code class="prose-inline">sessionStorage</code>, OPFS collections, or the <code class="prose-inline">BroadcastChannel</code> — will throw if it runs on the server.
+    </p>
+    <p class="text-text-secondary mb-4">
+      The standard approach is to scatter <code class="prose-inline">typeof window !== 'undefined'</code> guards throughout the code. The problem with that: it's error-prone, invisible, and mixes environment concerns into business logic. The approach here is to push all of that behind a single, explicit gate: <code class="prose-inline">AppWrapper</code>.
+    </p>
+    <pre class="code-block mb-5"><code><span class="token-comment">// src/components/custom/app-wrapper.tsx</span>
+<span class="token-keyword">export function</span> <span class="token-fn">AppWrapper</span>({ children }: { children: <span class="token-type">ReactNode</span> }) {
+  <span class="token-keyword">const</span> [isClient, setIsClient] = <span class="token-fn">useState</span>(<span class="token-keyword">false</span>)
+
+  <span class="token-fn">useEffect</span>(() =&gt; {
+    <span class="token-fn">setIsClient</span>(<span class="token-keyword">true</span>)  <span class="token-comment">// fires only in the browser, never on the server</span>
+  }, [])
+
+  <span class="token-keyword">if</span> (!isClient) <span class="token-keyword">return</span> &lt;<span class="token-type">Loading</span> className=<span class="token-string">'w-screen h-screen'</span> /&gt;
+
+  <span class="token-keyword">return</span> children
+}</code></pre>
+    <p class="text-text-secondary mb-4">
+      It wraps the private layout route — the parent of every authenticated page:
+    </p>
+    <pre class="code-block mb-5"><code><span class="token-comment">// src/routes/(private)/route.tsx</span>
+<span class="token-keyword">export const</span> Route = <span class="token-fn">createFileRoute</span>(<span class="token-string">'/(private)'</span>)({
+  component: () =&gt; (
+    &lt;<span class="token-type">AppWrapper</span>&gt;
+      &lt;<span class="token-type">RouteComponent</span> /&gt;  <span class="token-comment">// ← only renders after hydration</span>
+    &lt;/<span class="token-type">AppWrapper</span>&gt;
+  ),
+})</code></pre>
+    <p class="text-text-secondary mb-4">
+      Everything inside <code class="prose-inline">RouteComponent</code> — <code class="prose-inline">useLiveQuery</code> on OPFS collections, <code class="prose-inline">useIsOnline</code> which accesses <code class="prose-inline">navigator</code>, <code class="prose-inline">authStore.state</code> which reads <code class="prose-inline">sessionStorage</code> — runs only after <code class="prose-inline">isClient</code> is <code class="prose-inline">true</code>. The server renders the <code class="prose-inline">Loading</code> spinner. The browser hydrates, <code class="prose-inline">useEffect</code> fires, <code class="prose-inline">isClient</code> flips, and the real content mounts.
+    </p>
+    <div class="grid sm:grid-cols-2 gap-4">
+      <div class="bg-bg-elevated border border-accent/20 rounded-xl p-5">
+        <h3 class="font-semibold text-sm text-accent uppercase tracking-wide mb-3">What this gates</h3>
+        <ul class="flex flex-col gap-2 text-sm text-text-secondary">
+          <li class="flex gap-2"><span class="text-accent">›</span> TanStack DB collections (OPFS / <code class="prose-inline">IndexedDB</code>)</li>
+          <li class="flex gap-2"><span class="text-accent">›</span> <code class="prose-inline">navigator.onLine</code> access in <code class="prose-inline">useIsOnline</code></li>
+          <li class="flex gap-2"><span class="text-accent">›</span> <code class="prose-inline">sessionStorage</code> reads for hotline assignment</li>
+          <li class="flex gap-2"><span class="text-accent">›</span> <code class="prose-inline">BroadcastChannel</code> cross-tab sync</li>
+          <li class="flex gap-2"><span class="text-accent">›</span> Auth store reads that depend on client-only state</li>
+        </ul>
+      </div>
+      <div class="bg-bg-elevated border border-border rounded-xl p-5">
+        <h3 class="font-semibold text-sm uppercase tracking-wide mb-3">What it doesn't gate</h3>
+        <ul class="flex flex-col gap-2 text-sm text-text-secondary">
+          <li class="flex gap-2"><span class="text-warn">›</span> The root shell (<code class="prose-inline">RootDocument</code>) — renders on both server and client</li>
+          <li class="flex gap-2"><span class="text-warn">›</span> Public routes (login page) — handled by their own SSR guards</li>
+          <li class="flex gap-2"><span class="text-warn">›</span> <code class="prose-inline">beforeLoad</code> functions — those always run server-side</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 9. ROOT SHELL -->
+  <section id="root" class="mb-16 reveal" aria-labelledby="h-root">
+    <h2 id="h-root" class="text-2xl font-bold mb-4">9. The root shell — wiring it all together</h2>
+    <p class="text-text-secondary mb-4">
+      The TanStack Start root route ties the layers together. The <code class="prose-inline">beforeLoad</code> function runs on the server on every request — it calls <code class="prose-inline">getAuthUser()</code> to validate the Better Auth cookie and fetch the user from Postgres. If the request is offline (or the cookie is absent) it returns <code class="prose-inline">{ user: undefined }</code> without throwing. The private route guard picks up from there.
+    </p>
+    <pre class="code-block mb-5"><code><span class="token-comment">// src/routes/__root.tsx</span>
+<span class="token-keyword">export const</span> Route = <span class="token-fn">createRootRouteWithContext</span>&lt;<span class="token-type">MyRouterContext</span>&gt;()({
+  head: () =&gt; ({
+    links: [
+      { rel: <span class="token-string">'manifest'</span>,         href: <span class="token-string">'/manifest.json'</span>  }, <span class="token-comment">// PWA installability</span>
+      { rel: <span class="token-string">'apple-touch-icon'</span>, href: <span class="token-string">'/logo192.png'</span>    }, <span class="token-comment">// iOS home screen icon</span>
+    ],
+  }),
+
+  beforeLoad: <span class="token-keyword">async</span> () =&gt; {
+    <span class="token-keyword">try</span> {
+      <span class="token-keyword">const</span> user = <span class="token-keyword">await</span> <span class="token-fn">getAuthUser</span>()  <span class="token-comment">// server-side: validates cookie + fetches profile</span>
+      <span class="token-fn">setUser</span>(user!)                     <span class="token-comment">// idempotent — won't overwrite existing user</span>
+      <span class="token-keyword">return</span> { user }
+    } <span class="token-keyword">catch</span> {
+      <span class="token-keyword">return</span> { user: <span class="token-keyword">undefined</span> }         <span class="token-comment">// offline or unauthenticated — don't throw</span>
+    }
+  },
+
+  shellComponent: RootDocument,
+})
+
+<span class="token-keyword">function</span> <span class="token-fn">RootDocument</span>({ children }) {
+  <span class="token-keyword">const</span> { user } = Route.<span class="token-fn">useRouteContext</span>()
+  <span class="token-fn">useSw</span>()  <span class="token-comment">// SW registration — no-ops in dev and SSR</span>
+
+  <span class="token-fn">useEffect</span>(() =&gt; {
+    <span class="token-keyword">if</span> (user) <span class="token-fn">setUser</span>(user)  <span class="token-comment">// client-side re-hydration of the auth store</span>
+  }, [user])
+
+  <span class="token-keyword">return</span> (
+    &lt;<span class="token-type">html</span>&gt;
+      &lt;<span class="token-type">head</span>&gt;&lt;<span class="token-type">HeadContent</span> /&gt;&lt;/<span class="token-type">head</span>&gt;
+      &lt;<span class="token-type">body</span>&gt;
+        &lt;<span class="token-type">ThemeProvider</span>&gt;
+          &lt;<span class="token-type">NavigationProgress</span> /&gt;  <span class="token-comment">// top loading bar on route transitions</span>
+          &lt;<span class="token-type">Overlay</span> /&gt;             <span class="token-comment">// modal manager singleton</span>
+          {children}              <span class="token-comment">// route content (may be behind AppWrapper)</span>
+          &lt;<span class="token-type">Toaster</span> /&gt;             <span class="token-comment">// toast notifications</span>
+          &lt;<span class="token-type">Scripts</span> /&gt;             <span class="token-comment">// TanStack Start script injection</span>
+        &lt;/<span class="token-type">ThemeProvider</span>&gt;
+      &lt;/<span class="token-type">body</span>&gt;
+    &lt;/<span class="token-type">html</span>&gt;
+  )
+}</code></pre>
+    <p class="text-text-secondary">
+      The <code class="prose-inline">setUser</code> in <code class="prose-inline">useEffect</code> might look redundant given it also runs in <code class="prose-inline">beforeLoad</code>. It isn't: <code class="prose-inline">beforeLoad</code> runs on the server, which means the result populates the route context but doesn't persist across a full client navigation. The <code class="prose-inline">useEffect</code> re-applies the user to the reactive <code class="prose-inline">authStore</code> on the client side after hydration. And because <code class="prose-inline">setUser</code> is idempotent, if an offline login has already populated the store, this is a no-op.
+    </p>
+  </section>
+
+</div>
+
+<div class="max-w-3xl mx-auto px-6">
+
+  <!-- 10. DIAGRAM -->
+  <section id="diagram" class="mb-16 reveal" aria-labelledby="h-diagram">
+    <h2 id="h-diagram" class="text-2xl font-bold mb-4">10. Everything in one diagram</h2>
+
+    <div class="bg-bg-elevated border border-border rounded-xl p-6 text-sm font-mono text-text-secondary leading-loose mb-6">
+      <p class="text-text font-bold mb-1">BUILD TIME</p>
+      <p class="ml-4"><span class="text-accent">tanstackSerwistPlugin()</span></p>
+      <p class="ml-8">dev  → buildStart  → build(sw.ts → public/sw.js, no manifest)</p>
+      <p class="ml-8">prod → closeBundle → build(sw.ts → .output/public/sw.js)</p>
+      <p class="ml-14">→ injectManifest(globPatterns, self.__SW_MANIFEST)</p>
+      <p class="ml-14">→ sw.js now contains hashed asset URLs</p>
+      <br>
+      <p class="text-text font-bold mb-1">HTTP LAYER</p>
+      <p class="ml-4">Every response</p>
+      <p class="ml-8">Cross-Origin-Opener-Policy:    same-origin</p>
+      <p class="ml-8">Cross-Origin-Embedder-Policy:  require-corp</p>
+      <p class="ml-8">Cross-Origin-Resource-Policy:  cross-origin</p>
+      <p class="ml-8">→ browser grants SharedArrayBuffer → OPFS available</p>
+      <br>
+      <p class="text-text font-bold mb-1">SERVICE WORKER (prod)</p>
+      <p class="ml-4">navigate → <span class="text-accent-2">NetworkFirst</span>(pages-cache)</p>
+      <p class="ml-4">/_serverFn/* → <span class="text-danger">NetworkOnly</span>  ← never cached</p>
+      <p class="ml-4">style | image | font → <span class="text-accent">CacheFirst</span>(static-assets)</p>
+      <p class="ml-4">precache: all hashed JS/CSS/HTML/fonts from __SW_MANIFEST</p>
+      <br>
+      <p class="text-text font-bold mb-1">SERVICE WORKER (dev)</p>
+      <p class="ml-4">everything → <span class="text-danger">NetworkOnly</span>  ← transparent pass-through</p>
+      <br>
+      <p class="text-text font-bold mb-1">APP BOOT (server → client)</p>
+      <p class="ml-4">__root.tsx beforeLoad (server)</p>
+      <p class="ml-8">→ getAuthUser() → user from Postgres (or undefined)</p>
+      <p class="ml-8">→ setUser(user) [idempotent]</p>
+      <p class="ml-8">→ return { user } → route context</p>
+      <p class="ml-4">RootDocument shellComponent (server + client)</p>
+      <p class="ml-8">→ useSw() → registers SW (prod/client only)</p>
+      <p class="ml-8">→ useEffect → setUser(user) [re-hydrates authStore client-side]</p>
+      <br>
+      <p class="text-text font-bold mb-1">PRIVATE ROUTE</p>
+      <p class="ml-4"><span class="text-accent">AppWrapper</span></p>
+      <p class="ml-8">server → render &lt;Loading /&gt;</p>
+      <p class="ml-8">client → useEffect → setIsClient(true) → render children</p>
+      <p class="ml-4">RouteComponent (client-only)</p>
+      <p class="ml-8">→ useIsOnline() → HEAD /favicon.ico?t=now → true/false</p>
+      <p class="ml-8">→ useLiveQuery(localAuthCollection) → wait isReady</p>
+      <p class="ml-8">→ isOnline ? user (context) : authStore.state.user</p>
+      <p class="ml-8">→ !localUser?.id → navigate('/login')</p>
+      <p class="ml-8">→ isOnline + exists → AuthEngine.syncServerToLocal(user)</p>
+    </div>
+  </section>
+
+  <!-- 11. TRADEOFFS -->
+  <section id="tradeoffs" class="mb-16 reveal" aria-labelledby="h-tradeoffs">
+    <h2 id="h-tradeoffs" class="text-2xl font-bold mb-4">11. Tradeoffs and known limitations</h2>
+
+    <div class="flex flex-col gap-4 mb-10">
+      <div class="bg-bg-elevated border border-accent/20 rounded-xl p-5">
+        <h3 class="font-semibold text-sm text-accent uppercase tracking-wide mb-3">What this gets right</h3>
+        <ul class="flex flex-col gap-2 text-sm text-text-secondary">
+          <li class="flex gap-2"><span class="text-accent font-bold">›</span> Server functions are categorically excluded from all caching. There's no configuration that could accidentally cache a mutation response</li>
+          <li class="flex gap-2"><span class="text-accent font-bold">›</span> The prod/dev SW split is total — dev is <code class="prose-inline">NetworkOnly</code> for everything, eliminating an entire class of "it works in dev, broken in prod" caching bugs</li>
+          <li class="flex gap-2"><span class="text-accent font-bold">›</span> The SSR boundary is explicit and centralized. One component gates all browser-only code — no scattered <code class="prose-inline">typeof window</code> guards</li>
+          <li class="flex gap-2"><span class="text-accent font-bold">›</span> The connectivity probe verifies actual reachability, not just network interface status — the auth and data layers can trust the <code class="prose-inline">isOnline</code> signal</li>
+          <li class="flex gap-2"><span class="text-accent font-bold">›</span> <code class="prose-inline">skipWaiting</code> and <code class="prose-inline">clientsClaim</code> mean a newly deployed SW takes effect immediately without a manual refresh — important for agents who keep the app open all day</li>
+        </ul>
+      </div>
+
+      <div class="bg-bg-elevated border border-danger/20 rounded-xl p-5">
+        <h3 class="font-semibold text-sm text-danger uppercase tracking-wide mb-3">Known limitations</h3>
+        <ul class="flex flex-col gap-2 text-sm text-text-secondary">
+          <li class="flex gap-2"><span class="text-warn font-bold">›</span> <strong class="text-text"><code class="prose-inline">AppWrapper</code> introduces a layout shift.</strong> On first load the server renders a spinner; after hydration the real content mounts. For a field tool this is acceptable — but it would need to be reconsidered for a content-heavy public site</li>
+          <li class="flex gap-2"><span class="text-warn font-bold">›</span> <strong class="text-text">OPFS requires cross-origin isolation headers in production.</strong> Hosting platforms that strip or override custom headers (some CDN configurations, certain proxy setups) will silently break SQLite persistence. The failure mode is an empty collection on load, not a thrown error</li>
+          <li class="flex gap-2"><span class="text-warn font-bold">›</span> <strong class="text-text">The connectivity probe adds latency to the initial mount.</strong> The <code class="prose-inline">HEAD</code> request fires on every <code class="prose-inline">useEffect</code> run. On a high-latency connection this creates a brief period where the UI doesn't know its online state yet</li>
+          <li class="flex gap-2"><span class="text-warn font-bold">›</span> <strong class="text-text"><code class="prose-inline">skipWaiting</code> can cause problems with multiple open tabs.</strong> When a new SW activates and claims all clients, any tab that has already loaded the old JS bundle may make requests that the new SW handles differently. For this app the risk is low but it's worth documenting</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="mt-8 flex flex-wrap gap-4">
+      <a href="/nuvelco-cca.html"
+         class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-accent text-bg text-sm font-semibold hover:bg-accent-2 hover:-translate-y-0.5 transition-all">
+        View NUVELCO CCA project
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 17 17 7M7 7h10v10"/></svg>
+      </a>
+      <a href="/blog/offline-auth-engine.html"
+         class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-bg-elevated border border-border text-sm font-medium hover:border-accent hover:text-accent transition-all">
+        Also: Auth That Works Offline ↗
+      </a>
+      <a href="/blog/making-db-closer-to-app.html"
+         class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-bg-elevated border border-border text-sm font-medium hover:border-accent hover:text-accent transition-all">
+        Also: Making the DB Feel Like Part of the App ↗
+      </a>
+    </div>
+  </section>
+
+</div>
+
+<footer class="border-t border-border py-10 text-center text-sm text-text-secondary">
+  <p>&copy; 2026 Ricardo Rey Crisanto V. Lopez II. Built with semantic HTML5 &amp; Tailwind CSS v4.</p>
+  <a href="/index.html#blog" class="inline-block mt-3 text-accent hover:text-accent-2 transition-colors">&larr; Back to writing</a>
+</footer>
+
+<script>
+  const revealEls = document.querySelectorAll('.reveal');
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) { e.target.classList.add('in-view'); io.unobserve(e.target); }
+    });
+  }, { threshold: 0.1 });
+  revealEls.forEach(el => io.observe(el));
+</script>
+</body>
+</html>

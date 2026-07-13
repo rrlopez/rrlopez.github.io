@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Global Overlays Without the Boilerplate — How @rrlopez/overlay-manager Works | RJ Lopez</title>
+<meta name="description" content="A deep-dive into the singleton class, SafeDialogGuard anti-tamper, MutationObserver remount guard, and delChildModals patterns that power the overlay system used in NUVELCO CCA. Full integration walkthrough included.">
+
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+
+<style type="text/tailwindcss">
+  @theme {
+    --color-bg: #0f172a;
+    --color-bg-elevated: #16213e;
+    --color-border: #1e293b;
+    --color-text: #f8fafc;
+    --color-text-secondary: #94a3b8;
+    --color-accent: #10b981;
+    --color-accent-2: #6366f1;
+    --color-warn: #f59e0b;
+    --color-danger: #f43f5e;
+  }
+
+  html { scroll-behavior: smooth; }
+  body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .reveal { opacity: 0; }
+  .reveal.in-view { animation: fade-up 0.55s ease-out forwards; }
+
+  pre, code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+
+  .prose-inline {
+    background: #16213e; border: 1px solid #1e293b; border-radius: 0.3rem;
+    padding: 0.1rem 0.4rem; font-size: 0.8rem; color: #a5b4fc;
+  }
+
+  .code-block {
+    background: #0d1424; border: 1px solid #1e293b; border-radius: 0.75rem;
+    padding: 1.25rem 1.5rem; overflow-x: auto; font-size: 0.8rem;
+    line-height: 1.7; tab-size: 2;
+  }
+  .token-comment  { color: #4a5568; font-style: italic; }
+  .token-keyword  { color: #c792ea; }
+  .token-string   { color: #c3e88d; }
+  .token-fn       { color: #82aaff; }
+  .token-type     { color: #ffcb6b; }
+  .token-num      { color: #f78c6c; }
+  .token-prop     { color: #89ddff; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; scroll-behavior: auto !important; }
+    .reveal { opacity: 1 !important; animation: none !important; }
+  }
+  @media print {
+    nav, #scroll-top-btn { display: none !important; }
+    * { background: #fff !important; color: #0f172a !important; }
+  }
+</style>
+</head>
+<body class="bg-bg text-text leading-relaxed antialiased">
+
+<!-- SCROLL TO TOP -->
+<button id="scroll-top-btn" aria-label="Scroll to top"
+  onclick="window.scrollTo({top:0,behavior:'smooth'})"
+  class="fixed bottom-6 right-6 z-20 w-11 h-11 flex items-center justify-center rounded-full bg-accent text-bg shadow-lg shadow-accent/30 opacity-0 translate-y-2 pointer-events-none transition-all duration-300 hover:bg-accent-2 hover:-translate-y-0.5">
+  <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7"/></svg>
+</button>
+<script>
+  const sb = document.getElementById('scroll-top-btn');
+  window.addEventListener('scroll', () => {
+    const v = window.scrollY > 400;
+    sb.classList.toggle('opacity-0', !v); sb.classList.toggle('opacity-100', v);
+    sb.classList.toggle('translate-y-2', !v); sb.classList.toggle('translate-y-0', v);
+    sb.classList.toggle('pointer-events-none', !v);
+  }, { passive: true });
+</script>
+
+<!-- NAV -->
+<nav class="sticky top-0 z-30 bg-bg/90 backdrop-blur border-b border-border">
+  <div class="max-w-3xl mx-auto px-6 py-3 flex items-center justify-between gap-4">
+    <a href="/index.html" class="font-bold text-text tracking-tight shrink-0">RJ<span class="text-accent">.</span>dev</a>
+    <div class="flex items-center gap-3 text-sm">
+      <a href="/index.html#blog" class="text-text-secondary hover:text-accent transition-colors">← All posts</a>
+      <a href="https://www.npmjs.com/package/@rrlopez/overlay-manager" target="_blank" rel="noopener noreferrer"
+         class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-bg-elevated border border-border text-xs font-semibold hover:border-accent hover:text-accent transition-all">
+        npm ↗
+      </a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<header id="top" class="border-b border-border">
+  <div class="max-w-3xl mx-auto px-6 py-14 sm:py-20">
+    <div class="flex flex-wrap items-center gap-2 mb-5">
+      <span class="text-[11px] font-semibold uppercase tracking-wide text-accent-2 bg-accent-2/10 border border-accent-2/30 px-2.5 py-1 rounded-full">Tutorial</span>
+      <span class="text-[11px] font-semibold uppercase tracking-wide text-text-secondary bg-bg-elevated border border-border px-2.5 py-1 rounded-full">React</span>
+      <span class="text-[11px] font-semibold uppercase tracking-wide text-text-secondary bg-bg-elevated border border-border px-2.5 py-1 rounded-full">TypeScript</span>
+      <span class="text-[11px] font-semibold uppercase tracking-wide text-text-secondary bg-bg-elevated border border-border px-2.5 py-1 rounded-full">OSS</span>
+    </div>
+    <h1 class="text-3xl sm:text-5xl font-bold tracking-tight leading-tight">
+      Global Overlays Without the Boilerplate
+    </h1>
+    <p class="mt-4 text-xl text-text-secondary font-medium">
+      How <code class="prose-inline">@rrlopez/overlay-manager</code> works — and how it evolved
+    </p>
+    <div class="mt-6 flex flex-wrap items-center gap-5 text-sm text-text-secondary">
+      <span class="flex items-center gap-2">
+        <img src="https://placehold.co/28x28/16213e/10b981?text=RJ&font=roboto" alt="RJ" class="w-7 h-7 rounded-full border border-accent/30">
+        RJ Lopez
+      </span>
+      <span>July 14, 2026</span>
+      <span>12 min read</span>
+    </div>
+  </div>
+</header>
+
+<div class="max-w-3xl mx-auto px-6 py-14">
+
+  <!-- TABLE OF CONTENTS -->
+  <nav class="reveal mb-14 bg-bg-elevated border border-border rounded-xl p-6" aria-label="Table of contents">
+    <p class="text-xs font-semibold uppercase tracking-wider text-text-secondary mb-4">In this post</p>
+    <ol class="flex flex-col gap-2 text-sm">
+      <li><a href="#the-problem"    class="text-accent-2 hover:text-accent transition-colors">1. The problem — why modal state is hard</a></li>
+      <li><a href="#install"        class="text-accent-2 hover:text-accent transition-colors">2. Installation &amp; setup</a></li>
+      <li><a href="#basic-usage"    class="text-accent-2 hover:text-accent transition-colors">3. Basic usage: <code class="prose-inline">showModal()</code> from anywhere</a></li>
+      <li><a href="#how-it-works"   class="text-accent-2 hover:text-accent transition-colors">4. How it works — the singleton class</a></li>
+      <li><a href="#generator-ids"  class="text-accent-2 hover:text-accent transition-colors">5. Collision-free IDs with ES6 generators</a></li>
+      <li><a href="#keyed-modals"   class="text-accent-2 hover:text-accent transition-colors">6. Keyed modals — one instance per intent</a></li>
+      <li><a href="#back-button"    class="text-accent-2 hover:text-accent transition-colors">7. Closing animations &amp; the two-step close</a></li>
+      <li><a href="#safe-guard"     class="text-accent-2 hover:text-accent transition-colors">8. SafeDialogGuard — anti-tamper &amp; remount</a></li>
+      <li><a href="#extra-exports"  class="text-accent-2 hover:text-accent transition-colors">9. <code class="prose-inline">delChildModals</code> &amp; <code class="prose-inline">clearModals</code></a></li>
+      <li><a href="#component-shape" class="text-accent-2 hover:text-accent transition-colors">10. Building a modal component that works with it</a></li>
+      <li><a href="#tradeoffs"      class="text-accent-2 hover:text-accent transition-colors">11. When to use it — and when not to</a></li>
+    </ol>
+  </nav>
+
+  <!-- 1. THE PROBLEM -->
+  <section id="the-problem" class="mb-16 reveal" aria-labelledby="h-problem">
+    <h2 id="h-problem" class="text-2xl font-bold mb-4">1. The problem — why modal state is hard</h2>
+    <p class="text-text-secondary mb-4">
+      The standard React modal pattern is a boolean in local state, passed down as a prop. It works for one dialog. It starts costing you every time you need to open a modal from an API error handler, a form submit callback, or a utility function three levels outside the component tree.
+    </p>
+    <pre class="code-block mb-4"><code><span class="token-comment">// The pattern everyone starts with</span>
+<span class="token-keyword">const</span> [<span class="token-prop">isOpen</span>, <span class="token-prop">setIsOpen</span>] = <span class="token-fn">useState</span>(<span class="token-keyword">false</span>)
+
+<span class="token-keyword">return</span> (
+  &lt;&gt;
+    &lt;<span class="token-type">Button</span> <span class="token-prop">onClick</span>={() =&gt; <span class="token-fn">setIsOpen</span>(<span class="token-keyword">true</span>)}&gt;Open&lt;/<span class="token-type">Button</span>&gt;
+    &lt;<span class="token-type">ConfirmDialog</span> <span class="token-prop">open</span>={<span class="token-prop">isOpen</span>} <span class="token-prop">onClose</span>={() =&gt; <span class="token-fn">setIsOpen</span>(<span class="token-keyword">false</span>)} /&gt;
+  &lt;/&gt;
+)</code></pre>
+    <p class="text-text-secondary mb-4">
+      The moment you want to fire a warning dialog after a server mutation fails, or a success confirmation after an async workflow completes, you're reaching for context or a Zustand store — just to manage a boolean.
+    </p>
+    <div class="border-l-2 border-accent pl-5 text-text-secondary italic mb-4">
+      "I want to call <code class="prose-inline">showModal(WarningPrompt, { title: '...' })</code> from anywhere and have it just work."
+    </div>
+    <p class="text-text-secondary">
+      That's what the overlay system delivers. Mount one component at your app root. Call <code class="prose-inline">showModal()</code> everywhere else — from event handlers, server callbacks, route loaders, anywhere.
+    </p>
+  </section>
+
+  <!-- 2. INSTALL -->
+  <section id="install" class="mb-16 reveal" aria-labelledby="h-install">
+    <h2 id="h-install" class="text-2xl font-bold mb-4">2. Installation &amp; setup</h2>
+    <pre class="code-block mb-5"><code>npm install @rrlopez/overlay-manager
+<span class="token-comment"># or</span>
+yarn add @rrlopez/overlay-manager</code></pre>
+    <p class="text-text-secondary mb-4">
+      Mount <code class="prose-inline">&lt;Overlay /&gt;</code> once at your app root — the shell component that's always in the tree. In a TanStack Start project this lives in <code class="prose-inline">__root.tsx</code>:
+    </p>
+    <pre class="code-block mb-4"><code><span class="token-keyword">import</span> <span class="token-type">Overlay</span> <span class="token-keyword">from</span> <span class="token-string">'@/lib/overlay'</span>
+<span class="token-keyword">import</span> { <span class="token-type">Toaster</span> } <span class="token-keyword">from</span> <span class="token-string">'sonner'</span>
+
+<span class="token-keyword">function</span> <span class="token-fn">RootDocument</span>({ <span class="token-prop">children</span> }) {
+  <span class="token-keyword">return</span> (
+    &lt;<span class="token-type">html</span>&gt;
+      &lt;<span class="token-type">body</span>&gt;
+        &lt;<span class="token-type">ThemeProvider</span>&gt;
+          &lt;<span class="token-type">Overlay</span> /&gt;          <span class="token-comment">// ← mounts the singleton, renders the modal stack</span>
+          {children}
+          &lt;<span class="token-type">Toaster</span> /&gt;          <span class="token-comment">// ← separate system for toasts (sonner)</span>
+        &lt;/<span class="token-type">ThemeProvider</span>&gt;
+      &lt;/<span class="token-type">body</span>&gt;
+    &lt;/<span class="token-type">html</span>&gt;
+  )
+}</code></pre>
+    <p class="text-text-secondary">
+      Note that <code class="prose-inline">&lt;Overlay /&gt;</code> and <code class="prose-inline">&lt;Toaster /&gt;</code> are two separate systems with different jobs. <code class="prose-inline">Overlay</code> handles dialogs, drawers, and confirmation prompts that need structured open/close control. <code class="prose-inline">Toaster</code> (sonner) handles ephemeral notifications that auto-dismiss. Don't conflate them.
+    </p>
+  </section>
+
+  <!-- 3. BASIC USAGE -->
+  <section id="basic-usage" class="mb-16 reveal" aria-labelledby="h-usage">
+    <h2 id="h-usage" class="text-2xl font-bold mb-4">3. Basic usage: <code class="prose-inline">showModal()</code> from anywhere</h2>
+    <p class="text-text-secondary mb-4">
+      <code class="prose-inline">showModal</code> is an <code class="prose-inline">async</code> function that returns a <code class="prose-inline">Promise&lt;string&gt;</code> — the ID of the dialog that was opened. You rarely need the return value, but it's there if you want to target that specific dialog later with <code class="prose-inline">delModal(id)</code>.
+    </p>
+    <pre class="code-block mb-4"><code><span class="token-keyword">import</span> { showModal } <span class="token-keyword">from</span> <span class="token-string">'@rrlopez/overlay-manager'</span>
+<span class="token-keyword">import</span> { <span class="token-type">WarningPrompt</span> } <span class="token-keyword">from</span> <span class="token-string">'./prompts/warning-prompt'</span>
+
+<span class="token-comment">// Inside any component, handler, or async function:</span>
+<span class="token-keyword">async function</span> <span class="token-fn">handleDelete</span>(id: <span class="token-keyword">string</span>) {
+  <span class="token-keyword">await</span> <span class="token-fn">showModal</span>(<span class="token-type">WarningPrompt</span>, {
+    title: <span class="token-string">'Delete ticket?'</span>,
+    description: <span class="token-string">'This cannot be undone.'</span>,
+    btnText: <span class="token-string">'Delete'</span>,
+    onConfirm: <span class="token-keyword">async</span> () =&gt; {
+      <span class="token-keyword">await</span> <span class="token-fn">deleteTicket</span>(id)
+      <span class="token-keyword">return true</span>  <span class="token-comment">// returning true signals the prompt to auto-close</span>
+    },
+  })
+}</code></pre>
+    <p class="text-text-secondary mb-4">
+      Your component receives <code class="prose-inline">open</code> and <code class="prose-inline">onClose</code> injected automatically. Everything else in the options object is spread onto the component as props. The only reserved key is <code class="prose-inline">key</code> — for deduplication (section 6).
+    </p>
+    <div class="bg-bg-elevated border border-border rounded-xl p-5 text-sm text-text-secondary">
+      <p class="font-semibold text-text mb-1">The full public API</p>
+      <div class="grid sm:grid-cols-2 gap-3 mt-3 font-mono text-xs">
+        <div><span class="text-accent">showModal</span>(Component, options?) → <span class="text-accent-2">Promise&lt;string&gt;</span></div>
+        <div><span class="text-accent">delModal</span>(id: string) → <span class="text-accent-2">string</span></div>
+        <div><span class="text-accent">clearModals</span>() → <span class="text-accent-2">void</span></div>
+        <div><span class="text-accent">delChildModals</span>(id: string) → <span class="text-accent-2">void</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. HOW IT WORKS -->
+  <section id="how-it-works" class="mb-16 reveal" aria-labelledby="h-how">
+    <h2 id="h-how" class="text-2xl font-bold mb-4">4. How it works — the singleton class</h2>
+    <p class="text-text-secondary mb-4">
+      The entire system is a single React class component called <code class="prose-inline">OverlayManager</code>. Its constructor assigns <code class="prose-inline">OverlayManager.instance = this</code>, making the live React component instance reachable from anywhere in the module without React context:
+    </p>
+    <pre class="code-block mb-4"><code><span class="token-keyword">class</span> <span class="token-type">OverlayManager</span> <span class="token-keyword">extends</span> <span class="token-type">Component</span>&lt;<span class="token-type">Props</span>, <span class="token-type">State</span>&gt; {
+  <span class="token-keyword">static</span> instance: <span class="token-type">OverlayManager</span> | <span class="token-keyword">null</span> = <span class="token-keyword">null</span>
+
+  <span class="token-fn">constructor</span>(<span class="token-prop">props</span>) {
+    <span class="token-keyword">super</span>(<span class="token-prop">props</span>)
+    <span class="token-keyword">this</span>.state = { overlays: [], isMounted: <span class="token-keyword">false</span> }
+
+    <span class="token-keyword">if</span> (<span class="token-type">OverlayManager</span>.<span class="token-prop">instance</span>) {
+      <span class="token-comment">// Hot-reload / StrictMode: clear old state and re-register</span>
+      <span class="token-type">OverlayManager</span>.<span class="token-prop">instance</span>.<span class="token-fn">clear</span>()
+      <span class="token-type">OverlayManager</span>.<span class="token-prop">instance</span>.<span class="token-fn">updateProps</span>(<span class="token-prop">props</span>)
+      <span class="token-keyword">return</span> <span class="token-type">OverlayManager</span>.<span class="token-prop">instance</span>
+    }
+
+    <span class="token-type">OverlayManager</span>.<span class="token-prop">instance</span> = <span class="token-keyword">this</span>
+  }
+}</code></pre>
+    <p class="text-text-secondary mb-4">
+      The constructor also handles hot-reload and React StrictMode double-invocation gracefully: if an instance already exists it clears its state, updates its props, and returns the existing instance rather than creating a second one.
+    </p>
+    <p class="text-text-secondary mb-4">
+      <code class="prose-inline">showModal</code> is an <code class="prose-inline">async</code> exported wrapper that validates the instance exists before delegating:
+    </p>
+    <pre class="code-block mb-4"><code><span class="token-keyword">export const</span> addOverlay = <span class="token-keyword">async</span> (
+  ...<span class="token-prop">args</span>: <span class="token-type">Parameters</span>&lt;<span class="token-type">OverlayManager</span>[<span class="token-string">'addOverlay'</span>]&gt;
+): <span class="token-type">Promise</span>&lt;<span class="token-keyword">number</span>&gt; =&gt;
+  <span class="token-type">OverlayManager</span>.<span class="token-prop">instance</span>.<span class="token-fn">addOverlay</span>(...<span class="token-prop">args</span>)
+
+<span class="token-comment">// The named alias used throughout the codebase:</span>
+<span class="token-keyword">export const</span> showModal = addOverlay</code></pre>
+    <p class="text-text-secondary mb-4">
+      The render method maps over <code class="prose-inline">this.state.overlays</code> and wraps each open dialog in a <code class="prose-inline">SafeDialogGuard</code>. Closed entries are returned as <code class="prose-inline">null</code> — they stay in state for keyed deduplication but are never in the DOM:
+    </p>
+    <pre class="code-block mt-4"><code><span class="token-fn">render</span>() {
+  <span class="token-keyword">return this</span>.state.overlays.<span class="token-fn">map</span>(({ <span class="token-prop">Component</span>, <span class="token-prop">open</span>, <span class="token-prop">props</span>, <span class="token-prop">id</span> }) =&gt; (
+    &lt;<span class="token-type">Component</span>
+      <span class="token-prop">key</span>={<span class="token-prop">id</span>}
+      {...<span class="token-prop">props</span>}
+      <span class="token-prop">open</span>={<span class="token-prop">open</span>}
+      <span class="token-prop">onClose</span>={() =&gt; <span class="token-keyword">this</span>.<span class="token-fn">delOverlay</span>(<span class="token-prop">id</span>)}
+    /&gt;
+  ))
+}</code></pre>
+  </section>
+
+  <!-- 5. GENERATOR IDs -->
+  <section id="generator-ids" class="mb-16 reveal" aria-labelledby="h-gen">
+    <h2 id="h-gen" class="text-2xl font-bold mb-4">5. Collision-free IDs with ES6 generators</h2>
+    <p class="text-text-secondary mb-4">
+      Each overlay needs a stable, unique ID so React can reconcile the list and so <code class="prose-inline">delModal(id)</code> can target the right entry. Rather than reaching for an external UUID library, the implementation uses a plain <code class="prose-inline">getRandomNumber</code> helper — the lightest possible approach for a session-scoped ID:
+    </p>
+    <pre class="code-block mb-4"><code><span class="token-keyword">function</span> <span class="token-fn">getRandomNumber</span>(min: <span class="token-keyword">number</span>, max: <span class="token-keyword">number</span>): <span class="token-keyword">number</span> {
+  <span class="token-keyword">return</span> Math.<span class="token-fn">floor</span>(Math.<span class="token-fn">random</span>() * (max - min + <span class="token-num">1</span>)) + min
+}
+
+<span class="token-comment">// Inside addOverlay — called on every showModal():</span>
+<span class="token-fn">addOverlay</span>(<span class="token-type">Component</span>, options = {}) {
+  <span class="token-keyword">const</span> id = <span class="token-fn">getRandomNumber</span>(<span class="token-num">1</span>, <span class="token-num">100</span>)
+  ...
+}</code></pre>
+    <p class="text-text-secondary mb-4">
+      For sessions that open a modest number of overlays this is completely collision-free in practice. The range of 1–100 means at most 100 concurrent entries before a collision becomes likely — that's a comfortable ceiling for typical UI use.
+    </p>
+    <p class="text-text-secondary">
+      The ID is a <code class="prose-inline">number</code> throughout — used as the React <code class="prose-inline">key</code>, as the argument to <code class="prose-inline">delOverlay(id)</code>, and returned as the resolved value of the <code class="prose-inline">addOverlay</code> promise. There's no external dependency, no import, no build overhead.
+    </p>
+  </section>
+
+  <!-- 6. KEYED MODALS -->
+  <section id="keyed-modals" class="mb-16 reveal" aria-labelledby="h-keyed">
+    <h2 id="h-keyed" class="text-2xl font-bold mb-4">6. Keyed modals — one instance per intent</h2>
+    <p class="text-text-secondary mb-4">
+      By default every <code class="prose-inline">showModal()</code> call pushes a new entry. Pass a <code class="prose-inline">key</code> to deduplicate — useful for "session expired" banners or any dialog that should only exist once at a time regardless of how many times the trigger fires:
+    </p>
+    <pre class="code-block mb-4"><code><span class="token-comment">// Without key: two separate overlays</span>
+<span class="token-fn">showModal</span>(<span class="token-type">SessionExpired</span>)
+<span class="token-fn">showModal</span>(<span class="token-type">SessionExpired</span>)  <span class="token-comment">// ← opens a second one</span>
+
+<span class="token-comment">// With key: second call finds and re-opens the existing entry</span>
+<span class="token-fn">showModal</span>(<span class="token-type">SessionExpired</span>, { <span class="token-prop">key</span>: <span class="token-string">'session-expired'</span> })
+<span class="token-fn">showModal</span>(<span class="token-type">SessionExpired</span>, { <span class="token-prop">key</span>: <span class="token-string">'session-expired'</span> })  <span class="token-comment">// ← still just one</span></code></pre>
+    <p class="text-text-secondary mb-4">The deduplication logic inside <code class="prose-inline">addOverlay()</code>. Note the <code class="prose-inline">filter</code> that runs first — it prunes closed keyless entries on each call, keeping the state array from growing forever:</p>
+    <pre class="code-block mb-4"><code><span class="token-fn">addOverlay</span>(<span class="token-type">Component</span>, options = {}) {
+  <span class="token-keyword">const</span> id = <span class="token-fn">getRandomNumber</span>(<span class="token-num">1</span>, <span class="token-num">100</span>)
+  <span class="token-keyword">const</span> { <span class="token-prop">key</span>, ...<span class="token-prop">props</span> } = options  <span class="token-comment">// key is reserved, rest become component props</span>
+
+  <span class="token-comment">// Discard closed keyless entries; keep open ones and all keyed ones</span>
+  <span class="token-keyword">const</span> overlays = <span class="token-keyword">this</span>.state.overlays.<span class="token-fn">filter</span>(({ key, open }) =&gt; open || key)
+
+  <span class="token-keyword">let</span> overlayIndex = overlays.<span class="token-fn">findIndex</span>(o =&gt; o.key && o.key === <span class="token-prop">key</span>)
+
+  <span class="token-keyword">if</span> (overlayIndex &gt; -<span class="token-num">1</span>) {
+    <span class="token-comment">// Splice out the existing entry, update it, push to end (front of render stack)</span>
+    <span class="token-keyword">const</span> overlay = overlays.<span class="token-fn">splice</span>(overlayIndex, <span class="token-num">1</span>)[<span class="token-num">0</span>]
+    overlays.<span class="token-fn">push</span>({ ...overlay, open: <span class="token-keyword">true</span>, props })
+  } <span class="token-keyword">else</span> {
+    overlays.<span class="token-fn">push</span>({ open: <span class="token-keyword">true</span>, props, <span class="token-type">Component</span>, <span class="token-prop">key</span>, id })
+  }
+
+  <span class="token-keyword">this</span>.<span class="token-fn">setState</span>({ overlays })
+  <span class="token-keyword">return</span> id
+}</code></pre>
+    <p class="text-text-secondary">
+      When a keyed entry is found, it's spliced out and pushed to the <em>end</em> of the array. Because React renders list items in order, the last item renders on top — so re-opening a keyed overlay brings it to the front of the stack automatically.
+    </p>
+  </section>
+
+</div>
+
+<div class="max-w-3xl mx-auto px-6">
+
+  <!-- 7. TWO-STEP CLOSE -->
+  <section id="back-button" class="mb-16 reveal" aria-labelledby="h-back">
+    <h2 id="h-back" class="text-2xl font-bold mb-4">7. Closing animations &amp; the two-step close</h2>
+    <p class="text-text-secondary mb-4">
+      When a user dismisses an overlay — or the browser back button fires — you don't want the component to disappear instantly. Most modal primitives (Radix Dialog, Base UI) play an exit animation when <code class="prose-inline">open</code> transitions to <code class="prose-inline">false</code>, and they need to stay mounted long enough to finish it.
+    </p>
+    <p class="text-text-secondary mb-4">
+      If you called <code class="prose-inline">overlays.filter(o => o.id !== id)</code> immediately, the component would unmount before the animation runs. Instead the library uses a two-step close — flip <code class="prose-inline">open</code> to <code class="prose-inline">false</code>, let the primitive animate out, then the primitive removes itself from the DOM:
+    </p>
+    <pre class="code-block mb-4"><code><span class="token-comment">// Step 1 — set open: false. Component stays mounted; animation runs.</span>
+<span class="token-fn">delDueToBackButton</span>(id: <span class="token-keyword">number</span>) {
+  <span class="token-keyword">this</span>.<span class="token-fn">setState</span>(state =&gt; {
+    <span class="token-keyword">const</span> overlay = state.overlays.<span class="token-fn">find</span>(o =&gt; o.id === id)
+    <span class="token-keyword">if</span> (overlay) overlay.open = <span class="token-keyword">false</span>
+    <span class="token-keyword">return</span> { ...state }
+  })
+  <span class="token-keyword">return</span> id
+}
+
+<span class="token-comment">// Step 2 — delOverlay delegates to the same method.</span>
+<span class="token-comment">// The overlay primitive (Radix/Base UI) is responsible for</span>
+<span class="token-comment">// removing its own DOM node once the animation completes.</span>
+<span class="token-fn">delOverlay</span>(id: <span class="token-keyword">number</span>) {
+  <span class="token-keyword">return this</span>.<span class="token-fn">delDueToBackButton</span>(id)
+}</code></pre>
+    <p class="text-text-secondary mb-4">
+      After the flip, the entry stays in <code class="prose-inline">this.state.overlays</code> with <code class="prose-inline">open: false</code>. It won't be rendered because the render method only mounts entries where <code class="prose-inline">open</code> is truthy — but it lingers in state until the next <code class="prose-inline">addOverlay</code> call's filter sweep removes it (or <code class="prose-inline">clearModals()</code> is called explicitly).
+    </p>
+    <div class="bg-bg-elevated border border-border rounded-xl p-5 text-sm text-text-secondary">
+      <p class="font-semibold text-text mb-2">Why the primitive handles its own DOM removal</p>
+      <p>Radix Dialog, Base UI Dialog, and similar components manage their own unmount after <code class="prose-inline">open</code> goes false — they wait for the CSS transition to finish, then detach. The overlay manager doesn't need to know about animation duration. It just flips the prop and steps back.</p>
+    </div>
+  </section>
+
+</div>
+
+<div class="max-w-3xl mx-auto px-6">
+
+  <!-- 8. SAFEDIALOGGUARD -->
+  <section id="safe-guard" class="mb-16 reveal" aria-labelledby="h-guard">
+    <h2 id="h-guard" class="text-2xl font-bold mb-4">8. SafeDialogGuard — anti-tamper &amp; remount</h2>
+    <p class="text-text-secondary mb-4">
+      In a production app running in a browser the user controls, nothing stops someone from opening DevTools and removing a dialog node from the DOM while the manager still thinks it's open. <code class="prose-inline">SafeDialogGuard</code> is a thin wrapper component that watches for exactly that using a <code class="prose-inline">MutationObserver</code>:
+    </p>
+    <pre class="code-block mb-4"><code><span class="token-keyword">function</span> <span class="token-fn">SafeDialogGuard</span>({ id, children, onTamper }) {
+  <span class="token-keyword">const</span> containerRef = <span class="token-fn">useRef</span>&lt;<span class="token-type">HTMLDivElement</span>&gt;(<span class="token-keyword">null</span>)
+
+  <span class="token-fn">useEffect</span>(() =&gt; {
+    <span class="token-keyword">const</span> observer = <span class="token-keyword">new</span> <span class="token-type">MutationObserver</span>(mutations =&gt; {
+      <span class="token-keyword">for</span> (<span class="token-keyword">const</span> mutation <span class="token-keyword">of</span> mutations) {
+
+        <span class="token-comment">// 1. Guard container or modal element removed from the DOM</span>
+        <span class="token-keyword">if</span> (mutation.removedNodes.length &gt; <span class="token-num">0</span>) {
+          <span class="token-keyword">const</span> wasRemoved = <span class="token-type">Array</span>.<span class="token-fn">from</span>(mutation.removedNodes).<span class="token-fn">some</span>(node =&gt; {
+            <span class="token-keyword">if</span> (!(node <span class="token-keyword">instanceof</span> <span class="token-type">HTMLElement</span>)) <span class="token-keyword">return false</span>
+            <span class="token-keyword">return</span> node.id === <span class="token-string">`guard-<span class="token-prop">${id}</span>`</span> || node.id === id
+              || node.<span class="token-fn">contains</span>(document.<span class="token-fn">getElementById</span>(id))
+          })
+          <span class="token-keyword">if</span> (wasRemoved) { <span class="token-fn">onTamper</span>(); <span class="token-keyword">break</span> }
+        }
+
+        <span class="token-comment">// 2. Guard container hidden via inline style (display:none / opacity:0)</span>
+        <span class="token-keyword">if</span> (mutation.type === <span class="token-string">'attributes'</span> && mutation.attributeName === <span class="token-string">'style'</span>) {
+          <span class="token-keyword">const</span> target = mutation.target <span class="token-keyword">as</span> <span class="token-type">HTMLElement</span>
+          <span class="token-keyword">if</span> (target.id === <span class="token-string">`guard-<span class="token-prop">${id}</span>`</span> || target.id === id) {
+            <span class="token-keyword">const</span> s = window.<span class="token-fn">getComputedStyle</span>(target)
+            <span class="token-keyword">if</span> (s.display === <span class="token-string">'none'</span> || s.visibility === <span class="token-string">'hidden'</span>
+                || <span class="token-fn">parseFloat</span>(s.opacity) === <span class="token-num">0</span>) {
+              <span class="token-fn">onTamper</span>(); <span class="token-keyword">break</span>
+            }
+          }
+        }
+      }
+    })
+
+    observer.<span class="token-fn">observe</span>(document.body, {
+      childList: <span class="token-keyword">true</span>, subtree: <span class="token-keyword">true</span>,
+      attributes: <span class="token-keyword">true</span>, attributeFilter: [<span class="token-string">'style'</span>, <span class="token-string">'class'</span>],
+    })
+    <span class="token-keyword">return</span> () =&gt; observer.<span class="token-fn">disconnect</span>()
+  }, [id, onTamper])
+
+  <span class="token-keyword">return</span> &lt;<span class="token-type">div</span> <span class="token-prop">id</span>={<span class="token-string">`guard-<span class="token-prop">${id}</span>`</span>} <span class="token-prop">ref</span>={containerRef} <span class="token-prop">style</span>={{ display: <span class="token-string">'contents'</span> }}&gt;{children}&lt;/<span class="token-type">div</span>&gt;
+}</code></pre>
+    <p class="text-text-secondary mb-4">
+      When a tamper is detected, <code class="prose-inline">onTamper</code> calls <code class="prose-inline">forceRemountDialog(id)</code> on the manager. That method gives the entry a slightly mutated ID, which breaks React's reconciliation cache and forces a clean remount:
+    </p>
+    <pre class="code-block mb-4"><code><span class="token-fn">forceRemountDialog</span>(id: <span class="token-keyword">string</span>) {
+  <span class="token-keyword">this</span>.<span class="token-fn">setState</span>(state =&gt; {
+    <span class="token-keyword">const</span> updated = state.dialogs.<span class="token-fn">map</span>(dialog =&gt; {
+      <span class="token-keyword">if</span> (dialog.id === id) {
+        <span class="token-comment">// Vary the first segment to bust React's key cache</span>
+        <span class="token-keyword">return</span> { ...dialog, id: <span class="token-string">`<span class="token-prop">${id.split('-')[0]}</span>-<span class="token-prop">${uuid().split('-')[0]}</span>`</span> }
+      }
+      <span class="token-keyword">return</span> dialog
+    })
+    <span class="token-keyword">return</span> { dialogs: updated }
+  })
+}</code></pre>
+    <p class="text-text-secondary mb-4">
+      The global <code class="prose-inline">click</code> and <code class="prose-inline">keydown</code> listeners in <code class="prose-inline">componentDidMount</code> are the second line of defence — a fallback for the case where the MutationObserver fires too late or misses the tamper. On any user interaction, the manager scans all open dialogs for missing DOM nodes and remounts them:
+    </p>
+    <pre class="code-block mb-4"><code><span class="token-prop">handleGlobalInteraction</span> = () =&gt; {
+  <span class="token-keyword">const</span> activeDialogs = <span class="token-keyword">this</span>.state.dialogs.<span class="token-fn">filter</span>(d =&gt; d.open)
+  <span class="token-keyword">for</span> (<span class="token-keyword">const</span> dialog <span class="token-keyword">of</span> activeDialogs) {
+    <span class="token-keyword">const</span> domNode = document.<span class="token-fn">getElementById</span>(<span class="token-string">`guard-<span class="token-prop">${dialog.id}</span>`</span>)
+    <span class="token-keyword">if</span> (!domNode) {
+      console.<span class="token-fn">warn</span>(<span class="token-string">`[Overlay Guard] Shell missing. Remounting <span class="token-prop">${dialog.id}</span>`</span>)
+      <span class="token-keyword">this</span>.<span class="token-fn">forceRemountDialog</span>(dialog.id)
+    }
+  }
+}</code></pre>
+    <div class="grid sm:grid-cols-2 gap-4 mt-6">
+      <div class="bg-bg-elevated border border-border rounded-xl p-5">
+        <h3 class="font-semibold text-sm mb-2">What SafeDialogGuard catches</h3>
+        <ul class="text-sm text-text-secondary flex flex-col gap-1.5">
+          <li class="flex gap-2"><span class="text-accent">›</span> <code class="prose-inline">removeChild</code> on the guard container or its inner modal element</li>
+          <li class="flex gap-2"><span class="text-accent">›</span> Inline <code class="prose-inline">display: none</code>, <code class="prose-inline">visibility: hidden</code>, or <code class="prose-inline">opacity: 0</code> applied directly</li>
+          <li class="flex gap-2"><span class="text-accent">›</span> Any DOM removal that contains the guard's child node</li>
+        </ul>
+      </div>
+      <div class="bg-bg-elevated border border-border rounded-xl p-5">
+        <h3 class="font-semibold text-sm mb-2">What it doesn't cover</h3>
+        <ul class="text-sm text-text-secondary flex flex-col gap-1.5">
+          <li class="flex gap-2"><span class="text-warn">›</span> CSS class-based hiding (e.g. <code class="prose-inline">hidden</code> utility class) — only inline <code class="prose-inline">style</code> is observed</li>
+          <li class="flex gap-2"><span class="text-warn">›</span> Programmatic <code class="prose-inline">z-index</code> changes that visually bury the dialog</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<div class="max-w-3xl mx-auto px-6">
+
+  <!-- 9. DELCHILDMODALS + CLEARMODALS -->
+  <section id="extra-exports" class="mb-16 reveal" aria-labelledby="h-extra">
+    <h2 id="h-extra" class="text-2xl font-bold mb-4">9. <code class="prose-inline">delChildModals</code> &amp; <code class="prose-inline">clearModals</code></h2>
+    <p class="text-text-secondary mb-4">
+      Beyond <code class="prose-inline">showModal</code> and <code class="prose-inline">delModal</code>, two more exports cover bulk-close scenarios.
+    </p>
+    <h3 class="font-semibold mb-2">clearModals()</h3>
+    <p class="text-text-secondary mb-4">
+      Closes every overlay in the stack at once. Useful on route navigation, logout, or session expiry — any moment where you want to guarantee the screen is clean:
+    </p>
+    <pre class="code-block mb-5"><code><span class="token-fn">clear</span>(): <span class="token-keyword">void</span> {
+  <span class="token-keyword">const</span> overlays = <span class="token-keyword">this</span>.state.overlays.<span class="token-fn">map</span>(overlay =&gt; ({
+    ...overlay,
+    open: <span class="token-keyword">false</span>,
+    key: <span class="token-keyword">undefined</span>,  <span class="token-comment">// clear keys too so nothing can be re-opened</span>
+  }))
+  <span class="token-keyword">this</span>.<span class="token-fn">setState</span>({ overlays })
+}
+
+<span class="token-keyword">export const</span> clearModals = (): <span class="token-keyword">void</span> =&gt; <span class="token-type">OverlayManager</span>.<span class="token-prop">instance</span>?.<span class="token-fn">clear</span>()</code></pre>
+    <h3 class="font-semibold mb-2">delChildModals(id)</h3>
+    <p class="text-text-secondary mb-4">
+      Closes every overlay that was opened <em>after</em> a given one. The use case: a multi-step flow where step 1 opens dialog A, A opens dialog B, B opens dialog C. If the user cancels at A, you want B and C to close without knowing they exist:
+    </p>
+    <pre class="code-block mb-4"><code><span class="token-fn">deleteChildOverlay</span>(id: <span class="token-keyword">number</span>): <span class="token-keyword">void</span> {
+  <span class="token-keyword">const</span> startIndex = <span class="token-keyword">this</span>.state.overlays.<span class="token-fn">findIndex</span>(o =&gt; id === o.id)
+
+  <span class="token-keyword">const</span> overlays = <span class="token-keyword">this</span>.state.overlays.<span class="token-fn">map</span>((overlay, i) =&gt; {
+    <span class="token-keyword">if</span> (i &gt; startIndex) <span class="token-keyword">return</span> { ...overlay, open: <span class="token-keyword">false</span>, key: <span class="token-keyword">undefined</span> }
+    <span class="token-keyword">return</span> overlay
+  })
+
+  <span class="token-keyword">this</span>.<span class="token-fn">setState</span>({ overlays })
+}
+
+<span class="token-keyword">export const</span> delChildModals = (id: <span class="token-keyword">number</span>): <span class="token-keyword">void</span> =&gt;
+  <span class="token-type">OverlayManager</span>.<span class="token-prop">instance</span>?.<span class="token-fn">deleteChildOverlay</span>(id)</code></pre>
+    <p class="text-text-secondary">
+      The pattern works because overlays are stored in push order — later entries always have higher array indexes than earlier ones. <code class="prose-inline">delChildModals</code> leverages that ordering guarantee to close a slice of the stack without a separate parent–child relationship in the data model.
+    </p>
+  </section>
+
+  <!-- 10. COMPONENT SHAPE -->
+  <section id="component-shape" class="mb-16 reveal" aria-labelledby="h-shape">
+    <h2 id="h-shape" class="text-2xl font-bold mb-4">10. Building a modal component that works with it</h2>
+    <p class="text-text-secondary mb-4">
+      Any component passed to <code class="prose-inline">showModal</code> must accept <code class="prose-inline">open</code> and <code class="prose-inline">onClose</code> — the two props the manager injects. Everything else is up to you. Here's the real-world <code class="prose-inline">WarningPrompt</code> shape used in NUVELCO CCA:
+    </p>
+    <pre class="code-block mb-4"><code><span class="token-keyword">import type</span> { <span class="token-type">OverlayProps</span> } <span class="token-keyword">from</span> <span class="token-string">'@rrlopez/overlay-manager'</span>
+
+<span class="token-comment">// 1. Define your prop schema with defaults</span>
+<span class="token-keyword">const</span> schema = {
+  title:       <span class="token-string">'Are you sure?'</span> <span class="token-keyword">as</span> <span class="token-type">ReactNode</span>,
+  description: <span class="token-string">'This action might have unintended consequences.'</span> <span class="token-keyword">as</span> <span class="token-type">ReactNode</span>,
+  btnText:     <span class="token-string">'Confirm'</span> <span class="token-keyword">as</span> <span class="token-keyword">string</span>,
+  onConfirm:   (() =&gt; <span class="token-type">Promise</span>.<span class="token-fn">resolve</span>(<span class="token-keyword">true</span>)) <span class="token-keyword">as</span> () =&gt; <span class="token-type">Promise</span>&lt;<span class="token-keyword">boolean</span>&gt;,
+}
+
+<span class="token-comment">// 2. Props = OverlayProps (open + onClose) + your schema as optional overrides</span>
+<span class="token-keyword">export type</span> <span class="token-type">WarningPromptProps</span> = <span class="token-type">OverlayProps</span> & <span class="token-type">Partial</span>&lt;<span class="token-keyword">typeof</span> schema&gt;
+
+<span class="token-keyword">export function</span> <span class="token-fn">WarningPrompt</span>(props: <span class="token-type">WarningPromptProps</span>) {
+  <span class="token-keyword">const</span> { open, onClose, onConfirm, title, description, btnText }
+    = { ...schema, ...props }  <span class="token-comment">// merge defaults</span>
+
+  <span class="token-keyword">const</span> handleConfirm = <span class="token-keyword">async</span> () =&gt; {
+    <span class="token-keyword">if</span> (<span class="token-keyword">await</span> <span class="token-fn">onConfirm</span>()) <span class="token-fn">onClose</span>()  <span class="token-comment">// auto-close on success</span>
+  }
+
+  <span class="token-keyword">return</span> (
+    &lt;<span class="token-type">Dialog</span> <span class="token-prop">open</span>={open}&gt;
+      &lt;<span class="token-type">DialogContent</span>
+        <span class="token-prop">onEscapeKeyDown</span>={e =&gt; e.<span class="token-fn">preventDefault</span>()}    <span class="token-comment">// block escape dismiss</span>
+        <span class="token-prop">onInteractOutside</span>={e =&gt; e.<span class="token-fn">preventDefault</span>()}  <span class="token-comment">// block backdrop dismiss</span>
+      &gt;
+        &lt;<span class="token-type">DialogTitle</span>&gt;{title}&lt;/<span class="token-type">DialogTitle</span>&gt;
+        &lt;<span class="token-type">DialogDescription</span>&gt;{description}&lt;/<span class="token-type">DialogDescription</span>&gt;
+        &lt;<span class="token-type">Button</span> <span class="token-prop">onClick</span>={<span class="token-prop">onClose</span>}&gt;Cancel&lt;/<span class="token-type">Button</span>&gt;
+        &lt;<span class="token-type">Button</span> <span class="token-prop">onClick</span>={handleConfirm}&gt;{btnText}&lt;/<span class="token-type">Button</span>&gt;
+      &lt;/<span class="token-type">DialogContent</span>&gt;
+    &lt;/<span class="token-type">Dialog</span>&gt;
+  )
+}</code></pre>
+    <p class="text-text-secondary mb-4">Three things worth noting from this real implementation:</p>
+    <ul class="flex flex-col gap-4 text-sm mb-4">
+      <li class="flex gap-3">
+        <span class="text-accent font-bold shrink-0 mt-0.5">›</span>
+        <div>
+          <p class="font-semibold text-text mb-1">No <code class="prose-inline">onOpenChange</code> on Dialog.</p>
+          <p class="text-text-secondary">The Radix <code class="prose-inline">Dialog</code> is controlled purely through the <code class="prose-inline">open</code> prop. Closing is always initiated via the manager's <code class="prose-inline">onClose()</code>, never by the dialog's own interaction handlers. Escape and backdrop click are explicitly blocked.</p>
+        </div>
+      </li>
+      <li class="flex gap-3">
+        <span class="text-accent font-bold shrink-0 mt-0.5">›</span>
+        <div>
+          <p class="font-semibold text-text mb-1"><code class="prose-inline">onConfirm</code> returns a boolean.</p>
+          <p class="text-text-secondary"><code class="prose-inline">true</code> means "I'm done, close me." <code class="prose-inline">false</code> means "keep me open" — useful for validation failures where you want to keep the dialog visible.</p>
+        </div>
+      </li>
+      <li class="flex gap-3">
+        <span class="text-accent font-bold shrink-0 mt-0.5">›</span>
+        <div>
+          <p class="font-semibold text-text mb-1">All props are optional with sensible defaults.</p>
+          <p class="text-text-secondary">You can fire <code class="prose-inline">showModal(WarningPrompt)</code> with no options and get a functional dialog. Override only what you need.</p>
+        </div>
+      </li>
+    </ul>
+    <p class="text-text-secondary">
+      The four built-in prompt components in NUVELCO CCA — <code class="prose-inline">AlertPrompt</code>, <code class="prose-inline">WarningPrompt</code>, <code class="prose-inline">SuccessPrompt</code>, and <code class="prose-inline">LoadingPrompt</code> — all follow this exact same shape, differing only in icon, color, and whether they have a confirm callback.
+    </p>
+  </section>
+
+</div>
+
+<div class="max-w-3xl mx-auto px-6">
+
+  <!-- 11. TRADEOFFS -->
+  <section id="tradeoffs" class="mb-16 reveal" aria-labelledby="h-tradeoffs">
+    <h2 id="h-tradeoffs" class="text-2xl font-bold mb-4">11. When to use it — and when not to</h2>
+    <div class="flex flex-col gap-4 mb-8">
+      <div class="bg-bg-elevated border border-accent/20 rounded-xl p-5">
+        <h3 class="font-semibold text-accent text-sm uppercase tracking-wide mb-3">Good fit</h3>
+        <ul class="flex flex-col gap-2 text-sm text-text-secondary">
+          <li class="flex gap-2"><span class="text-accent font-bold">›</span> Confirmation dialogs triggered from form submit handlers, API error callbacks, or route loaders — anywhere React context isn't naturally available</li>
+          <li class="flex gap-2"><span class="text-accent font-bold">›</span> Stacked multi-step flows where each step opens the next dialog and can close all subsequent ones with <code class="prose-inline">delChildModals</code></li>
+          <li class="flex gap-2"><span class="text-accent font-bold">›</span> Internal tools and admin dashboards where you're iterating quickly — no boilerplate state wiring per dialog</li>
+          <li class="flex gap-2"><span class="text-accent font-bold">›</span> Apps already using Radix, shadcn/ui, or Base UI — the manager owns <code class="prose-inline">open</code>, the primitive owns its animation</li>
+        </ul>
+      </div>
+      <div class="bg-bg-elevated border border-danger/20 rounded-xl p-5">
+        <h3 class="font-semibold text-danger text-sm uppercase tracking-wide mb-3">Not a good fit</h3>
+        <ul class="flex flex-col gap-2 text-sm text-text-secondary">
+          <li class="flex gap-2"><span class="text-warn font-bold">›</span> Dialogs that need to return a value to the caller synchronously — the async pattern works but a promise-based imperative API (like <code class="prose-inline">dialog.showModal()</code>) is cleaner for that case</li>
+          <li class="flex gap-2"><span class="text-warn font-bold">›</span> SSR environments without careful hydration handling — the static class field persists across requests in a Node.js server context if module caching isn't isolated</li>
+          <li class="flex gap-2"><span class="text-warn font-bold">›</span> Teams that want full traceability in React DevTools — global singleton state is invisible to the component tree inspector</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- CLOSING DIAGRAM -->
+    <h2 class="text-xl font-bold mb-4">The full picture in one diagram</h2>
+    <div class="bg-bg-elevated border border-border rounded-xl p-6 text-sm font-mono text-text-secondary leading-loose">
+      <p><span class="text-text">App root</span></p>
+      <p class="ml-4">└── <span class="text-accent">&lt;OverlayManager /&gt;</span></p>
+      <p class="ml-8">sets OverlayManager.instance = this</p>
+      <p class="ml-8">attaches click/keydown global guards</p>
+      <p class="ml-8">renders this.state.overlays[]</p>
+      <br>
+      <p><span class="text-text">Anywhere in the app</span></p>
+      <p class="ml-4">└── <span class="text-accent-2">showModal(WarningPrompt, { title: '...' })</span></p>
+      <p class="ml-8">→ OverlayManager.instance.addOverlay(...)</p>
+      <p class="ml-8">→ getRandomNumber(1, 100) → id = 42</p>
+      <p class="ml-8">→ filter closed keyless entries</p>
+      <p class="ml-8">→ push { Component, open: true, props, id }</p>
+      <p class="ml-8">→ setState → re-render</p>
+      <p class="ml-8">→ &lt;SafeDialogGuard id="42"&gt;</p>
+      <p class="ml-10">→ MutationObserver watches document.body</p>
+      <p class="ml-10">→ &lt;WarningPrompt open={true} onClose={…} title="…" /&gt;</p>
+      <br>
+      <p><span class="text-text">User closes</span></p>
+      <p class="ml-4">└── <span class="text-warn">onClose() → delOverlay(42)</span></p>
+      <p class="ml-8">→ delDueToBackButton(42)</p>
+      <p class="ml-8">→ sets open: false on entry</p>
+      <p class="ml-8">→ render returns null for that entry</p>
+      <p class="ml-8">→ Radix Dialog plays exit animation, removes from DOM</p>
+      <p class="ml-8">→ MutationObserver disconnects for that guard</p>
+    </div>
+
+    <div class="mt-10 flex flex-wrap gap-4">
+      <a href="https://www.npmjs.com/package/@rrlopez/overlay-manager" target="_blank" rel="noopener noreferrer"
+         class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-accent text-bg text-sm font-semibold hover:bg-accent-2 hover:-translate-y-0.5 transition-all">
+        View on npm
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 17 17 7M7 7h10v10"/></svg>
+      </a>
+      <a href="https://github.com/rrlopez/modal-manager" target="_blank" rel="noopener noreferrer"
+         class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-bg-elevated border border-border text-sm font-medium hover:border-accent hover:text-accent transition-all">
+        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.57.1.78-.25.78-.55v-1.94c-3.2.7-3.87-1.36-3.87-1.36-.53-1.34-1.29-1.7-1.29-1.7-1.05-.72.08-.7.08-.7 1.17.08 1.78 1.2 1.78 1.2 1.03 1.77 2.7 1.26 3.36.96.1-.74.4-1.26.72-1.55-2.55-.29-5.23-1.28-5.23-5.7 0-1.26.45-2.29 1.2-3.1-.12-.29-.52-1.46.11-3.04 0 0 .98-.31 3.2 1.18a11.1 11.1 0 0 1 5.83 0c2.22-1.49 3.2-1.18 3.2-1.18.63 1.58.23 2.75.11 3.04.75.81 1.2 1.84 1.2 3.1 0 4.43-2.69 5.41-5.25 5.69.41.36.77 1.07.77 2.15v3.19c0 .3.21.66.79.55A11.51 11.51 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5Z"/></svg>
+        Source on GitHub
+      </a>
+      <a href="/overlay-manager.html"
+         class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-bg-elevated border border-border text-sm font-medium hover:border-accent hover:text-accent transition-all">
+        Project page ↗
+      </a>
+    </div>
+  </section>
+
+</div>
+
+<footer class="border-t border-border py-10 text-center text-sm text-text-secondary">
+  <p>&copy; 2026 Ricardo Rey Crisanto V. Lopez II. Built with semantic HTML5 &amp; Tailwind CSS v4.</p>
+  <a href="/index.html#blog" class="inline-block mt-3 text-accent hover:text-accent-2 transition-colors">&larr; Back to writing</a>
+</footer>
+
+<script>
+  const revealEls = document.querySelectorAll('.reveal');
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) { e.target.classList.add('in-view'); io.unobserve(e.target); }
+    });
+  }, { threshold: 0.1 });
+  revealEls.forEach(el => io.observe(el));
+</script>
+</body>
+</html>

@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Auth That Works Offline — Building a Credential Cache with Better Auth and SQLite OPFS | RJ Lopez</title>
+<meta name="description" content="How NUVELCO CCA implements dual-mode authentication: Better Auth handles the online session, a locally-persisted SQLite credential cache with crypto.subtle hashing handles the offline path — with a shared AuthEngine object coordinating both.">
+
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+
+<style type="text/tailwindcss">
+  @theme {
+    --color-bg: #0f172a;
+    --color-bg-elevated: #16213e;
+    --color-border: #1e293b;
+    --color-text: #f8fafc;
+    --color-text-secondary: #94a3b8;
+    --color-accent: #10b981;
+    --color-accent-2: #6366f1;
+    --color-warn: #f59e0b;
+    --color-danger: #f43f5e;
+  }
+
+  html { scroll-behavior: smooth; }
+  body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .reveal { opacity: 0; }
+  .reveal.in-view { animation: fade-up 0.55s ease-out forwards; }
+
+  pre, code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+
+  .prose-inline {
+    background: #16213e; border: 1px solid #1e293b; border-radius: 0.3rem;
+    padding: 0.1rem 0.4rem; font-size: 0.8rem; color: #a5b4fc;
+  }
+
+  .code-block {
+    background: #0d1424; border: 1px solid #1e293b; border-radius: 0.75rem;
+    padding: 1.25rem 1.5rem; overflow-x: auto; font-size: 0.8rem;
+    line-height: 1.7; tab-size: 2;
+  }
+  .token-comment  { color: #4a5568; font-style: italic; }
+  .token-keyword  { color: #c792ea; }
+  .token-string   { color: #c3e88d; }
+  .token-fn       { color: #82aaff; }
+  .token-type     { color: #ffcb6b; }
+  .token-num      { color: #f78c6c; }
+  .token-prop     { color: #89ddff; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; scroll-behavior: auto !important; }
+    .reveal { opacity: 1 !important; animation: none !important; }
+  }
+  @media print {
+    nav, #scroll-top-btn { display: none !important; }
+    * { background: #fff !important; color: #0f172a !important; }
+  }
+</style>
+</head>
+<body class="bg-bg text-text leading-relaxed antialiased">
+
+<!-- SCROLL TO TOP -->
+<button id="scroll-top-btn" aria-label="Scroll to top"
+  onclick="window.scrollTo({top:0,behavior:'smooth'})"
+  class="fixed bottom-6 right-6 z-20 w-11 h-11 flex items-center justify-center rounded-full bg-accent text-bg shadow-lg shadow-accent/30 opacity-0 translate-y-2 pointer-events-none transition-all duration-300 hover:bg-accent-2 hover:-translate-y-0.5">
+  <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7"/></svg>
+</button>
+<script>
+  const sb = document.getElementById('scroll-top-btn');
+  window.addEventListener('scroll', () => {
+    const v = window.scrollY > 400;
+    sb.classList.toggle('opacity-0', !v); sb.classList.toggle('opacity-100', v);
+    sb.classList.toggle('translate-y-2', !v); sb.classList.toggle('translate-y-0', v);
+    sb.classList.toggle('pointer-events-none', !v);
+  }, { passive: true });
+</script>
+
+<!-- NAV -->
+<nav class="sticky top-0 z-30 bg-bg/90 backdrop-blur border-b border-border">
+  <div class="max-w-3xl mx-auto px-6 py-3 flex items-center justify-between gap-4">
+    <a href="/index.html" class="font-bold text-text tracking-tight shrink-0">RJ<span class="text-accent">.</span>dev</a>
+    <div class="flex items-center gap-3 text-sm">
+      <a href="/index.html#blog" class="text-text-secondary hover:text-accent transition-colors">← All posts</a>
+      <a href="/nuvelco-cca.html"
+         class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-bg-elevated border border-border text-xs font-semibold hover:border-accent hover:text-accent transition-all">
+        Project ↗
+      </a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<header id="top" class="border-b border-border">
+  <div class="max-w-3xl mx-auto px-6 py-14 sm:py-20">
+    <div class="flex flex-wrap items-center gap-2 mb-5">
+      <span class="text-[11px] font-semibold uppercase tracking-wide text-accent bg-accent/10 border border-accent/30 px-2.5 py-1 rounded-full">Architecture</span>
+      <span class="text-[11px] font-semibold uppercase tracking-wide text-text-secondary bg-bg-elevated border border-border px-2.5 py-1 rounded-full">Auth</span>
+      <span class="text-[11px] font-semibold uppercase tracking-wide text-text-secondary bg-bg-elevated border border-border px-2.5 py-1 rounded-full">TypeScript</span>
+      <span class="text-[11px] font-semibold uppercase tracking-wide text-text-secondary bg-bg-elevated border border-border px-2.5 py-1 rounded-full">Offline-First</span>
+    </div>
+    <h1 class="text-3xl sm:text-5xl font-bold tracking-tight leading-tight">
+      Auth That Works Offline
+    </h1>
+    <p class="mt-4 text-xl text-text-secondary font-medium">
+      Building a dual-mode credential system with Better Auth, <code class="prose-inline">crypto.subtle</code>, and SQLite OPFS
+    </p>
+    <div class="mt-6 flex flex-wrap items-center gap-5 text-sm text-text-secondary">
+      <span class="flex items-center gap-2">
+        <img src="https://placehold.co/28x28/16213e/10b981?text=RJ&font=roboto" alt="RJ" class="w-7 h-7 rounded-full border border-accent/30">
+        RJ Lopez
+      </span>
+      <span>July 14, 2026</span>
+      <span>12 min read</span>
+    </div>
+  </div>
+</header>
+
+<div class="max-w-3xl mx-auto px-6 py-14">
+
+  <!-- TABLE OF CONTENTS -->
+  <nav class="reveal mb-14 bg-bg-elevated border border-border rounded-xl p-6" aria-label="Table of contents">
+    <p class="text-xs font-semibold uppercase tracking-wider text-text-secondary mb-4">In this post</p>
+    <ol class="flex flex-col gap-2 text-sm">
+      <li><a href="#the-problem"    class="text-accent-2 hover:text-accent transition-colors">1. The problem — auth when there's no network</a></li>
+      <li><a href="#architecture"   class="text-accent-2 hover:text-accent transition-colors">2. The architecture at a glance</a></li>
+      <li><a href="#local-cache"    class="text-accent-2 hover:text-accent transition-colors">3. The credential cache — <code class="prose-inline">localAuthCollection</code></a></li>
+      <li><a href="#online-login"   class="text-accent-2 hover:text-accent transition-colors">4. Online login — capturing the hash at the right moment</a></li>
+      <li><a href="#offline-login"  class="text-accent-2 hover:text-accent transition-colors">5. Offline login — hash comparison and TTL enforcement</a></li>
+      <li><a href="#sync"           class="text-accent-2 hover:text-accent transition-colors">6. Background sync — keeping the cache fresh</a></li>
+      <li><a href="#store"          class="text-accent-2 hover:text-accent transition-colors">7. The auth store — hotline state and idempotent <code class="prose-inline">setUser</code></a></li>
+      <li><a href="#route-guard"    class="text-accent-2 hover:text-accent transition-colors">8. The private route guard — online vs. offline identity resolution</a></li>
+      <li><a href="#verify-trick"   class="text-accent-2 hover:text-accent transition-colors">9. The <code class="prose-inline">verifyAuth</code> trick — checking credentials without clobbering the session</a></li>
+      <li><a href="#logout"         class="text-accent-2 hover:text-accent transition-colors">10. Logout — cleaning up both worlds</a></li>
+      <li><a href="#diagram"        class="text-accent-2 hover:text-accent transition-colors">11. Everything in one diagram</a></li>
+      <li><a href="#tradeoffs"      class="text-accent-2 hover:text-accent transition-colors">12. Tradeoffs and what this doesn't solve</a></li>
+    </ol>
+  </nav>
+
+  <!-- 1. THE PROBLEM -->
+  <section id="the-problem" class="mb-16 reveal" aria-labelledby="h-problem">
+    <h2 id="h-problem" class="text-2xl font-bold mb-4">1. The problem — auth when there's no network</h2>
+    <p class="text-text-secondary mb-4">
+      Most auth libraries are built around a single assumption: there is a server to talk to. Cookie-based sessions, JWTs, OAuth flows — all of them require a network round-trip to validate identity. That assumption breaks the moment your users work in an environment with unreliable connectivity.
+    </p>
+    <p class="text-text-secondary mb-4">
+      NUVELCO CCA runs in field stations attached to substations across a rural province. Agents log support tickets, dispatch field crews, and update consumer accounts. When a substation loses its uplink — which happens — they need to keep working. That means they need to keep being <em>authenticated</em>.
+    </p>
+    <p class="text-text-secondary mb-4">
+      The requirement is specific: an agent who has logged in at least once while online should be able to re-authenticate offline, with the same credentials, for up to seven days. After that, they must come back online.
+    </p>
+    <div class="border-l-2 border-accent pl-5 text-text-secondary italic mb-4">
+      "We can't tell a field agent their session expired and they need to connect to the internet. There is no internet."
+    </div>
+    <p class="text-text-secondary">
+      The solution is a dual-mode credential system built on top of Better Auth. Online sessions go through the normal Better Auth flow. Offline sessions authenticate against a locally-persisted, cryptographically-hashed credential cache stored in SQLite OPFS. A single <code class="prose-inline">AuthEngine</code> object coordinates both paths with the same external interface — the login page doesn't know which mode it's in until it checks <code class="prose-inline">navigator.onLine</code>.
+    </p>
+  </section>
+
+  <!-- 2. ARCHITECTURE -->
+  <section id="architecture" class="mb-16 reveal" aria-labelledby="h-arch">
+    <h2 id="h-arch" class="text-2xl font-bold mb-4">2. The architecture at a glance</h2>
+    <p class="text-text-secondary mb-4">
+      Four pieces interact to make this work:
+    </p>
+    <div class="grid sm:grid-cols-2 gap-4 mb-6">
+      <div class="bg-bg-elevated border border-border rounded-xl p-5">
+        <p class="font-semibold text-sm text-accent mb-1">Better Auth</p>
+        <p class="text-sm text-text-secondary">Handles the online session — cookies, session tokens, Prisma-backed user records. The canonical source of identity when the network is available.</p>
+      </div>
+      <div class="bg-bg-elevated border border-border rounded-xl p-5">
+        <p class="font-semibold text-sm text-accent mb-1"><code class="prose-inline">localAuthCollection</code></p>
+        <p class="text-sm text-text-secondary">A TanStack DB collection persisted in SQLite OPFS. Stores the user profile, a SHA-256 hash of the last-used password, and a 7-day expiry timestamp. The offline credential store.</p>
+      </div>
+      <div class="bg-bg-elevated border border-border rounded-xl p-5">
+        <p class="font-semibold text-sm text-accent mb-1"><code class="prose-inline">AuthEngine</code></p>
+        <p class="text-sm text-text-secondary">A plain object with four methods: <code class="prose-inline">loginOnline</code>, <code class="prose-inline">loginOffline</code>, <code class="prose-inline">syncServerToLocal</code>, and <code class="prose-inline">logout</code>. The unified interface that hides which path is active.</p>
+      </div>
+      <div class="bg-bg-elevated border border-border rounded-xl p-5">
+        <p class="font-semibold text-sm text-accent mb-1"><code class="prose-inline">authStore</code></p>
+        <p class="text-sm text-text-secondary">A TanStack Store that holds the active user identity in memory. Both auth paths write to the same store shape — the rest of the app doesn't care how the session was established.</p>
+      </div>
+    </div>
+    <p class="text-text-secondary">
+      The login form checks <code class="prose-inline">navigator.onLine</code> and calls either <code class="prose-inline">AuthEngine.loginOnline</code> or <code class="prose-inline">AuthEngine.loginOffline</code>. Both callbacks receive a <code class="prose-inline">ServerUser</code> and navigate to the same role-based landing page. Nothing downstream changes.
+    </p>
+  </section>
+
+</div>
+
+<div class="max-w-3xl mx-auto px-6">
+
+  <!-- 3. LOCAL CACHE -->
+  <section id="local-cache" class="mb-16 reveal" aria-labelledby="h-cache">
+    <h2 id="h-cache" class="text-2xl font-bold mb-4">3. The credential cache — <code class="prose-inline">localAuthCollection</code></h2>
+    <p class="text-text-secondary mb-4">
+      The cache is a TanStack DB collection backed by the same SQLite OPFS persistence layer used for all app data. It lives alongside the ticket and consumer collections but is never synced to the server — it's client-only by design.
+    </p>
+    <pre class="code-block mb-5"><code><span class="token-comment">// src/db/local-auth.ts</span>
+<span class="token-keyword">import type</span> { <span class="token-type">ServerUser</span> } <span class="token-keyword">from</span> <span class="token-string">'@/lib/better-auth/auth-server'</span>
+
+<span class="token-keyword">const</span> LocalAuthSchema = z.<span class="token-fn">object</span>({
+  id:             z.<span class="token-fn">string</span>(),
+  email:          z.<span class="token-fn">email</span>(),
+  hashedPassword: z.<span class="token-fn">string</span>(),  <span class="token-comment">// SHA-256 hex of the last successful password</span>
+  profile:        z.<span class="token-fn">object</span>({}) <span class="token-keyword">as unknown as</span> z.<span class="token-type">ZodType</span>&lt;<span class="token-type">LocalUser</span>&gt;, <span class="token-comment">// full ServerUser snapshot</span>
+  expiresAt:      z.<span class="token-fn">number</span>(),   <span class="token-comment">// Unix ms timestamp — Date.now() + 7 days</span>
+})
+
+<span class="token-keyword">export type</span> <span class="token-type">LocalAuth</span> = z.<span class="token-fn">infer</span>&lt;<span class="token-keyword">typeof</span> LocalAuthSchema&gt;
+
+<span class="token-keyword">export let</span> localAuthCollection = {} <span class="token-keyword">as</span> <span class="token-type">Collection</span>&lt;<span class="token-type">LocalAuth</span>, <span class="token-keyword">string</span>&gt;
+<span class="token-keyword">if</span> (<span class="token-keyword">typeof</span> window !== <span class="token-string">'undefined'</span>) {
+  localAuthCollection = <span class="token-fn">createCollection</span>(
+    <span class="token-fn">persistedCollectionOptions</span>&lt;<span class="token-type">LocalAuth</span>, <span class="token-keyword">string</span>&gt;({
+      id: <span class="token-string">'localAuth'</span>,
+      getKey: auth =&gt; auth.id,
+      persistence,      <span class="token-comment">// shared SQLite OPFS instance</span>
+      schemaVersion: <span class="token-num">1</span>,
+    }),
+  )
+}</code></pre>
+    <p class="text-text-secondary mb-4">
+      A few design choices are worth calling out. The <code class="prose-inline">profile</code> field stores a full snapshot of <code class="prose-inline">ServerUser</code> — name, role, image, everything — so that an offline login can hydrate the auth store with the complete user object, not a partial shell. The <code class="prose-inline">hashedPassword</code> is never sent to the server; it only ever lives in the browser's OPFS partition. And the collection is guarded by a <code class="prose-inline">typeof window !== 'undefined'</code> check because it depends on browser APIs that don't exist during SSR.
+    </p>
+    <div class="bg-bg-elevated border border-border rounded-xl p-5 text-sm text-text-secondary mb-4">
+      <p class="font-semibold text-text mb-2">Why OPFS and not <code class="prose-inline">localStorage</code>?</p>
+      <p><code class="prose-inline">localStorage</code> is synchronous, size-limited (~5 MB), and stores everything as strings. OPFS (Origin Private File System) gives you a full SQLite database, async access, no practical size limit, and is isolated to the origin — no other site can read it. Storing a credential cache in <code class="prose-inline">localStorage</code> would be careless. In OPFS it's structurally sound.</p>
+    </div>
+  </section>
+
+  <!-- 4. ONLINE LOGIN -->
+  <section id="online-login" class="mb-16 reveal" aria-labelledby="h-online">
+    <h2 id="h-online" class="text-2xl font-bold mb-4">4. Online login — capturing the hash at the right moment</h2>
+    <p class="text-text-secondary mb-4">
+      The online path delegates the actual authentication to Better Auth's <code class="prose-inline">authClient.signIn.email</code>. The trick is what happens in the <code class="prose-inline">onSuccess</code> callback: the plaintext password is hashed with <code class="prose-inline">crypto.subtle</code> and written into the local cache <em>while the credential is still available in memory</em>. After this callback returns, the password is gone — the app never stores it.
+    </p>
+    <pre class="code-block mb-5"><code><span class="token-comment">// src/lib/better-auth/auth-engine.ts</span>
+<span class="token-keyword">async</span> <span class="token-fn">loginOnline</span>(email: <span class="token-keyword">string</span>, password: <span class="token-keyword">string</span>, onSuccess: (user: <span class="token-type">ServerUser</span>) =&gt; <span class="token-keyword">void</span>) {
+  <span class="token-keyword">await</span> authClient.signIn.<span class="token-fn">email</span>(
+    { email, password },
+    {
+      onSuccess: <span class="token-keyword">async</span> () =&gt; {
+        <span class="token-fn">clearSessionHotline</span>()
+
+        <span class="token-comment">// Fetch the full user profile from the server now that the session is live</span>
+        <span class="token-keyword">const</span> fullUser = <span class="token-keyword">await</span> <span class="token-fn">getAuthUser</span>()
+        <span class="token-keyword">if</span> (!fullUser) {
+          toast.<span class="token-fn">error</span>(<span class="token-string">'Login succeeded but user profile could not be loaded.'</span>)
+          <span class="token-keyword">return</span>
+        }
+
+        <span class="token-comment">// Hash the plaintext password before it leaves this scope</span>
+        <span class="token-keyword">const</span> hashedPassword = <span class="token-keyword">await</span> AuthEngine.<span class="token-fn">hashCredentials</span>(password)
+        <span class="token-keyword">const</span> localUser = [...localAuthCollection.<span class="token-fn">values</span>()].<span class="token-fn">find</span>(u =&gt; u.email === email)
+
+        <span class="token-keyword">if</span> (localUser) {
+          <span class="token-comment">// Update the existing entry — refresh profile snapshot and extend TTL</span>
+          <span class="token-keyword">await</span> localAuthCollection.<span class="token-fn">update</span>(localUser.id, draft =&gt; {
+            draft.profile        = fullUser
+            draft.hashedPassword = hashedPassword
+            draft.expiresAt      = Date.<span class="token-fn">now</span>() + <span class="token-num">7</span> * <span class="token-num">24</span> * <span class="token-num">60</span> * <span class="token-num">60</span> * <span class="token-num">1000</span>
+          })
+        } <span class="token-keyword">else</span> {
+          <span class="token-comment">// First login on this device — create the entry</span>
+          <span class="token-keyword">await</span> localAuthCollection.<span class="token-fn">insert</span>({
+            id: fullUser.id, email: fullUser.email,
+            hashedPassword,  profile: fullUser,
+            expiresAt: Date.<span class="token-fn">now</span>() + <span class="token-num">7</span> * <span class="token-num">24</span> * <span class="token-num">60</span> * <span class="token-num">60</span> * <span class="token-num">1000</span>,
+          })
+        }
+
+        <span class="token-fn">onSuccess</span>(fullUser)
+      },
+      onError: ctx =&gt; toast.<span class="token-fn">error</span>(ctx.error.message || <span class="token-string">'Authentication failed'</span>),
+    },
+  )
+},</code></pre>
+    <p class="text-text-secondary mb-4">
+      The hash is computed with the Web Crypto API — no library, no dependency:
+    </p>
+    <pre class="code-block mb-5"><code>hashCredentials: <span class="token-keyword">async</span> (password: <span class="token-keyword">string</span>) =&gt; {
+  <span class="token-keyword">const</span> msgBuffer  = <span class="token-keyword">new</span> <span class="token-type">TextEncoder</span>().<span class="token-fn">encode</span>(password)
+  <span class="token-keyword">const</span> hashBuffer = <span class="token-keyword">await</span> crypto.subtle.<span class="token-fn">digest</span>(<span class="token-string">'SHA-256'</span>, msgBuffer)
+  <span class="token-keyword">return</span> <span class="token-type">Array</span>.<span class="token-fn">from</span>(<span class="token-keyword">new</span> <span class="token-type">Uint8Array</span>(hashBuffer))
+    .<span class="token-fn">map</span>(b =&gt; b.<span class="token-fn">toString</span>(<span class="token-num">16</span>).<span class="token-fn">padStart</span>(<span class="token-num">2</span>, <span class="token-string">'0'</span>))
+    .<span class="token-fn">join</span>(<span class="token-string">''</span>)
+}</code></pre>
+    <p class="text-text-secondary">
+      Every online login refreshes the cache: the profile snapshot is updated with the latest server state, the hash is refreshed with whatever password was just used, and the TTL is extended by another seven days from now. The cache is always as fresh as the most recent successful login.
+    </p>
+  </section>
+
+</div>
+
+<div class="max-w-3xl mx-auto px-6">
+
+  <!-- 5. OFFLINE LOGIN -->
+  <section id="offline-login" class="mb-16 reveal" aria-labelledby="h-offline">
+    <h2 id="h-offline" class="text-2xl font-bold mb-4">5. Offline login — hash comparison and TTL enforcement</h2>
+    <p class="text-text-secondary mb-4">
+      Offline login is a three-step gate: find the cached entry by email, hash the submitted password and compare it to the stored hash, check the TTL. Pass all three and the <code class="prose-inline">authStore</code> is populated from the local profile snapshot. Fail any one and the attempt is rejected with an explicit error.
+    </p>
+    <pre class="code-block mb-5"><code><span class="token-keyword">async</span> <span class="token-fn">loginOffline</span>(email: <span class="token-keyword">string</span>, password: <span class="token-keyword">string</span>, onSuccess: (user: <span class="token-type">ServerUser</span>) =&gt; <span class="token-keyword">void</span>) {
+  <span class="token-comment">// Step 1 — look up the cached entry</span>
+  <span class="token-keyword">const</span> localUser = [...localAuthCollection.<span class="token-fn">values</span>()].<span class="token-fn">find</span>(u =&gt; u.email === email)
+  <span class="token-keyword">const</span> inputHash = <span class="token-keyword">await</span> AuthEngine.<span class="token-fn">hashCredentials</span>(password)
+
+  <span class="token-keyword">if</span> (localUser && localUser.hashedPassword === inputHash) {
+    <span class="token-comment">// Step 2 — TTL check: don't allow stale offline sessions</span>
+    <span class="token-keyword">if</span> (Date.<span class="token-fn">now</span>() > localUser.expiresAt) {
+      toast.<span class="token-fn">error</span>(<span class="token-string">'Offline session expired. Please connect to the internet.'</span>)
+      <span class="token-keyword">return</span>
+    }
+
+    <span class="token-fn">clearSessionHotline</span>()
+
+    <span class="token-comment">// Step 3 — hydrate the in-memory auth store from the local profile snapshot</span>
+    authStore.<span class="token-fn">setState</span>(s =&gt; ({
+      ...s,
+      user: { ...localUser.profile, assignedHotline: <span class="token-keyword">undefined</span> },
+      isAuthenticated: <span class="token-keyword">true</span>,
+    }))
+
+    <span class="token-fn">onSuccess</span>(localUser.profile)
+    <span class="token-keyword">return</span>
+  }
+
+  toast.<span class="token-fn">error</span>(<span class="token-string">'Invalid credentials or user not cached for offline use.'</span>)
+},</code></pre>
+    <p class="text-text-secondary mb-4">
+      A few things this deliberately does not do. It doesn't hit the network. It doesn't create a Better Auth session — there is no session token; the auth store is the session for the duration of the offline period. And it clears the <code class="prose-inline">assignedHotline</code> from the restored profile: hotline assignment is a session-scoped concept (stored in <code class="prose-inline">sessionStorage</code>, not in the OPFS cache) so offline users must re-select their hotline after logging in.
+    </p>
+    <div class="bg-bg-elevated border border-border rounded-xl p-5 text-sm text-text-secondary">
+      <p class="font-semibold text-text mb-2">Why not store the hash on the server and verify there?</p>
+      <p>Because that requires a network round-trip — which is exactly what we're trying to avoid. The point of offline auth is to be fully self-contained. The hash comparison happens entirely in the browser, against data that was written to OPFS the last time the user was online. No server contact at any point.</p>
+    </div>
+  </section>
+
+  <!-- 6. SYNC -->
+  <section id="sync" class="mb-16 reveal" aria-labelledby="h-sync">
+    <h2 id="h-sync" class="text-2xl font-bold mb-4">6. Background sync — keeping the cache fresh</h2>
+    <p class="text-text-secondary mb-4">
+      A credential cache that only updates on explicit login would go stale for users who stay logged in between shifts. The private route guard addresses this: every time a user navigates to a protected route while online, it calls <code class="prose-inline">AuthEngine.syncServerToLocal</code> to silently refresh the cache with the latest server profile, extending the TTL.
+    </p>
+    <pre class="code-block mb-5"><code><span class="token-comment">// Called on every protected route mount when isOnline and user exists in localAuthCollection</span>
+<span class="token-keyword">async</span> <span class="token-fn">syncServerToLocal</span>(serverUser: <span class="token-type">ServerUser</span>): <span class="token-type">Promise</span>&lt;<span class="token-keyword">void</span>&gt; {
+  <span class="token-keyword">const</span> expiry = Date.<span class="token-fn">now</span>() + <span class="token-num">7</span> * <span class="token-num">24</span> * <span class="token-num">60</span> * <span class="token-num">60</span> * <span class="token-num">1000</span>
+  <span class="token-keyword">const</span> exists = localAuthCollection.<span class="token-fn">has</span>(serverUser.id)
+
+  <span class="token-keyword">if</span> (exists) {
+    <span class="token-keyword">await</span> localAuthCollection.<span class="token-fn">update</span>(serverUser.id, draft =&gt; {
+      draft.profile   = serverUser  <span class="token-comment">// pull latest name, role, image from server</span>
+      draft.expiresAt = expiry      <span class="token-comment">// extend TTL on every active session</span>
+    })
+  } <span class="token-keyword">else</span> {
+    <span class="token-comment">// User navigated to a protected route but was never explicitly logged in</span>
+    <span class="token-comment">// on this device — seed the entry without a password hash</span>
+    <span class="token-keyword">await</span> localAuthCollection.<span class="token-fn">insert</span>({
+      id: serverUser.id, email: serverUser.email,
+      profile: serverUser, hashedPassword: <span class="token-string">''</span>,
+      expiresAt: expiry,
+    })
+  }
+}</code></pre>
+    <p class="text-text-secondary mb-4">
+      Note the <code class="prose-inline">hashedPassword: ''</code> in the insert branch. An entry seeded this way will <em>never</em> pass offline auth — the empty hash will never match a real password hash. This is intentional: a user who has never explicitly logged in on this device doesn't have a cached password. Seeding the profile without a hash ensures the cache is populated for the <em>next</em> online login to update, rather than silently failing or being absent entirely.
+    </p>
+    <p class="text-text-secondary">
+      This also means <code class="prose-inline">syncServerToLocal</code> is safe to call on every route mount. It only updates the profile and TTL — it never touches <code class="prose-inline">hashedPassword</code> unless the entry already has one.
+    </p>
+  </section>
+
+</div>
+
+<div class="max-w-3xl mx-auto px-6">
+
+  <!-- 7. AUTH STORE -->
+  <section id="store" class="mb-16 reveal" aria-labelledby="h-store">
+    <h2 id="h-store" class="text-2xl font-bold mb-4">7. The auth store — hotline state and idempotent <code class="prose-inline">setUser</code></h2>
+    <p class="text-text-secondary mb-4">
+      The auth store is a TanStack Store — a lightweight reactive container with no React dependency. It holds the active <code class="prose-inline">ServerUser</code> in memory and a handful of boolean flags. Both the online and offline auth paths write to the same store, so every consumer in the component tree sees the same shape regardless of how the session was established.
+    </p>
+    <pre class="code-block mb-5"><code><span class="token-comment">// src/store/auth-store.ts</span>
+<span class="token-keyword">export const</span> authStore = <span class="token-keyword">new</span> <span class="token-type">Store</span>&lt;<span class="token-type">AuthState</span>&gt;({
+  isAuthenticated: <span class="token-keyword">false</span>,
+  isLoggingOut:    <span class="token-keyword">false</span>,
+  user:            {} <span class="token-keyword">as unknown as</span> <span class="token-type">ServerUser</span>,
+  <span class="token-comment">// ...other flags</span>
+})</code></pre>
+    <p class="text-text-secondary mb-4">
+      Two subtle patterns in the store are worth explaining. First, the <code class="prose-inline">setUser</code> function is idempotent — if the store already has a user, it returns the existing state untouched. This prevents the server-side <code class="prose-inline">beforeLoad</code> from overwriting a user that was already restored from the offline cache on a back-navigation:
+    </p>
+    <pre class="code-block mb-5"><code><span class="token-keyword">export const</span> <span class="token-fn">setUser</span> = (user: <span class="token-type">ServerUser</span>) =&gt; {
+  authStore.<span class="token-fn">setState</span>(state =&gt; {
+    <span class="token-keyword">if</span> (state.user.id) <span class="token-keyword">return</span> state  <span class="token-comment">// already have a user — don't overwrite</span>
+
+    <span class="token-keyword">return</span> user
+      ? { ...state, isAuthenticated: <span class="token-keyword">true</span>, user: <span class="token-fn">withSessionHotline</span>(user) }
+      : defaultValue
+  })
+}</code></pre>
+    <p class="text-text-secondary mb-4">
+      Second, the hotline is deliberately <em>not</em> stored in OPFS or in the Better Auth session model directly. It lives in <code class="prose-inline">sessionStorage</code> — scoped to the browser tab, cleared on close. When <code class="prose-inline">setUser</code> runs, it reads the hotline from <code class="prose-inline">sessionStorage</code> and merges it into the user object before storing it. This means the hotline survives a page reload within the same tab but is gone after a fresh login, which matches the intended UX: agents pick their hotline at the start of each shift.
+    </p>
+    <pre class="code-block mb-5"><code><span class="token-keyword">function</span> <span class="token-fn">withSessionHotline</span>(user: <span class="token-type">ServerUser</span>): <span class="token-type">ServerUser</span> {
+  <span class="token-keyword">const</span> assignedHotline = <span class="token-fn">readSessionHotline</span>()  <span class="token-comment">// reads from sessionStorage</span>
+  <span class="token-keyword">return</span> assignedHotline
+    ? { ...user, assignedHotline }
+    : { ...user, assignedHotline: <span class="token-keyword">undefined</span> }
+}</code></pre>
+  </section>
+
+  <!-- 8. ROUTE GUARD -->
+  <section id="route-guard" class="mb-16 reveal" aria-labelledby="h-guard">
+    <h2 id="h-guard" class="text-2xl font-bold mb-4">8. The private route guard — online vs. offline identity resolution</h2>
+    <p class="text-text-secondary mb-4">
+      The private layout route is where the two auth paths converge. It has to answer one question: is there a valid authenticated user right now? The answer depends on whether the app is online or offline.
+    </p>
+    <pre class="code-block mb-5"><code><span class="token-comment">// src/routes/(private)/route.tsx</span>
+<span class="token-keyword">function</span> <span class="token-fn">RouteComponent</span>() {
+  <span class="token-keyword">const</span> isOnline       = <span class="token-fn">useIsOnline</span>()
+  <span class="token-keyword">const</span> { user }       = Route.<span class="token-fn">useRouteContext</span>()  <span class="token-comment">// from server beforeLoad</span>
+  <span class="token-keyword">const</span> localAuths     = <span class="token-fn">useLiveQuery</span>(q =&gt; q.<span class="token-fn">from</span>({ localAuth: localAuthCollection }))
+
+  <span class="token-fn">useEffect</span>(() =&gt; {
+    <span class="token-keyword">if</span> (!localAuths.isReady) <span class="token-keyword">return</span>
+
+    <span class="token-comment">// Online: identity comes from the server beforeLoad context</span>
+    <span class="token-comment">// Offline: identity comes from the in-memory auth store (set at offline login)</span>
+    <span class="token-keyword">const</span> localUser = isOnline ? user : authStore.state.user
+
+    <span class="token-keyword">if</span> (!localUser?.id) {
+      navigate({ to: <span class="token-string">'/login'</span> })
+      <span class="token-keyword">return</span>
+    }
+
+    <span class="token-comment">// If online and this user exists in the local cache, refresh the cache entry</span>
+    <span class="token-keyword">const</span> exists = localAuths.data.<span class="token-fn">find</span>(u =&gt; u.id === localUser.id)
+    <span class="token-keyword">if</span> (exists && isOnline && user) {
+      AuthEngine.<span class="token-fn">syncServerToLocal</span>(user)
+    }
+  }, [localAuths.isReady, navigate, user])
+
+  <span class="token-keyword">if</span> (!user) <span class="token-keyword">return</span> &lt;<span class="token-type">Loading</span> /&gt;
+  <span class="token-keyword">return</span> &lt;<span class="token-type">Outlet</span> /&gt;
+}</code></pre>
+    <p class="text-text-secondary mb-4">
+      When online, <code class="prose-inline">user</code> comes from the root's <code class="prose-inline">beforeLoad</code> function which calls <code class="prose-inline">getAuthUser()</code> — a server function that validates the Better Auth cookie and fetches the user from Postgres. When offline, that server call fails silently (the <code class="prose-inline">beforeLoad</code> catches the error and returns <code class="prose-inline">{ user: undefined }</code>), so the guard falls back to <code class="prose-inline">authStore.state.user</code> — which was set by <code class="prose-inline">loginOffline</code>.
+    </p>
+    <p class="text-text-secondary">
+      The <code class="prose-inline">useLiveQuery</code> on <code class="prose-inline">localAuthCollection</code> isn't used for the auth check itself — it's used to gate the <code class="prose-inline">syncServerToLocal</code> call. The collection needs to be ready before we can check if the user exists in it. Once it is, the sync runs exactly once per route mount while online.
+    </p>
+  </section>
+
+</div>
+
+<div class="max-w-3xl mx-auto px-6">
+
+  <!-- 9. VERIFY TRICK -->
+  <section id="verify-trick" class="mb-16 reveal" aria-labelledby="h-verify">
+    <h2 id="h-verify" class="text-2xl font-bold mb-4">9. The <code class="prose-inline">verifyAuth</code> trick — checking credentials without clobbering the session</h2>
+    <p class="text-text-secondary mb-4">
+      There's a second, separate auth scenario in the app: an admin needs to re-confirm a logged-in agent's identity before a destructive action, without that check ending the agent's current session. The naive approach — calling <code class="prose-inline">authClient.signIn.email</code> — would create a new session and overwrite the active session token. That's a silent bug that's easy to miss.
+    </p>
+    <p class="text-text-secondary mb-4">
+      The solution is <code class="prose-inline">verifyAuth</code>, a server function that calls Better Auth's internal <code class="prose-inline">auth.api.signInEmail</code> with <code class="prose-inline">asResponse: true</code>. This flag tells Better Auth to run the credential check and return a plain HTTP <code class="prose-inline">Response</code> instead of its normal behavior of writing session cookies. The active session is completely untouched.
+    </p>
+    <pre class="code-block mb-5"><code><span class="token-comment">// src/lib/better-auth/auth-server.ts</span>
+<span class="token-keyword">export const</span> verifyAuth = <span class="token-fn">createServerFn</span>({ method: <span class="token-string">'POST'</span> })
+  .<span class="token-fn">middleware</span>([authMiddleware])
+  .<span class="token-fn">handler</span>(<span class="token-keyword">async</span> ({ data }) =&gt; {
+    <span class="token-keyword">const</span> response = <span class="token-keyword">await</span> auth.api.<span class="token-fn">signInEmail</span>({
+      body:  { email: data.email, password: data.password },
+      asResponse: <span class="token-keyword">true</span>,  <span class="token-comment">// ← the key: returns a Response, sets no cookies</span>
+    })
+
+    <span class="token-keyword">if</span> (!response.ok) {
+      <span class="token-keyword">return</span> { success: <span class="token-keyword">false</span>, error: <span class="token-string">'Invalid password.'</span> }
+    }
+
+    <span class="token-comment">// Pull minimal user data — just enough for the caller to act on</span>
+    <span class="token-keyword">const</span> user = <span class="token-keyword">await</span> prisma.user.<span class="token-fn">findFirst</span>({
+      where: { email: data.email },
+      select: { id: <span class="token-keyword">true</span>, firstName: <span class="token-keyword">true</span>, lastName: <span class="token-keyword">true</span>, role: <span class="token-keyword">true</span> },
+    })
+
+    <span class="token-keyword">return</span> user
+      ? { success: <span class="token-keyword">true</span>, data: user }
+      : { success: <span class="token-keyword">false</span>, error: <span class="token-string">'User is not authorized.'</span> }
+  })</code></pre>
+    <p class="text-text-secondary mb-4">
+      The distinction between <code class="prose-inline">authClient.signIn.email</code> (client-side, writes cookies, creates a session) and <code class="prose-inline">auth.api.signInEmail</code> with <code class="prose-inline">asResponse: true</code> (server-side, stateless check, no side effects) is easy to conflate. Missing it would create a subtle multi-user bug that only shows up in production when two people are logged in on the same machine.
+    </p>
+    <div class="border-l-2 border-warn pl-5 text-text-secondary italic">
+      <code class="prose-inline">asResponse: true</code> is not documented prominently in Better Auth's guides. It's available on all <code class="prose-inline">auth.api.*</code> methods and is the correct pattern any time you need to use the auth logic as a pure function without session side effects.
+    </div>
+  </section>
+
+  <!-- 10. LOGOUT -->
+  <section id="logout" class="mb-16 reveal" aria-labelledby="h-logout">
+    <h2 id="h-logout" class="text-2xl font-bold mb-4">10. Logout — cleaning up both worlds</h2>
+    <p class="text-text-secondary mb-4">
+      Logout needs to clean up both the server session and the in-memory state. The implementation is deliberately optimistic: the UI is cleared immediately regardless of whether the server signout succeeds, and the server call only fires if the app is online. An offline logout clears local state and redirects without touching the server.
+    </p>
+    <pre class="code-block mb-5"><code><span class="token-keyword">async</span> <span class="token-fn">logout</span>(params: { onSuccess: () =&gt; <span class="token-keyword">void</span> }) {
+  <span class="token-comment">// Immediately mark as logging out — blocks UI interactions</span>
+  authStore.<span class="token-fn">setState</span>(state =&gt; ({ ...state, isLoggingOut: <span class="token-keyword">true</span> }))
+
+  <span class="token-comment">// Clear ephemeral state in both overlay and sessionStorage</span>
+  <span class="token-fn">clearModals</span>()
+  <span class="token-fn">clearSessionHotline</span>()
+  <span class="token-fn">resetAuth</span>()  <span class="token-comment">// returns authStore to defaultValue synchronously</span>
+
+  <span class="token-keyword">try</span> {
+    <span class="token-keyword">if</span> (navigator.onLine) {
+      <span class="token-comment">// Best-effort server signout — invalidates the session token</span>
+      <span class="token-keyword">await</span> authClient.<span class="token-fn">signOut</span>({}, params)
+    }
+  } <span class="token-keyword">catch</span> (error) {
+    console.<span class="token-fn">error</span>(<span class="token-string">'AuthEngine: Server signOut failed'</span>, error)
+  }
+
+  params.<span class="token-fn">onSuccess</span>()  <span class="token-comment">// navigate to /login in all cases</span>
+}</code></pre>
+    <p class="text-text-secondary mb-4">
+      The local credential cache (<code class="prose-inline">localAuthCollection</code>) is intentionally <em>not</em> cleared on logout. The rationale: the cache exists for connectivity resilience. Clearing it on logout would mean an agent who logs out before going offline can't log back in. The cache entry expires naturally via TTL, and a future online login will refresh it. If you need a "clear this device" capability, that's a separate explicit action.
+    </p>
+  </section>
+
+</div>
+
+<div class="max-w-3xl mx-auto px-6">
+
+  <!-- 11. DIAGRAM -->
+  <section id="diagram" class="mb-16 reveal" aria-labelledby="h-diagram">
+    <h2 id="h-diagram" class="text-2xl font-bold mb-4">11. Everything in one diagram</h2>
+
+    <div class="bg-bg-elevated border border-border rounded-xl p-6 text-sm font-mono text-text-secondary leading-loose mb-6">
+      <p class="text-text font-bold mb-1">ONLINE LOGIN</p>
+      <p class="ml-4">Login form → <span class="text-accent">AuthEngine.loginOnline(email, password)</span></p>
+      <p class="ml-8">→ authClient.signIn.email() [Better Auth]</p>
+      <p class="ml-8">→ onSuccess: getAuthUser() → fullUser from Postgres</p>
+      <p class="ml-8">→ crypto.subtle.digest('SHA-256', password) → hash</p>
+      <p class="ml-8">→ localAuthCollection.insert/update</p>
+      <p class="ml-12">{ id, email, hashedPassword: hash, profile: fullUser, expiresAt: now+7d }</p>
+      <p class="ml-8">→ onSuccess(fullUser) → navigate to RoleLandingPage</p>
+      <br>
+      <p class="text-text font-bold mb-1">OFFLINE LOGIN</p>
+      <p class="ml-4">Login form → <span class="text-accent">AuthEngine.loginOffline(email, password)</span></p>
+      <p class="ml-8">→ localAuthCollection.find(email)</p>
+      <p class="ml-8">→ crypto.subtle.digest('SHA-256', password) → inputHash</p>
+      <p class="ml-8">→ inputHash === localUser.hashedPassword ?</p>
+      <p class="ml-12">→ Date.now() &lt; localUser.expiresAt ?</p>
+      <p class="ml-16">→ authStore.setState({ user: localUser.profile, isAuthenticated: true })</p>
+      <p class="ml-16">→ onSuccess(localUser.profile) → navigate to RoleLandingPage</p>
+      <p class="ml-12">→ else: toast.error('Offline session expired')</p>
+      <p class="ml-8">→ else: toast.error('Invalid credentials or not cached')</p>
+      <br>
+      <p class="text-text font-bold mb-1">PROTECTED ROUTE (every mount while online)</p>
+      <p class="ml-4">route.tsx RouteComponent</p>
+      <p class="ml-8">→ isOnline ? user (from beforeLoad) : authStore.state.user</p>
+      <p class="ml-8">→ !localUser?.id → navigate('/login')</p>
+      <p class="ml-8">→ exists in localAuthCollection && isOnline</p>
+      <p class="ml-12">→ <span class="text-accent">AuthEngine.syncServerToLocal(user)</span></p>
+      <p class="ml-16">→ localAuthCollection.update: profile + expiresAt (never hashedPassword)</p>
+      <br>
+      <p class="text-text font-bold mb-1">LOGOUT</p>
+      <p class="ml-4"><span class="text-accent">AuthEngine.logout()</span></p>
+      <p class="ml-8">→ authStore.setState(isLoggingOut: true)</p>
+      <p class="ml-8">→ clearModals() + clearSessionHotline() + resetAuth()</p>
+      <p class="ml-8">→ navigator.onLine → authClient.signOut() [best-effort]</p>
+      <p class="ml-8">→ onSuccess() → navigate('/login')</p>
+      <p class="ml-8">  localAuthCollection: untouched (TTL-based expiry only)</p>
+      <br>
+      <p class="text-text font-bold mb-1">CREDENTIAL VERIFICATION (no session side effects)</p>
+      <p class="ml-4"><span class="text-accent-2">verifyAuth(email, password)</span> [server function]</p>
+      <p class="ml-8">→ auth.api.signInEmail({ asResponse: true })</p>
+      <p class="ml-8">  ↑ returns Response — sets no cookies, invalidates nothing</p>
+      <p class="ml-8">→ response.ok → prisma.user.findFirst → return data</p>
+    </div>
+  </section>
+
+  <!-- 12. TRADEOFFS -->
+  <section id="tradeoffs" class="mb-16 reveal" aria-labelledby="h-tradeoffs">
+    <h2 id="h-tradeoffs" class="text-2xl font-bold mb-4">12. Tradeoffs and what this doesn't solve</h2>
+
+    <div class="flex flex-col gap-4 mb-10">
+      <div class="bg-bg-elevated border border-accent/20 rounded-xl p-5">
+        <h3 class="font-semibold text-sm text-accent uppercase tracking-wide mb-3">What this gets right</h3>
+        <ul class="flex flex-col gap-2 text-sm text-text-secondary">
+          <li class="flex gap-2"><span class="text-accent font-bold">›</span> Zero network dependency on the offline path — no background sync, no service worker proxy, no queued requests</li>
+          <li class="flex gap-2"><span class="text-accent font-bold">›</span> The hash never leaves the browser. The plaintext password is available in memory for exactly the duration of the <code class="prose-inline">onSuccess</code> callback, then gone</li>
+          <li class="flex gap-2"><span class="text-accent font-bold">›</span> Both auth paths produce the same <code class="prose-inline">ServerUser</code> shape — the rest of the app is unaware which path was used</li>
+          <li class="flex gap-2"><span class="text-accent font-bold">›</span> TTL enforcement means offline access has a hard expiry that can't be extended without coming back online</li>
+          <li class="flex gap-2"><span class="text-accent font-bold">›</span> <code class="prose-inline">syncServerToLocal</code> runs on every protected route mount — active users stay fresh without any explicit refresh action</li>
+        </ul>
+      </div>
+
+      <div class="bg-bg-elevated border border-danger/20 rounded-xl p-5">
+        <h3 class="font-semibold text-sm text-danger uppercase tracking-wide mb-3">What it doesn't solve</h3>
+        <ul class="flex flex-col gap-2 text-sm text-text-secondary">
+          <li class="flex gap-2"><span class="text-warn font-bold">›</span> <strong class="text-text">No server-side revocation.</strong> If an account is disabled on the server while the device is offline, the local cache has no way to know. The user can log in offline until their TTL expires</li>
+          <li class="flex gap-2"><span class="text-warn font-bold">›</span> <strong class="text-text">SHA-256 is not a password hash.</strong> It's fast, which makes it unsuitable for protecting credentials against a determined attacker with access to the OPFS database. For a higher-security requirement, this should use <code class="prose-inline">PBKDF2</code> or <code class="prose-inline">bcrypt</code> via a WASM port</li>
+          <li class="flex gap-2"><span class="text-warn font-bold">›</span> <strong class="text-text">No multi-device invalidation.</strong> Clearing the credential cache on a lost or reassigned device requires a separate admin action — there's no remote wipe mechanism</li>
+          <li class="flex gap-2"><span class="text-warn font-bold">›</span> <strong class="text-text">First login always requires connectivity.</strong> An agent who has never logged in on a given device can't do so offline — the hash only exists after a successful online login</li>
+        </ul>
+      </div>
+    </div>
+
+    <p class="text-text-secondary mb-8">
+      For NUVELCO CCA — a known-device, known-user, internally-operated system where accounts are managed by an admin — these tradeoffs are acceptable. SHA-256 isn't protecting against a cloud breach; it's protecting against someone picking up an unattended tablet and guessing a password. The TTL and the absence of a network path mean the blast radius of a compromised device is bounded by time and scope.
+    </p>
+
+    <div class="mt-8 flex flex-wrap gap-4">
+      <a href="/nuvelco-cca.html"
+         class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-accent text-bg text-sm font-semibold hover:bg-accent-2 hover:-translate-y-0.5 transition-all">
+        View NUVELCO CCA project
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 17 17 7M7 7h10v10"/></svg>
+      </a>
+      <a href="/blog/making-db-closer-to-app.html"
+         class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-bg-elevated border border-border text-sm font-medium hover:border-accent hover:text-accent transition-all">
+        Also: Making the DB Feel Like Part of the App ↗
+      </a>
+    </div>
+  </section>
+
+</div>
+
+<footer class="border-t border-border py-10 text-center text-sm text-text-secondary">
+  <p>&copy; 2026 Ricardo Rey Crisanto V. Lopez II. Built with semantic HTML5 &amp; Tailwind CSS v4.</p>
+  <a href="/index.html#blog" class="inline-block mt-3 text-accent hover:text-accent-2 transition-colors">&larr; Back to writing</a>
+</footer>
+
+<script>
+  const revealEls = document.querySelectorAll('.reveal');
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) { e.target.classList.add('in-view'); io.unobserve(e.target); }
+    });
+  }, { threshold: 0.1 });
+  revealEls.forEach(el => io.observe(el));
+</script>
+</body>
+</html>
