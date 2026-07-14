@@ -1,0 +1,8 @@
+---
+import HomeLayout from '../layouts/HomeLayout.astro';
+import indexHtml from '../content/index.html?raw';
+---
+
+<HomeLayout title={"RJ Lopez — Senior Full Stack Engineer"} description={"Ricardo Rey Crisanto V. Lopez II (RJ) — Senior Full Stack Engineer, 7+ years building scalable SaaS platforms with the JavaScript/TypeScript ecosystem."}>
+  <Fragment set:html={indexHtml} />
+</HomeLayout>

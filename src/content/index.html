@@ -1,170 +1,6 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>RJ Lopez — Senior Full Stack Engineer</title>
-<meta name="description" content="Ricardo Rey Crisanto V. Lopez II (RJ) — Senior Full Stack Engineer, 7+ years building scalable SaaS platforms with the JavaScript/TypeScript ecosystem.">
-
-<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-
-<style type="text/tailwindcss">
-  @theme {
-    --color-bg: #0f172a;
-    --color-bg-elevated: #16213e;
-    --color-border: #1e293b;
-    --color-text: #f8fafc;
-    --color-text-secondary: #94a3b8;
-    --color-accent: #10b981;
-    --color-accent-2: #6366f1;
-  }
-
-  html { scroll-behavior: smooth; }
-  body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
-
-  @keyframes pulse-ring {
-    0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5); }
-    100% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
-  }
-  .pulse-dot { animation: pulse-ring 1.8s ease-out infinite; }
-
-  @media (prefers-reduced-motion: reduce) {
-    * { transition: none !important; scroll-behavior: auto !important; }
-    .pulse-dot { animation: none !important; }
-  }
-
-  /* =====================================================
-     PRINT / "DOWNLOAD RESUME" LAYOUT
-     Single source of truth: same markup, paper-first skin.
-     ===================================================== */
-  @media print {
-    @page { margin: 1.4cm; }
-
-    /* ---- Base: pure white canvas, dark slate ink, zero decoration ---- */
-    * {
-      background: #ffffff !important;
-      color: #0f172a !important;
-      box-shadow: none !important;
-      text-shadow: none !important;
-      filter: none !important;
-      transform: none !important;
-      transition: none !important;
-    }
-    html, body { background: #ffffff !important; }
-
-    /* Icons render nothing on paper — plain text handles already replace them */
-    svg { display: none !important; }
-    a { text-decoration: none !important; }
-
-    /* ---- 1. Full-width document canvas (kill the "narrow webpage" look) ---- */
-    .max-w-4xl {
-      max-width: 100% !important;
-      width: 100% !important;
-      padding-left: 0 !important;
-      padding-right: 0 !important;
-      margin-left: 0 !important;
-      margin-right: 0 !important;
-    }
-
-    /* ---- 1. Strip every card/panel chrome: no borders, no fills, no radius ---- */
-    article,
-    #education .rounded-xl {
-      background: none !important;
-      border: none !important;
-      border-radius: 0 !important;
-      box-shadow: none !important;
-      padding: 0 !important;
-    }
-
-    /* ---- 2. Tech badges & skill pills become bold, comma-separated inline text ---- */
-    [class*="bg-accent-2/10"],
-    [class*="bg-bg-elevated"][class*="rounded-full"] {
-      display: inline !important;
-      background: none !important;
-      border: none !important;
-      border-radius: 0 !important;
-      padding: 0 !important;
-      margin: 0 !important;
-      font-weight: 700 !important;
-      text-transform: none !important;
-      letter-spacing: normal !important;
-      color: #0f172a !important;
-    }
-    [class*="bg-accent-2/10"]:not(:last-child)::after,
-    [class*="bg-bg-elevated"][class*="rounded-full"]:not(:last-child)::after {
-      content: ", ";
-      font-weight: 400 !important;
-    }
-    /* badge/pill wrapper rows flow as a single justified line, not flex chips */
-    article .flex-wrap,
-    #skills .flex-wrap {
-      display: block !important;
-      gap: 0 !important;
-    }
-
-    /* ---- 3. Hide interactive links and web-only scaffolding ---- */
-    article > a { display: none !important; }
-    article img,
-    header img { display: none !important; }
-    #experience .relative.w-3.shrink-0 { display: none !important; }
-
-    /* Section accent dots collapse to a simple ink mark */
-    .bg-accent, .bg-accent-2 { background: #0f172a !important; }
-
-    /* ---- 4. Tight, document-style vertical rhythm ---- */
-    section {
-      padding-top: 0.35rem !important;
-      padding-bottom: 0.35rem !important;
-      border: none !important;
-    }
-    h2 {
-      margin-bottom: 0.4rem !important;
-      font-size: 1.05rem !important;
-    }
-    article, #education .rounded-xl { margin-bottom: 0.6rem !important; }
-    #projects .grid, #skills .grid { gap: 0.75rem !important; }
-    #experience .flex.flex-col.gap-10 { gap: 0.6rem !important; }
-    ul { gap: 0.15rem !important; margin-top: 0.25rem !important; }
-    li { margin: 0 !important; }
-
-    /* ---- Page-break sanity: never split a project or job entry mid-block ---- */
-    article,
-    #education .rounded-xl,
-    #experience .flex.flex-col.gap-10 > div {
-      break-inside: avoid;
-      page-break-inside: avoid;
-    }
-    h2 { break-after: avoid; page-break-after: avoid; }
-  }
-</style>
-</head>
-<body class="bg-bg text-text leading-relaxed antialiased">
-
-<!-- ===== SCROLL TO TOP ===== -->
-<button
-  id="scroll-top-btn"
-  aria-label="Scroll to top"
-  onclick="window.scrollTo({top: 0, behavior: 'smooth'})"
-  class="fixed bottom-6 right-6 z-20 w-11 h-11 flex items-center justify-center rounded-full bg-accent text-bg shadow-lg shadow-accent/30 opacity-0 translate-y-2 pointer-events-none transition-all duration-300 hover:bg-accent-2 hover:-translate-y-0.5 print:hidden"
->
-  <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7"/></svg>
-</button>
-
-<script>
-  const scrollBtn = document.getElementById('scroll-top-btn');
-  window.addEventListener('scroll', () => {
-    const visible = window.scrollY > 400;
-    scrollBtn.classList.toggle('opacity-0', !visible);
-    scrollBtn.classList.toggle('translate-y-2', !visible);
-    scrollBtn.classList.toggle('pointer-events-none', !visible);
-    scrollBtn.classList.toggle('opacity-100', visible);
-    scrollBtn.classList.toggle('translate-y-0', visible);
-  }, { passive: true });
-</script>
-
 <!-- ===== NAV ===== -->
 <nav class="sticky top-0 z-10 bg-bg/90 backdrop-blur border-b border-border print:hidden" aria-label="Section navigation">
-  <div class="max-w-4xl mx-auto px-6 py-3 flex items-center justify-between">
+  <div class="max-w-6xl mx-auto px-6 py-3 flex items-center justify-between">
     <a href="#top" class="font-bold text-text tracking-tight">RJ<span class="text-accent">.</span>dev</a>
     <div class="flex items-center gap-5 text-sm font-medium text-text-secondary">
       <a href="#projects" class="hover:text-accent transition-colors">Projects</a>
@@ -187,7 +23,7 @@
 
 <!-- ===== HEADER / HERO ===== -->
 <header id="top" class="border-b border-border">
-  <div class="max-w-4xl mx-auto px-6 py-16 sm:py-20 print:py-4 flex flex-col sm:flex-row items-center sm:items-start gap-8 print:gap-0">
+  <div class="max-w-6xl mx-auto px-6 py-16 sm:py-20 print:py-4 flex flex-col sm:flex-row items-center sm:items-start gap-8 print:gap-0">
 
     <img
       src="https://placehold.co/160x160/16213e/10b981?text=RJ&font=roboto"
@@ -270,7 +106,7 @@
   </div>
 </header>
 
-<main class="max-w-4xl mx-auto px-6">
+<main class="max-w-6xl mx-auto px-6">
 
   <!-- ===== PROJECTS ===== -->
   <section id="projects" class="py-14 border-b border-border scroll-mt-16" aria-labelledby="projects-heading">
@@ -661,6 +497,3 @@
 <footer class="border-t border-border py-8 text-center text-sm text-text-secondary print:hidden">
   <p>&copy; 2026 Ricardo Rey Crisanto V. Lopez II. Built with semantic HTML5 &amp; Tailwind CSS v4.</p>
 </footer>
-
-</body>
-</html>

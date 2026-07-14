@@ -1,90 +1,9 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Architecting an Offline App Shell — Service Workers, OPFS, and the SSR Hydration Gap | RJ Lopez</title>
-<meta name="description" content="How NUVELCO CCA builds an offline-capable app shell in TanStack Start: a custom Vite-Serwist plugin, a prod/dev split caching strategy that never caches server functions, cross-origin isolation headers for OPFS, and an AppWrapper SSR gate that prevents browser-only code from running on the server.">
-
-<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-
-<style type="text/tailwindcss">
-  @theme {
-    --color-bg: #0f172a;
-    --color-bg-elevated: #16213e;
-    --color-border: #1e293b;
-    --color-text: #f8fafc;
-    --color-text-secondary: #94a3b8;
-    --color-accent: #10b981;
-    --color-accent-2: #6366f1;
-    --color-warn: #f59e0b;
-    --color-danger: #f43f5e;
-  }
-
-  html { scroll-behavior: smooth; }
-  body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
-
-  @keyframes fade-up {
-    from { opacity: 0; transform: translateY(12px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-  .reveal { opacity: 0; }
-  .reveal.in-view { animation: fade-up 0.55s ease-out forwards; }
-
-  pre, code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
-
-  .prose-inline {
-    background: #16213e; border: 1px solid #1e293b; border-radius: 0.3rem;
-    padding: 0.1rem 0.4rem; font-size: 0.8rem; color: #a5b4fc;
-  }
-
-  .code-block {
-    background: #0d1424; border: 1px solid #1e293b; border-radius: 0.75rem;
-    padding: 1.25rem 1.5rem; overflow-x: auto; font-size: 0.8rem;
-    line-height: 1.7; tab-size: 2;
-  }
-  .token-comment  { color: #4a5568; font-style: italic; }
-  .token-keyword  { color: #c792ea; }
-  .token-string   { color: #c3e88d; }
-  .token-fn       { color: #82aaff; }
-  .token-type     { color: #ffcb6b; }
-  .token-num      { color: #f78c6c; }
-  .token-prop     { color: #89ddff; }
-
-  @media (prefers-reduced-motion: reduce) {
-    * { transition: none !important; scroll-behavior: auto !important; }
-    .reveal { opacity: 1 !important; animation: none !important; }
-  }
-  @media print {
-    nav, #scroll-top-btn { display: none !important; }
-    * { background: #fff !important; color: #0f172a !important; }
-  }
-</style>
-</head>
-<body class="bg-bg text-text leading-relaxed antialiased">
-
-<!-- SCROLL TO TOP -->
-<button id="scroll-top-btn" aria-label="Scroll to top"
-  onclick="window.scrollTo({top:0,behavior:'smooth'})"
-  class="fixed bottom-6 right-6 z-20 w-11 h-11 flex items-center justify-center rounded-full bg-accent text-bg shadow-lg shadow-accent/30 opacity-0 translate-y-2 pointer-events-none transition-all duration-300 hover:bg-accent-2 hover:-translate-y-0.5">
-  <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7"/></svg>
-</button>
-<script>
-  const sb = document.getElementById('scroll-top-btn');
-  window.addEventListener('scroll', () => {
-    const v = window.scrollY > 400;
-    sb.classList.toggle('opacity-0', !v); sb.classList.toggle('opacity-100', v);
-    sb.classList.toggle('translate-y-2', !v); sb.classList.toggle('translate-y-0', v);
-    sb.classList.toggle('pointer-events-none', !v);
-  }, { passive: true });
-</script>
-
 <!-- NAV -->
 <nav class="sticky top-0 z-30 bg-bg/90 backdrop-blur border-b border-border">
-  <div class="max-w-3xl mx-auto px-6 py-3 flex items-center justify-between gap-4">
-    <a href="/index.html" class="font-bold text-text tracking-tight shrink-0">RJ<span class="text-accent">.</span>dev</a>
+  <div class="max-w-6xl mx-auto px-6 py-3 flex items-center justify-between gap-4">
+    <a href="/" class="font-bold text-text tracking-tight shrink-0">RJ<span class="text-accent">.</span>dev</a>
     <div class="flex items-center gap-3 text-sm">
-      <a href="/index.html#blog" class="text-text-secondary hover:text-accent transition-colors">← All posts</a>
+      <a href="/#blog" class="text-text-secondary hover:text-accent transition-colors">← All posts</a>
       <a href="/nuvelco-cca.html"
          class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-bg-elevated border border-border text-xs font-semibold hover:border-accent hover:text-accent transition-all">
         Project ↗
@@ -95,7 +14,7 @@
 
 <!-- HERO -->
 <header id="top" class="border-b border-border">
-  <div class="max-w-3xl mx-auto px-6 py-14 sm:py-20">
+  <div class="max-w-6xl mx-auto px-6 py-14 sm:py-20">
     <div class="flex flex-wrap items-center gap-2 mb-5">
       <span class="text-[11px] font-semibold uppercase tracking-wide text-accent bg-accent/10 border border-accent/30 px-2.5 py-1 rounded-full">Architecture</span>
       <span class="text-[11px] font-semibold uppercase tracking-wide text-text-secondary bg-bg-elevated border border-border px-2.5 py-1 rounded-full">PWA</span>
@@ -119,7 +38,7 @@
   </div>
 </header>
 
-<div class="max-w-3xl mx-auto px-6 py-14">
+<div class="max-w-6xl mx-auto px-6 py-14">
 
   <!-- TABLE OF CONTENTS -->
   <nav class="reveal mb-14 bg-bg-elevated border border-border rounded-xl p-6" aria-label="Table of contents">
@@ -198,7 +117,7 @@
 
 </div>
 
-<div class="max-w-3xl mx-auto px-6">
+<div class="max-w-6xl mx-auto px-6">
 
   <!-- 3. CROSS-ORIGIN ISOLATION -->
   <section id="coi" class="mb-16 reveal" aria-labelledby="h-coi">
@@ -312,7 +231,7 @@
 
 </div>
 
-<div class="max-w-3xl mx-auto px-6">
+<div class="max-w-6xl mx-auto px-6">
 
   <!-- 5. SERVICE WORKER -->
   <section id="sw" class="mb-16 reveal" aria-labelledby="h-sw">
@@ -394,7 +313,7 @@ serwist.<span class="token-fn">addEventListeners</span>()</code></pre>
 
 </div>
 
-<div class="max-w-3xl mx-auto px-6">
+<div class="max-w-6xl mx-auto px-6">
 
   <!-- 6. REGISTRATION -->
   <section id="registration" class="mb-16 reveal" aria-labelledby="h-reg">
@@ -509,7 +428,7 @@ serwist.<span class="token-fn">addEventListeners</span>()</code></pre>
 
 </div>
 
-<div class="max-w-3xl mx-auto px-6">
+<div class="max-w-6xl mx-auto px-6">
 
   <!-- 8. APP WRAPPER -->
   <section id="app-wrapper" class="mb-16 reveal" aria-labelledby="h-wrapper">
@@ -626,7 +545,7 @@ serwist.<span class="token-fn">addEventListeners</span>()</code></pre>
 
 </div>
 
-<div class="max-w-3xl mx-auto px-6">
+<div class="max-w-6xl mx-auto px-6">
 
   <!-- 10. DIAGRAM -->
   <section id="diagram" class="mb-16 reveal" aria-labelledby="h-diagram">
@@ -726,10 +645,10 @@ serwist.<span class="token-fn">addEventListeners</span>()</code></pre>
 
 <footer class="border-t border-border py-10 text-center text-sm text-text-secondary">
   <p>&copy; 2026 Ricardo Rey Crisanto V. Lopez II. Built with semantic HTML5 &amp; Tailwind CSS v4.</p>
-  <a href="/index.html#blog" class="inline-block mt-3 text-accent hover:text-accent-2 transition-colors">&larr; Back to writing</a>
+  <a href="/#blog" class="inline-block mt-3 text-accent hover:text-accent-2 transition-colors">&larr; Back to writing</a>
 </footer>
 
-<script>
+<script is:inline>
   const revealEls = document.querySelectorAll('.reveal');
   const io = new IntersectionObserver((entries) => {
     entries.forEach(e => {
@@ -738,5 +657,3 @@ serwist.<span class="token-fn">addEventListeners</span>()</code></pre>
   }, { threshold: 0.1 });
   revealEls.forEach(el => io.observe(el));
 </script>
-</body>
-</html>

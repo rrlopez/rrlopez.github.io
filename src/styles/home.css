@@ -1,0 +1,137 @@
+/* PRINT / "DOWNLOAD RESUME" LAYOUT */
+@media print {
+  @page {
+    margin: 1.4cm;
+  }
+
+  * {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    filter: none !important;
+    transform: none !important;
+    transition: none !important;
+  }
+
+  html,
+  body {
+    background: #ffffff !important;
+  }
+
+  svg {
+    display: none !important;
+  }
+
+  a {
+    text-decoration: none !important;
+  }
+
+  .max-w-4xl {
+    max-width: 100% !important;
+    width: 100% !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  article,
+  #education .rounded-xl {
+    background: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+  }
+
+  [class*="bg-accent-2/10"],
+  [class*="bg-bg-elevated"][class*="rounded-full"] {
+    display: inline !important;
+    background: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    font-weight: 700 !important;
+    text-transform: none !important;
+    letter-spacing: normal !important;
+    color: #0f172a !important;
+  }
+
+  [class*="bg-accent-2/10"]:not(:last-child)::after,
+  [class*="bg-bg-elevated"][class*="rounded-full"]:not(:last-child)::after {
+    content: ", ";
+    font-weight: 400 !important;
+  }
+
+  article .flex-wrap,
+  #skills .flex-wrap {
+    display: block !important;
+    gap: 0 !important;
+  }
+
+  article > a {
+    display: none !important;
+  }
+
+  article img,
+  header img {
+    display: none !important;
+  }
+
+  #experience .relative.w-3.shrink-0 {
+    display: none !important;
+  }
+
+  .bg-accent,
+  .bg-accent-2 {
+    background: #0f172a !important;
+  }
+
+  section {
+    padding-top: 0.35rem !important;
+    padding-bottom: 0.35rem !important;
+    border: none !important;
+  }
+
+  h2 {
+    margin-bottom: 0.4rem !important;
+    font-size: 1.05rem !important;
+  }
+
+  article,
+  #education .rounded-xl {
+    margin-bottom: 0.6rem !important;
+  }
+
+  #projects .grid,
+  #skills .grid {
+    gap: 0.75rem !important;
+  }
+
+  #experience .flex.flex-col.gap-10 {
+    gap: 0.6rem !important;
+  }
+
+  ul {
+    gap: 0.15rem !important;
+    margin-top: 0.25rem !important;
+  }
+
+  li {
+    margin: 0 !important;
+  }
+
+  article,
+  #education .rounded-xl,
+  #experience .flex.flex-col.gap-10 > div {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  h2 {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+}

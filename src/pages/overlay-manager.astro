@@ -1,0 +1,8 @@
+---
+import OverlayLayout from '../layouts/OverlayLayout.astro';
+import overlay_managerHtml from '../content/overlay-manager.html?raw';
+---
+
+<OverlayLayout title={"@rrlopez/modal-manager — Simple, Global Modals for React | RJ Lopez"} description={"A lightweight utility to trigger React modals from anywhere in your code without dealing with nested component states or complex global state contexts."}>
+  <Fragment set:html={overlay_managerHtml} />
+</OverlayLayout>

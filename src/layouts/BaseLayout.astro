@@ -1,0 +1,28 @@
+---
+import '../styles/global.css';
+import ScrollToTop from '../components/ScrollToTop.astro';
+
+interface Props {
+  title: string;
+  description?: string;
+  themeClass?: string;
+}
+
+const { title, description = '', themeClass = '' } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title}</title>
+    {description && <meta name="description" content={description} />}
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" href="/favicon.ico" />
+  </head>
+  <body class:list={['bg-bg text-text leading-relaxed antialiased', themeClass]}>
+    <ScrollToTop />
+    <slot />
+  </body>
+</html>

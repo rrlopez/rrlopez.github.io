@@ -1,0 +1,74 @@
+@keyframes pulse-ring-warn {
+  0% {
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.5);
+  }
+  100% {
+    box-shadow: 0 0 0 6px rgba(245, 158, 11, 0);
+  }
+}
+
+.pulse-dot-warn {
+  animation: pulse-ring-warn 1.2s ease-out infinite;
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.reveal {
+  opacity: 0;
+}
+
+.reveal.in-view {
+  animation: fade-up 0.6s ease-out forwards;
+}
+
+@keyframes flow-dash {
+  to {
+    stroke-dashoffset: -24;
+  }
+}
+
+.flow-line {
+  stroke-dasharray: 4 4;
+  animation: flow-dash 1.4s linear infinite;
+}
+
+.shot {
+  background-image:
+    radial-gradient(circle at 15% 20%, rgba(99, 102, 241, 0.18), transparent 45%),
+    radial-gradient(circle at 85% 80%, rgba(16, 185, 129, 0.16), transparent 45%),
+    linear-gradient(160deg, #16213e 0%, #0f172a 100%);
+  background-size: 200% 200%;
+  background-position: 0% 0%;
+  transition: background-position 0.8s ease;
+}
+
+.shot:hover {
+  background-position: 100% 100%;
+}
+
+@media print {
+  nav,
+  #scroll-top-btn,
+  .no-print {
+    display: none !important;
+  }
+
+  * {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    box-shadow: none !important;
+  }
+
+  section {
+    break-inside: avoid;
+  }
+}

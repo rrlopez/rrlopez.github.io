@@ -1,0 +1,8 @@
+---
+import BlogLayout from '../../layouts/BlogLayout.astro';
+import offline_app_shellHtml from '../../content/blog/offline-app-shell.html?raw';
+---
+
+<BlogLayout title={"Architecting an Offline App Shell — Service Workers, OPFS, and the SSR Hydration Gap | RJ Lopez"} description={"How NUVELCO CCA builds an offline-capable app shell in TanStack Start: a custom Vite-Serwist plugin, a prod/dev split caching strategy that never caches server functions, cross-origin isolation headers for OPFS, and an AppWrapper SSR gate that prevents browser-only code from running on the server."}>
+  <Fragment set:html={offline_app_shellHtml} />
+</BlogLayout>

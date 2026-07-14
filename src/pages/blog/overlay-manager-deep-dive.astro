@@ -1,0 +1,8 @@
+---
+import BlogLayout from '../../layouts/BlogLayout.astro';
+import overlay_manager_deep_diveHtml from '../../content/blog/overlay-manager-deep-dive.html?raw';
+---
+
+<BlogLayout title={"Global Overlays Without the Boilerplate — How @rrlopez/overlay-manager Works | RJ Lopez"} description={"A deep-dive into the singleton class, SafeDialogGuard anti-tamper, MutationObserver remount guard, and delChildModals patterns that power the overlay system used in NUVELCO CCA. Full integration walkthrough included."}>
+  <Fragment set:html={overlay_manager_deep_diveHtml} />
+</BlogLayout>
