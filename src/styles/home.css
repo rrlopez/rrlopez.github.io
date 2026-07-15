@@ -1,61 +1,163 @@
 @media print {
-	/* Strip all color and go black-on-white */
-	* {
-		color: #000 !important;
-		background: transparent !important;
-		box-shadow: none !important;
-		text-shadow: none !important;
-	}
+  /* ---------- Strip all color, borders, shadows ---------- */
+  * {
+    color: #000 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    border: none !important;
+  }
 
-	/* Kill every border */
-	*,
-	[class*="border-"] {
-		border: none !important;
-	}
+  /* ---------- No page margin/padding from code — dialog controls it ---------- */
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  header > div, main, main > section {
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
 
-	/* Force single column everywhere — no side-by-side cards/skills */
-	.grid,
-	[class*="grid-cols-"] {
-		display: block !important;
-	}
-	.grid > * {
-		margin-bottom: 0.85rem;
-	}
+  /* ---------- Single column everywhere ---------- */
+  .grid, [class*="grid-cols-"] { display: block !important; }
+  .grid > * { margin-bottom: 0.85rem; }
 
-	/* Remove rounded pill/card styling, keep it flat and plain */
-	[class*="rounded-"] {
-		border-radius: 0 !important;
-	}
+  /* ---------- Hide buttons, icons, CTA links, decorative dots ---------- */
+  button, svg,
+  a[class*="rounded-xl"], a[class*="rounded-full"],
+  article > a[target="_blank"] {
+    display: none !important;
+  }
+  span[class*="rounded-full"]::after { content: "" !important; }
+  span[class*="rounded-full"] { margin-right: 0.5rem !important; }
+  h2 > span.rounded-full { display: none !important; }
+  h2 { gap: 0 !important; }
 
-	/* Tighten spacing for a compact resume look */
-	section {
-		padding-top: 0.6rem !important;
-		padding-bottom: 0.6rem !important;
-	}
-	header {
-		padding-top: 0 !important;
-		padding-bottom: 0.5rem !important;
-	}
+  /* ---------- Left-align everything consistently ---------- */
+  body, header, header *, section, section *, .text-center { text-align: left !important; }
+  header > div { display: block !important; }
+  .items-center, .justify-center, .sm\:items-start {
+    align-items: flex-start !important;
+    justify-content: flex-start !important;
+  }
 
-	/* Avoid awkward page breaks mid-card/mid-job */
-	article,
-	section > div > div {
-		break-inside: avoid;
-	}
+  /* ---------- Zero card padding so text starts at a uniform edge ---------- */
+  article, [class*="p-6"], [class*="p-5"], [class*="p-4"], [class*="p-3"] {
+    padding: 0 !important;
+  }
 
-	/* Underline links so they read in plain text/PDF */
-	a {
-		text-decoration: underline !important;
-	}
+  /* ---------- Remove Work History timeline rail spacer ---------- */
+  #experience .flex.gap-5 > .w-3 { display: none !important; }
+  #experience .flex.gap-5 { gap: 0 !important; }
 
-	/* Keep skill tags readable as plain inline text instead of pill badges */
-	span[class*="rounded-full"] {
-		display: inline !important;
-		padding: 0 !important;
-		margin-right: 0.4rem !important;
-	}
-	span[class*="rounded-full"]::after {
-		content: "·";
-		margin-left: 0.4rem;
-	}
+  /* ---------- Uniform vertical rhythm ---------- */
+  main > section { padding-top: 0 !important; padding-bottom: 0 !important; margin-bottom: 1.1rem !important; }
+  header { margin-bottom: 0.9rem !important; }
+  h2 { margin-top: 0 !important; margin-bottom: 0.5rem !important; }
+  article, .pb-2 { break-inside: avoid; }
+
+
+  /* Turn skill pills into a flowing, comma-separated list per category */
+  #skills .flex.flex-wrap.gap-2 {
+    display: block !important;
+  }
+  #skills .flex.flex-wrap.gap-2 > span {
+    display: inline !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    padding-inline: 0.25rem !important;
+  }
+  #skills .flex.flex-wrap.gap-2 > span:not(:last-child)::after {
+    content: ", ";
+  }
+
+  /* Consistent spacing between category label and its list, and between categories */
+  #skills h3 {
+    margin-top: 0.7rem !important;
+    margin-bottom: 0.25rem !important;
+  }
+  /* Only the FIRST category (Core Stack) gets no top margin — scoped to
+     the actual first div in #skills, not every div's first child */
+  #skills .grid > div:first-child h3 {
+    margin-top: 0 !important;
+  }
+  #skills .grid > div {
+    margin-bottom: 0 !important;
+  }
+
+
+  /* ---------- Engineering Focus: same pill→comma-list treatment as Skills ---------- */
+  #focus .flex.flex-wrap.gap-2\.5 {
+    display: block !important;
+  }
+  #focus .flex.flex-wrap.gap-2\.5 > span {
+    display: inline !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    padding-inline: 0.25rem !important;
+    font-weight: 600 !important;
+  }
+  #focus .flex.flex-wrap.gap-2\.5 > span:not(:last-child)::after {
+    content: ", ";
+  }
+
+  /* ---------- Project case studies: collapse the two-column split to a
+     single column and drop the fixed-width classes so the narrative text
+     isn't squeezed into a 40%-width column on the printed page. ---------- */
+  #projects article {
+    display: block !important;
+  }
+  #projects article > div {
+    display: block !important;
+    width: 100% !important;
+  }
+  #projects article > div[class*="md:w-2/5"] {
+    margin-bottom: 0.35rem !important;
+  }
+  #projects article > div[class*="md:w-3/5"] > div {
+    margin-bottom: 0.35rem !important;
+  }
+  #projects article > div[class*="md:w-3/5"] p[class*="text-\[11px\]"] {
+    margin-bottom: 0.05rem !important;
+  }
+
+  /* Tighten spacing inside each project card */
+  article h3 {
+    margin-bottom: 0.1rem !important;
+  }
+  article p[class*="uppercase"] {
+    margin-bottom: 0.35rem !important;
+  }
+
+  /* Tech tag row: same pill→comma-list treatment as Skills, plus tighter gap */
+  article .flex.flex-wrap.gap-1\.5 {
+    display: block !important;
+    margin-bottom: 0.4rem !important;
+    
+  }
+  article .flex.flex-wrap.gap-1\.5 > span {
+    display: inline !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    padding-inline: 0.5rem !important;
+  }
+  article .flex.flex-wrap.gap-1\.5 > span:not(:last-child)::after {
+    content: ", ";
+  }
+
+  /* Bullet list: tighten line gap and remove the trailing margin
+     that was there to make room for the (now-hidden) View Project link */
+  article ul {
+    gap: 0.35rem !important;
+  }
+  article ul.mb-5 {
+    margin-bottom: 0.3rem !important;
+  }
+
+  /* Space between project cards themselves */
+  article {
+    margin-bottom: 0.9rem !important;
+  }
 }
