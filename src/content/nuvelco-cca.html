@@ -13,7 +13,7 @@
     </div>
     <a href="/"
        class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-bg-elevated border border-border text-xs font-semibold hover:border-accent hover:text-accent transition-all shrink-0">
-      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0 7-7m-7 7h18"/></svg>
+      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0 7-7m-7 7h18"/></svg>
       Back to Portfolio
     </a>
   </div>
@@ -43,7 +43,7 @@
     <div class="mt-8 flex flex-wrap gap-3">
       <a href="#architecture" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-accent text-bg text-sm font-semibold hover:bg-accent-2 hover:-translate-y-0.5 transition-all">
         Explore the Architecture
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0-7 7m7-7H3"/></svg>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0-7 7m7-7H3"/></svg>
       </a>
       <a href="#features" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-bg-elevated border border-border text-sm font-medium hover:border-accent hover:text-accent transition-all">
         See the Features
@@ -52,8 +52,8 @@
 
     <!-- hero mockup -->
     <div class="mt-14 rounded-2xl border border-border bg-bg-elevated p-2 shadow-2xl shadow-accent-2/10">
-      <div class="rounded-xl border border-border shot h-72 sm:h-[420px] flex flex-col items-center justify-center gap-3 text-center px-6">
-        <svg class="w-10 h-10 text-text-secondary/50" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z"/></svg>
+      <div class="rounded-xl border border-border shot h-72 sm:h-105 flex flex-col items-center justify-center gap-3 text-center px-6">
+        <svg class="w-10 h-10 text-text-secondary/50" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z"/></svg>
         <p class="text-sm font-semibold text-text-secondary uppercase tracking-wide">[ Agent Dashboard Screenshot ]</p>
         <p class="text-xs text-text-secondary/70 max-w-sm">Role-based ticket queue, agent status panel, and ticket intake form.</p>
       </div>
@@ -206,7 +206,7 @@
         </div>
         <button id="cca-toggle-btn" type="button"
           class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-bg border border-border text-xs font-semibold hover:border-accent-2 hover:text-accent-2 transition-all">
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.111 16.404a5.5 5.5 0 0 1 7.778 0M4.929 13.222a9.5 9.5 0 0 1 14.142 0M1.747 10.04C6.9 4.887 15.1 4.887 20.253 10.04M12 20.5h.01"/></svg>
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M8.111 16.404a5.5 5.5 0 0 1 7.778 0M4.929 13.222a9.5 9.5 0 0 1 14.142 0M1.747 10.04C6.9 4.887 15.1 4.887 20.253 10.04M12 20.5h.01"/></svg>
           Simulate connection drop
         </button>
       </div>
@@ -468,10 +468,10 @@
       }
     });
   }, { threshold: 0.15 });
-  revealEls.forEach((el) => io.observe(el));
+  revealEls.forEach((el) => {io.observe(el)});
 
   // ---- Offline-first simulation ----
-  (function () {
+  (() => {
     const btn = document.getElementById('cca-toggle-btn');
     const dot = document.getElementById('cca-sync-dot');
     const dotPing = document.getElementById('cca-sync-dot-ping');
