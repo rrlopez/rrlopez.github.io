@@ -52,11 +52,31 @@
   #experience .flex.gap-5 > .w-3 { display: none !important; }
   #experience .flex.gap-5 { gap: 0 !important; }
 
+  /* ---------- Let long Work History entries flow across a page break
+     instead of being pushed whole to the next page ---------- */
+  /* article (project cards) stay atomic — they're short enough to fit as
+     one block. Work-history entries are the long ones, and forcing each of
+     them to stay in one piece is what pushed the whole "Independent Full
+     Stack Software Engineer" entry to page 2, leaving a big blank gap under
+     iScale on page 1. Instead, allow an entry to break across the page,
+     but keep its title/date header glued to at least its first bullet (no
+     orphaned header sitting alone at the bottom of a page), and never split
+     a single bullet line across the break. */
+  #experience .relative.flex.gap-5 > div:last-child {
+    break-inside: auto !important;
+  }
+  #experience .relative.flex.gap-5 > div:last-child > p {
+    break-after: avoid !important;
+  }
+  #experience li {
+    break-inside: avoid !important;
+  }
+
   /* ---------- Uniform vertical rhythm ---------- */
   main > section { padding-top: 0 !important; padding-bottom: 0 !important; margin-bottom: 1.1rem !important; }
   header { margin-bottom: 0.9rem !important; }
   h2 { margin-top: 0 !important; margin-bottom: 0.5rem !important; }
-  article, .pb-2 { break-inside: avoid; }
+  article { break-inside: avoid; }
 
 
   /* Turn skill pills into a flowing, comma-separated list per category */

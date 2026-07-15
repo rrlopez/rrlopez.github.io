@@ -1,8 +1,542 @@
 ---
-import nuvelco_ccaHtml from '../content/nuvelco-cca.html?raw';
 import ProjectLayout from '../layouts/ProjectLayout.astro';
 ---
 
 <ProjectLayout title={"NUVELCO CCA Portal — Call Center Agent Portal | RJ Lopez"} description={"NUVELCO CCA Portal: a call center agent portal with ticket intake, offline-capable workflows, and role-based dashboards. Architecture deep-dive by Ricardo Rey Crisanto V. Lopez II (RJ)."}>
-  <Fragment set:html={nuvelco_ccaHtml} />
+  <!-- ===== NAV ===== -->
+  <nav class="sticky top-0 z-30 bg-bg/90 backdrop-blur border-b border-border" aria-label="Section navigation">
+    <div class="max-w-6xl mx-auto px-6 py-3 flex items-center justify-between gap-4">
+      <a href="#top" class="font-bold text-text tracking-tight shrink-0">NUVELCO<span class="text-accent">CCA</span></a>
+      <div class="hidden md:flex items-center gap-5 text-sm font-medium text-text-secondary overflow-x-auto">
+        <a href="#problem" class="hover:text-accent transition-colors whitespace-nowrap">Problem</a>
+        <a href="#features" class="hover:text-accent transition-colors whitespace-nowrap">Features</a>
+        <a href="#offline" class="hover:text-accent transition-colors whitespace-nowrap">Offline-First</a>
+        <a href="#architecture" class="hover:text-accent transition-colors whitespace-nowrap">Architecture</a>
+        <a href="#database" class="hover:text-accent transition-colors whitespace-nowrap">Database</a>
+        <a href="#challenges" class="hover:text-accent transition-colors whitespace-nowrap">Challenges</a>
+        <a href="#stack" class="hover:text-accent transition-colors whitespace-nowrap">Stack</a>
+      </div>
+      <a href="/"
+        class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-bg-elevated border border-border text-xs font-semibold hover:border-accent hover:text-accent transition-all shrink-0">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0 7-7m-7 7h18"/></svg>
+        Back to Portfolio
+      </a>
+    </div>
+  </nav>
+
+  <!-- ===== HERO ===== -->
+  <header id="top" class="border-b border-border relative overflow-hidden">
+    <div class="absolute inset-0 pointer-events-none opacity-40" style="background-image: radial-gradient(circle at 20% 10%, rgba(99,102,241,0.15), transparent 40%), radial-gradient(circle at 80% 30%, rgba(16,185,129,0.12), transparent 40%);"></div>
+
+    <div class="max-w-6xl mx-auto px-6 py-20 sm:py-28 relative">
+      <div class="inline-flex items-center gap-2 mb-5 px-3 py-1 rounded-full bg-bg-elevated border border-border">
+        <span class="relative flex w-2 h-2">
+          <span class="absolute inline-flex w-2 h-2 rounded-full bg-accent pulse-dot"></span>
+          <span class="relative inline-flex w-2 h-2 rounded-full bg-accent"></span>
+        </span>
+        <span class="text-xs font-medium text-text-secondary">Offline-capable · Role-based · Local-first sync</span>
+      </div>
+
+      <h1 class="text-4xl sm:text-6xl font-bold tracking-tight max-w-3xl">
+        A call center portal that works even when the network doesn't.
+      </h1>
+
+      <p class="mt-6 max-w-2xl text-lg text-text-secondary">
+        NUVELCO CCA is a call center agent portal for NUVELCO — handling ticket intake, role-based dashboards, and offline-capable workflows. Built on TanStack Start with a local-first data layer so agents never lose work mid-call due to a dropped connection.
+      </p>
+
+      <div class="mt-8 flex flex-wrap gap-3">
+        <a href="#architecture" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-accent text-bg text-sm font-semibold hover:bg-accent-2 hover:-translate-y-0.5 transition-all">
+          Explore the Architecture
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0-7 7m7-7H3"/></svg>
+        </a>
+        <a href="#features" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-bg-elevated border border-border text-sm font-medium hover:border-accent hover:text-accent transition-all">
+          See the Features
+        </a>
+      </div>
+
+      <!-- hero mockup -->
+      <div class="mt-14 rounded-2xl border border-border bg-bg-elevated p-2 shadow-2xl shadow-accent-2/10">
+        <img
+          src="/public/images/cca/banner.png"
+          alt="Placeholder preview of the NUVELCO CCA call center agent portal"
+          class="w-full object-cover rounded-lg border border-border shrink-0 print:hidden"
+        >
+      </div>
+    </div>
+  </header>
+
+  <!-- ===== TECH STRIP ===== -->
+  <section class="border-b border-border bg-bg-elevated/40" aria-label="Core technologies">
+    <div class="max-w-6xl mx-auto px-6 py-6 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-sm font-semibold text-text-secondary">
+      <span>React 19</span><span class="text-border">/</span>
+      <span>TanStack Start</span><span class="text-border">/</span>
+      <span>TanStack DB</span><span class="text-border">/</span>
+      <span>Prisma 7</span><span class="text-border">/</span>
+      <span>PostgreSQL</span><span class="text-border">/</span>
+      <span>Better Auth</span><span class="text-border">/</span>
+      <span>Serwist</span><span class="text-border">/</span>
+      <span>Tailwind CSS v4</span><span class="text-border">/</span>
+      <span>shadcn/ui</span><span class="text-border">/</span>
+      <span>Biome</span>
+    </div>
+  </section>
+
+  <main class="max-w-6xl mx-auto px-6">
+
+    <!-- ===== THE PROBLEM ===== -->
+    <section id="problem" class="py-20 border-b border-border scroll-mt-16 reveal" aria-labelledby="problem-heading">
+      <div class="max-w-2xl">
+        <p class="text-sm font-semibold text-accent uppercase tracking-wide mb-3">The Problem</p>
+        <h2 id="problem-heading" class="text-2xl sm:text-3xl font-bold mb-5">Call center agents lose context and work when a connection drops mid-call.</h2>
+        <p class="text-text-secondary">
+          A call center agent filling in a ticket during an active call can't afford for the form to freeze, fail silently, or lose data the moment the network hiccups. Most internal tooling is built with a live-API-per-keystroke assumption — which works fine on a stable corporate LAN but fails in the edge cases that matter most: a slow VPN, a brief ISP outage, or a tab reload mid-session.
+        </p>
+      </div>
+      <div class="mt-10 grid sm:grid-cols-2 gap-5">
+        <div class="bg-bg-elevated border border-border rounded-xl p-6">
+          <h3 class="font-semibold mb-2">Network interruptions kill in-progress ticket work</h3>
+          <p class="text-sm text-text-secondary">An agent mid-call who loses connectivity shouldn't also lose the partially filled ticket — the customer is still on the line.</p>
+        </div>
+        <div class="bg-bg-elevated border border-border rounded-xl p-6">
+          <h3 class="font-semibold mb-2">Role boundaries need to be enforced at the data layer, not just the UI</h3>
+          <p class="text-sm text-text-secondary">Agents, supervisors, and admins see different queues and actions — hiding buttons isn't enough if the server functions don't enforce the same rules.</p>
+        </div>
+        <div class="bg-bg-elevated border border-border rounded-xl p-6">
+          <h3 class="font-semibold mb-2">Ticket intake is only half the workflow</h3>
+          <p class="text-sm text-text-secondary">Creating a ticket is table stakes. Agents also need to look up history, reassign work, and track resolution state — all in one focused UI, not three tabs.</p>
+        </div>
+        <div class="bg-bg-elevated border border-border rounded-xl p-6">
+          <h3 class="font-semibold mb-2">Auth state can't survive a page reload in a serverless-first world</h3>
+          <p class="text-sm text-text-secondary">Session data stored only on the server means a reload while offline = logged out. Local-first auth persistence keeps agents signed in and working.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== FEATURES ===== -->
+    <section id="features" class="py-20 border-b border-border scroll-mt-16" aria-labelledby="features-heading">
+      <p class="text-sm font-semibold text-accent uppercase tracking-wide mb-3 reveal">Feature Showcase</p>
+      <h2 id="features-heading" class="text-2xl sm:text-3xl font-bold mb-14 max-w-2xl reveal">Ticket intake, role dashboards, and offline sync — in one portal.</h2>
+
+      <div class="flex flex-col gap-20">
+
+        <!-- 1. Ticket Intake -->
+        <div class="grid md:grid-cols-2 gap-10 items-center reveal">
+          <div>
+            <h3 class="text-xl font-bold mb-3">Structured ticket intake that writes locally first</h3>
+            <p class="text-text-secondary mb-5">When an agent submits a ticket, it lands in the local TanStack DB collection immediately — the UI confirms the write without waiting for a server round trip. The sync layer queues the mutation and flushes it to Postgres as soon as a connection is available.</p>
+            <ul class="flex flex-col gap-2 text-sm text-text-secondary">
+              <li class="flex gap-2"><span class="text-accent font-bold">›</span> Validated intake form with Zod-backed server functions — bad data never reaches the database</li>
+              <li class="flex gap-2"><span class="text-accent font-bold">›</span> Tickets are immediately visible in the agent's queue before the server confirms</li>
+              <li class="flex gap-2"><span class="text-accent font-bold">›</span> Optimistic UI ensures no visible loading states during normal operation</li>
+            </ul>
+          </div>
+          <div class="shot rounded-xl border border-border flex flex-col items-center justify-center gap-2 text-center">
+            <img
+              src="/public/images/cca/ticket-intake.png"
+              alt="Placeholder preview of the NUVELCO CCA call center agent portal"
+              class="w-full object-cover rounded-lg border border-border shrink-0 print:hidden"
+            >
+          </div>
+        </div>
+
+        <!-- 2. Role-Based Dashboards -->
+        <div class="grid md:grid-cols-2 gap-10 items-center reveal">
+          <div class="shot rounded-xl border border-border  flex flex-col items-center justify-center gap-2 text-center md:order-1">
+           <img
+              src="/public/images/cca/employee-page.png"
+              alt="Placeholder preview of the NUVELCO CCA call center agent portal"
+              class="w-full object-cover rounded-lg border border-border shrink-0 print:hidden"
+            >
+          </div>
+          <div class="md:order-2">
+            <h3 class="text-xl font-bold mb-3">One codebase, three role-scoped views</h3>
+            <p class="text-text-secondary mb-5">The same React application renders a different dashboard depending on the authenticated role. Agents see their own ticket queue; supervisors see team workload and can reassign; admins get configuration and audit access. Role gates run on both the router and server functions — UI-only guards aren't enough.</p>
+            <ul class="flex flex-col gap-2 text-sm text-text-secondary">
+              <li class="flex gap-2"><span class="text-accent font-bold">›</span> TanStack Router file-based routes with per-role loader guards</li>
+              <li class="flex gap-2"><span class="text-accent font-bold">›</span> Better Auth session carries role claims, verified on every server function call</li>
+              <li class="flex gap-2"><span class="text-accent font-bold">›</span> Supervisors can reassign open tickets without touching the agent's local queue directly</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- 3. Ticket Lifecycle -->
+        <div class="grid md:grid-cols-2 gap-10 items-center reveal">
+          <div>
+            <h3 class="text-xl font-bold mb-3">A ticket lifecycle with a full audit trail</h3>
+            <p class="text-text-secondary mb-5">Tickets move through a defined set of states — Open, In Progress, Pending, Resolved, Closed — and every transition is recorded with a timestamp and the acting user. Nothing gets quietly edited; the history is always queryable.</p>
+            <ul class="flex flex-col gap-2 text-sm text-text-secondary">
+              <li class="flex gap-2"><span class="text-accent font-bold">›</span> State transitions enforced server-side — an agent can't resolve a ticket assigned to someone else</li>
+              <li class="flex gap-2"><span class="text-accent font-bold">›</span> Each status change creates an immutable history record, not an overwrite</li>
+              <li class="flex gap-2"><span class="text-accent font-bold">›</span> Soft-deleted tickets preserved for reporting — a closed ticket doesn't break historical counts</li>
+            </ul>
+          </div>
+          <div class="shot rounded-xl border border-border flex flex-col items-center justify-center gap-2 text-center">
+            <img
+              src="/public/images/cca/ticket-details.png"
+              alt="Placeholder preview of the NUVELCO CCA call center agent portal"
+              class="w-full object-cover rounded-lg border border-border shrink-0 print:hidden"
+            >
+          </div>
+        </div>
+
+        <!-- 4. Auth -->
+        <div class="grid md:grid-cols-2 gap-10 items-center reveal">
+          <div class="shot rounded-xl border border-border flex flex-col items-center justify-center gap-2 text-center md:order-1">
+           <img
+              src="/public/images/cca/login-page.png"
+              alt="Placeholder preview of the NUVELCO CCA call center agent portal"
+              class="w-full object-cover rounded-lg border border-border shrink-0 print:hidden"
+            >
+          </div>
+          <div class="md:order-2">
+            <h3 class="text-xl font-bold mb-3">Auth that survives a reload, even offline</h3>
+            <p class="text-text-secondary mb-5">Better Auth handles session creation and validation server-side, but the session token is also persisted in the local TanStack DB SQLite store. If the agent reloads the page while disconnected, they stay authenticated against the local session rather than being bounced to the login screen.</p>
+            <ul class="flex flex-col gap-2 text-sm text-text-secondary">
+              <li class="flex gap-2"><span class="text-accent font-bold">›</span> Email/password auth via Better Auth with secure session cookies</li>
+              <li class="flex gap-2"><span class="text-accent font-bold">›</span> Local SQLite (OPFS) persists session data for offline continuity</li>
+              <li class="flex gap-2"><span class="text-accent font-bold">›</span> Session syncs to server on reconnect to validate against revocation</li>
+            </ul>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ===== OFFLINE FIRST ===== -->
+    <section id="offline" class="py-20 border-b border-border scroll-mt-16" aria-labelledby="offline-heading">
+      <p class="text-sm font-semibold text-accent uppercase tracking-wide mb-3 reveal">Offline-First</p>
+      <h2 id="offline-heading" class="text-2xl sm:text-3xl font-bold mb-5 max-w-2xl reveal">The agent keeps working. The network catches up later.</h2>
+      <p class="max-w-2xl text-text-secondary mb-10 reveal">
+        Every write — a new ticket, a status update, an agent note — lands in a local SQLite store in the browser first. The UI updates immediately from that local store. A background sync layer queues mutations and pushes them to Postgres through Prisma server functions when the connection returns.
+      </p>
+
+      <!-- Interactive offline demo -->
+      <div class="bg-bg-elevated border border-border rounded-2xl p-6 sm:p-8 reveal">
+        <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+          <div class="flex items-center gap-3">
+            <span class="relative flex w-2.5 h-2.5">
+              <span id="cca-sync-dot-ping" class="absolute inline-flex w-2.5 h-2.5 rounded-full bg-accent pulse-dot"></span>
+              <span id="cca-sync-dot" class="relative inline-flex w-2.5 h-2.5 rounded-full bg-accent"></span>
+            </span>
+            <span id="cca-sync-label" class="text-sm font-semibold">Synced</span>
+          </div>
+          <button id="cca-toggle-btn" type="button"
+            class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-bg border border-border text-xs font-semibold hover:border-accent-2 hover:text-accent-2 transition-all">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M8.111 16.404a5.5 5.5 0 0 1 7.778 0M4.929 13.222a9.5 9.5 0 0 1 14.142 0M1.747 10.04C6.9 4.887 15.1 4.887 20.253 10.04M12 20.5h.01"/></svg>
+            Simulate connection drop
+          </button>
+        </div>
+
+        <div class="grid sm:grid-cols-3 gap-3 text-sm">
+          <div class="bg-bg border border-border rounded-lg p-4">
+            <p class="text-xs text-text-secondary uppercase tracking-wide mb-2">Agent action</p>
+            <p class="font-medium">Ticket #TKT-0042 submitted</p>
+            <p class="text-text-secondary text-xs mt-1">Written to local SQLite instantly</p>
+          </div>
+          <div class="bg-bg border border-border rounded-lg p-4">
+            <p class="text-xs text-text-secondary uppercase tracking-wide mb-2">Sync queue</p>
+            <p id="cca-queue-status" class="font-medium">0 mutations pending</p>
+            <p id="cca-queue-detail" class="text-text-secondary text-xs mt-1">Nothing waiting on the network</p>
+          </div>
+          <div class="bg-bg border border-border rounded-lg p-4">
+            <p class="text-xs text-text-secondary uppercase tracking-wide mb-2">Server state</p>
+            <p id="cca-server-status" class="font-medium">Up to date</p>
+            <p class="text-text-secondary text-xs mt-1">Postgres reflects the local store</p>
+          </div>
+        </div>
+        <p class="text-xs text-text-secondary mt-5">This panel is a simplified simulation for illustration — it doesn't talk to a real backend.</p>
+      </div>
+
+      <div class="mt-12 grid sm:grid-cols-2 gap-5 reveal">
+        <div class="border border-border rounded-xl p-6">
+          <h3 class="font-semibold mb-2">Optimistic by default</h3>
+          <p class="text-sm text-text-secondary">TanStack DB applies writes to the local collection immediately and reconciles with the server response when it arrives, so agents never see a loading spinner for their own actions.</p>
+        </div>
+        <div class="border border-border rounded-xl p-6">
+          <h3 class="font-semibold mb-2">PWA shell caching via Serwist</h3>
+          <p class="text-sm text-text-secondary">The application shell is cached by a Serwist service worker in production — the portal loads and is navigable even with zero network, independently of whether TanStack DB has data to show.</p>
+        </div>
+        <div class="border border-border rounded-xl p-6">
+          <h3 class="font-semibold mb-2">Background sync, not manual refresh</h3>
+          <p class="text-sm text-text-secondary">Queued mutations flush automatically when connectivity returns, via TanStack Query's mutation layer coordinating with TanStack Start server functions.</p>
+        </div>
+        <div class="border border-border rounded-xl p-6">
+          <h3 class="font-semibold mb-2">Offline auth continuity</h3>
+          <p class="text-sm text-text-secondary">Session data is persisted locally alongside ticket data so an agent reloading the page while offline doesn't land on the login screen mid-shift.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== ARCHITECTURE ===== -->
+    <section id="architecture" class="py-20 border-b border-border scroll-mt-16" aria-labelledby="architecture-heading">
+      <p class="text-sm font-semibold text-accent-2 uppercase tracking-wide mb-3 reveal">Architecture</p>
+      <h2 id="architecture-heading" class="text-2xl sm:text-3xl font-bold mb-5 max-w-2xl reveal">One direction of trust, local-first at every write.</h2>
+      <p class="max-w-2xl text-text-secondary mb-12 reveal">
+        Writes flow down from the UI to the local SQLite store first, then up to Postgres via the sync layer. Reads come from the local store so the UI is always fast, regardless of network state.
+      </p>
+
+      <div class="flex flex-col items-center gap-0 reveal">
+        <div class="w-full max-w-xl bg-bg-elevated border border-border rounded-xl px-6 py-4 flex items-center justify-between">
+          <div><p class="font-semibold">React 19</p><p class="text-xs text-text-secondary">UI components, rendered on client and server via SSR</p></div>
+          <span class="text-xs text-text-secondary font-mono">view</span>
+        </div>
+        <div class="h-8 w-px bg-border"></div>
+        <div class="w-full max-w-xl bg-bg-elevated border border-border rounded-xl px-6 py-4 flex items-center justify-between">
+          <div><p class="font-semibold">TanStack Router</p><p class="text-xs text-text-secondary">File-based, type-safe routes with role-guard loaders</p></div>
+          <span class="text-xs text-text-secondary font-mono">routing</span>
+        </div>
+        <div class="h-8 w-px bg-border"></div>
+        <div class="w-full max-w-xl bg-bg-elevated border border-border rounded-xl px-6 py-4 flex items-center justify-between">
+          <div><p class="font-semibold">TanStack Query</p><p class="text-xs text-text-secondary">Server-state fetching, caching, and mutation lifecycle</p></div>
+          <span class="text-xs text-text-secondary font-mono">data fetching</span>
+        </div>
+        <div class="h-8 w-px bg-border"></div>
+        <div class="w-full max-w-xl bg-accent-2/10 border border-accent-2/40 rounded-xl px-6 py-4 flex items-center justify-between">
+          <div><p class="font-semibold">TanStack DB</p><p class="text-xs text-text-secondary">Reactive client-side ticket &amp; session collections</p></div>
+          <span class="text-xs text-accent-2 font-mono">live collections</span>
+        </div>
+        <div class="h-8 w-px bg-border"></div>
+        <div class="w-full max-w-xl bg-accent/10 border border-accent/40 rounded-xl px-6 py-4 flex items-center justify-between">
+          <div><p class="font-semibold">SQLite (OPFS, in-browser)</p><p class="text-xs text-text-secondary">Persists tickets and auth state across reloads and offline windows</p></div>
+          <span class="text-xs text-accent font-mono">durability</span>
+        </div>
+        <div class="h-8 w-px bg-border"></div>
+        <div class="w-full max-w-xl bg-warn/10 border border-warn/40 rounded-xl px-6 py-4 flex items-center justify-between">
+          <div><p class="font-semibold">Sync Layer</p><p class="text-xs text-text-secondary">Queues and replays mutations against the server when online</p></div>
+          <span class="text-xs text-warn font-mono">reconciliation</span>
+        </div>
+        <div class="h-8 w-px bg-border"></div>
+        <div class="w-full max-w-xl bg-bg-elevated border border-border rounded-xl px-6 py-4 flex items-center justify-between">
+          <div><p class="font-semibold">TanStack Start + Prisma 7</p><p class="text-xs text-text-secondary">Server functions with type-safe ORM queries, role-verified on every call</p></div>
+          <span class="text-xs text-text-secondary font-mono">server layer</span>
+        </div>
+        <div class="h-8 w-px bg-border"></div>
+        <div class="w-full max-w-xl bg-bg-elevated border border-border rounded-xl px-6 py-4 flex items-center justify-between">
+          <div><p class="font-semibold">PostgreSQL</p><p class="text-xs text-text-secondary">Durable system of record for all tickets, agents, and history</p></div>
+          <span class="text-xs text-text-secondary font-mono">source of record</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== DATABASE ===== -->
+    <section id="database" class="py-20 border-b border-border scroll-mt-16" aria-labelledby="database-heading">
+      <p class="text-sm font-semibold text-accent uppercase tracking-wide mb-3 reveal">Database</p>
+      <h2 id="database-heading" class="text-2xl sm:text-3xl font-bold mb-5 max-w-2xl reveal">Schema grouped by what it's responsible for.</h2>
+      <p class="max-w-2xl text-text-secondary mb-12 reveal">
+        PostgreSQL via Prisma 7. Schema synced with <code class="text-accent-2">prisma db push</code> rather than migration files — appropriate for the current stage. Every high-traffic table is indexed on agent and ticket identifiers to keep queries fast as volume grows.
+      </p>
+
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 reveal">
+        <div class="bg-bg-elevated border border-border rounded-xl p-6">
+          <h3 class="font-semibold mb-1">Identity &amp; Auth</h3>
+          <p class="text-xs text-text-secondary mb-3">User, Session, Account</p>
+          <p class="text-sm text-text-secondary">Better Auth–managed tables. Sessions carry role claims used by every server function for access control.</p>
+        </div>
+        <div class="bg-bg-elevated border border-border rounded-xl p-6">
+          <h3 class="font-semibold mb-1">Tickets</h3>
+          <p class="text-xs text-text-secondary mb-3">Ticket, TicketHistory, TicketNote</p>
+          <p class="text-sm text-text-secondary">Core domain. Every state transition creates a <code class="text-accent-2">TicketHistory</code> row — the ticket row is never silently overwritten.</p>
+        </div>
+        <div class="bg-bg-elevated border border-border rounded-xl p-6">
+          <h3 class="font-semibold mb-1">Classification</h3>
+          <p class="text-xs text-text-secondary mb-3">Category, Priority, Tag</p>
+          <p class="text-sm text-text-secondary">Configurable lookup tables so issue taxonomy evolves without schema changes. Tags are many-to-many with tickets.</p>
+        </div>
+        <div class="bg-bg-elevated border border-border rounded-xl p-6">
+          <h3 class="font-semibold mb-1">People</h3>
+          <p class="text-xs text-text-secondary mb-3">Agent, Caller</p>
+          <p class="text-sm text-text-secondary">Agents are linked to the auth user record. Callers are contact records that can repeat across multiple tickets without duplicate data entry.</p>
+        </div>
+        <div class="bg-bg-elevated border border-border rounded-xl p-6">
+          <h3 class="font-semibold mb-1">Assignment &amp; Queues</h3>
+          <p class="text-xs text-text-secondary mb-3">Assignment, Queue</p>
+          <p class="text-sm text-text-secondary">Tickets can be assigned to individual agents or to a queue for the next available agent to claim. Both models are first-class records, not just a nullable foreign key.</p>
+        </div>
+        <div class="bg-bg-elevated border border-border rounded-xl p-6">
+          <h3 class="font-semibold mb-1">Audit</h3>
+          <p class="text-xs text-text-secondary mb-3">AuditLog</p>
+          <p class="text-sm text-text-secondary">Supervisor and admin actions — reassignments, configuration changes — are written to a separate audit table, not mixed into ticket history.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== ENGINEERING CHALLENGES ===== -->
+    <section id="challenges" class="py-20 border-b border-border scroll-mt-16" aria-labelledby="challenges-heading">
+      <p class="text-sm font-semibold text-accent uppercase tracking-wide mb-3 reveal">Engineering Challenges</p>
+      <h2 id="challenges-heading" class="text-2xl sm:text-3xl font-bold mb-12 max-w-2xl reveal">The decisions that were actually hard.</h2>
+
+      <div class="grid sm:grid-cols-2 gap-5 reveal">
+        <div class="border border-border rounded-xl p-6">
+          <h3 class="font-semibold mb-2">Offline auth without a persistent server session</h3>
+          <p class="text-sm text-text-secondary">Better Auth validates sessions against Postgres. When Postgres is unreachable, the agent would normally be treated as unauthenticated. The solution: persist the session token and user record in the local SQLite store, and short-circuit the auth check against the local copy when offline — with a background revalidation queued for reconnect.</p>
+        </div>
+        <div class="border border-border rounded-xl p-6">
+          <h3 class="font-semibold mb-2">Role enforcement that can't be faked client-side</h3>
+          <p class="text-sm text-text-secondary">Hiding UI elements is cosmetic. Every TanStack Start server function re-reads the session's role from the database and throws if the caller doesn't have the required permission — even if they manually crafted the request. The client-side role check is purely for UX; the server check is the real gate.</p>
+        </div>
+        <div class="border border-border rounded-xl p-6">
+          <h3 class="font-semibold mb-2">Ticket history without destructive updates</h3>
+          <p class="text-sm text-text-secondary">Rather than updating a ticket's <code class="text-accent-2">status</code> column and losing the previous value, every transition appends a <code class="text-accent-2">TicketHistory</code> row. The tradeoff is extra writes per update and a join to reconstruct current state — worth it because supervisors and auditors need to know not just what a ticket's status is, but the full sequence of how it got there.</p>
+        </div>
+        <div class="border border-border rounded-xl p-6">
+          <h3 class="font-semibold mb-2">Docker dev environment on Windows</h3>
+          <p class="text-sm text-text-secondary">Full project bind mounts in Docker on Windows break Vite's hot reload due to file-system notification differences between the host and container. The workaround: replace bind mounts with <code class="text-accent-2">docker compose watch</code> for targeted file sync, with an isolated <code class="text-accent-2">.output</code> volume to prevent stale SSR build artifacts from leaking across reloads.</p>
+        </div>
+        <div class="border border-border rounded-xl p-6">
+          <h3 class="font-semibold mb-2">Keeping TanStack DB and Postgres in sync during reconnect</h3>
+          <p class="text-sm text-text-secondary">Local writes that queue up during an offline window need to be replayed in the correct order when connectivity returns, and the server's response needs to reconcile against what the local store already shows the user. Today this uses last-write-wins, which is acceptable for a single-agent-per-session model. True multi-device conflict resolution is scoped as future work.</p>
+        </div>
+        <div class="border border-border rounded-xl p-6">
+          <h3 class="font-semibold mb-2">Type safety from database to form validation</h3>
+          <p class="text-sm text-text-secondary">Prisma's generated types cover the database layer. TanStack Form with Zod schemas covers the intake form. The gap between them — a form field that accepts a string but the database expects a specific enum — is closed by sharing Zod schemas between the client form and the server function validator, so a schema change propagates to both ends at once.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== TECH STACK ===== -->
+    <section id="stack" class="py-20 border-b border-border scroll-mt-16" aria-labelledby="stack-heading">
+      <p class="text-sm font-semibold text-accent uppercase tracking-wide mb-3 reveal">Tech Stack</p>
+      <h2 id="stack-heading" class="text-2xl sm:text-3xl font-bold mb-12 max-w-2xl reveal">What's in package.json, and why it's there.</h2>
+
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 reveal">
+        <div class="bg-bg-elevated border border-border rounded-xl p-6">
+          <h3 class="font-semibold mb-2">React 19 + TanStack Router</h3>
+          <p class="text-sm text-text-secondary">File-based, fully type-safe routing. Role-guard loaders run before any component mounts, so a forbidden route never even begins to render.</p>
+        </div>
+        <div class="bg-bg-elevated border border-border rounded-xl p-6">
+          <h3 class="font-semibold mb-2">TanStack Start</h3>
+          <p class="text-sm text-text-secondary">Full-stack React SSR with colocated server functions. No separate API server — the ticket mutation and the form that triggers it live in the same file.</p>
+        </div>
+        <div class="bg-bg-elevated border border-border rounded-xl p-6">
+          <h3 class="font-semibold mb-2">TanStack DB + SQLite (OPFS)</h3>
+          <p class="text-sm text-text-secondary">Reactive client collections backed by an in-browser SQLite store. The local-first layer that makes offline ticket intake possible as an architectural property, not a UI workaround.</p>
+        </div>
+        <div class="bg-bg-elevated border border-border rounded-xl p-6">
+          <h3 class="font-semibold mb-2">Prisma 7 + PostgreSQL</h3>
+          <p class="text-sm text-text-secondary">Type-safe ORM for the full schema. The pg driver adapter keeps the connection pool explicit — important when server functions can be short-lived.</p>
+        </div>
+        <div class="bg-bg-elevated border border-border rounded-xl p-6">
+          <h3 class="font-semibold mb-2">Better Auth</h3>
+          <p class="text-sm text-text-secondary">Session-based auth with email/password. Role claims on the session token, verified server-side on every mutation. IP and user-agent logging for audit.</p>
+        </div>
+        <div class="bg-bg-elevated border border-border rounded-xl p-6">
+          <h3 class="font-semibold mb-2">Serwist (PWA)</h3>
+          <p class="text-sm text-text-secondary">Service worker caches the application shell so the portal loads in production even with no network. Separate from TanStack DB — one caches the app, the other caches the data.</p>
+        </div>
+        <div class="bg-bg-elevated border border-border rounded-xl p-6">
+          <h3 class="font-semibold mb-2">TanStack Form + Zod</h3>
+          <p class="text-sm text-text-secondary">Type-safe form state management paired with Zod schemas shared between the client form and the server function validator — one source of truth for what a valid ticket looks like.</p>
+        </div>
+        <div class="bg-bg-elevated border border-border rounded-xl p-6">
+          <h3 class="font-semibold mb-2">Tailwind CSS v4 + shadcn/ui + Base UI</h3>
+          <p class="text-sm text-text-secondary">Utility-first styling with accessible Radix and Base UI primitives. Dark-mode-first — a call center portal is often running on a dim monitor all day.</p>
+        </div>
+        <div class="bg-bg-elevated border border-border rounded-xl p-6">
+          <h3 class="font-semibold mb-2">Biome + Lefthook + Vitest + Playwright</h3>
+          <p class="text-sm text-text-secondary">Biome replaces ESLint and Prettier in one pass. Lefthook enforces it as a pre-commit gate. Vitest covers unit/integration. Playwright handles end-to-end flows.</p>
+        </div>
+        <div class="bg-bg-elevated border border-border rounded-xl p-6">
+          <h3 class="font-semibold mb-2">Docker + docker compose watch</h3>
+          <p class="text-sm text-text-secondary">Containerized dev environment with Postgres. File sync via <code class="text-accent-2">compose watch</code> instead of bind mounts — the workaround that makes Vite HMR reliable on Windows.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== STATS ===== -->
+    <section class="py-20 border-b border-border scroll-mt-16" aria-label="Project statistics">
+      <p class="text-sm font-semibold text-accent-2 uppercase tracking-wide mb-3 reveal">By the Numbers</p>
+      <h2 class="text-2xl sm:text-3xl font-bold mb-10 max-w-2xl reveal">What the codebase looks like at a glance.</h2>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 reveal">
+        <div class="bg-bg-elevated border border-border rounded-xl p-5 text-center">
+          <p class="text-3xl font-bold text-accent">React 19</p>
+          <p class="text-xs text-text-secondary mt-1">UI runtime</p>
+        </div>
+        <div class="bg-bg-elevated border border-border rounded-xl p-5 text-center">
+          <p class="text-3xl font-bold text-accent">3</p>
+          <p class="text-xs text-text-secondary mt-1">Role-scoped dashboard views</p>
+        </div>
+        <div class="bg-bg-elevated border border-border rounded-xl p-5 text-center">
+          <p class="text-3xl font-bold text-accent">5</p>
+          <p class="text-xs text-text-secondary mt-1">Ticket lifecycle states</p>
+        </div>
+        <div class="bg-bg-elevated border border-border rounded-xl p-5 text-center">
+          <p class="text-3xl font-bold text-accent">0</p>
+          <p class="text-xs text-text-secondary mt-1">Blocking network calls on write</p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="border-t border-border py-10 text-center text-sm text-text-secondary">
+    <p>&copy; 2026 Ricardo Rey Crisanto V. Lopez II. NUVELCO CCA Portal overview — Build with Astro &amp; Tailwind CSS v4.</p>
+    <a href="/" class="inline-block mt-3 text-accent hover:text-accent-2 transition-colors">&larr; Back to portfolio</a>
+  </footer>
+
+  <script is:inline>
+    // ---- Section reveal on scroll ----
+    const revealEls = document.querySelectorAll('.reveal');
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('in-view');
+          io.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.15 });
+    revealEls.forEach((el) => {io.observe(el)});
+
+    // ---- Offline-first simulation ----
+    (() => {
+      const btn = document.getElementById('cca-toggle-btn');
+      const dot = document.getElementById('cca-sync-dot');
+      const dotPing = document.getElementById('cca-sync-dot-ping');
+      const label = document.getElementById('cca-sync-label');
+      const queueStatus = document.getElementById('cca-queue-status');
+      const queueDetail = document.getElementById('cca-queue-detail');
+      const serverStatus = document.getElementById('cca-server-status');
+      let offline = false;
+      let syncTimer = null;
+
+      function setOffline() {
+        offline = true;
+        dot.className = 'relative inline-flex w-2.5 h-2.5 rounded-full bg-warn';
+        dotPing.className = 'absolute inline-flex w-2.5 h-2.5 rounded-full bg-warn';
+        dotPing.style.animation = 'pulse-ring-warn 1.2s ease-out infinite';
+        label.textContent = 'Offline — writing locally';
+        queueStatus.textContent = '2 mutations pending';
+        queueDetail.textContent = 'Queued in local SQLite, waiting for a connection';
+        serverStatus.textContent = 'Stale (last synced moments ago)';
+        btn.textContent = 'Restore connection';
+      }
+
+      function setSyncing() {
+        label.textContent = 'Reconnected — syncing';
+        queueDetail.textContent = 'Flushing queued mutations to the server';
+      }
+
+      function setOnline() {
+        offline = false;
+        dot.className = 'relative inline-flex w-2.5 h-2.5 rounded-full bg-accent';
+        dotPing.className = 'absolute inline-flex w-2.5 h-2.5 rounded-full bg-accent pulse-dot';
+        dotPing.style.animation = '';
+        label.textContent = 'Synced';
+        queueStatus.textContent = '0 mutations pending';
+        queueDetail.textContent = 'Nothing waiting on the network';
+        serverStatus.textContent = 'Up to date';
+        btn.innerHTML = '<svg class="w-3.5 h-3.5 inline mr-1.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.111 16.404a5.5 5.5 0 0 1 7.778 0M4.929 13.222a9.5 9.5 0 0 1 14.142 0M1.747 10.04C6.9 4.887 15.1 4.887 20.253 10.04M12 20.5h.01"/></svg>Simulate connection drop';
+      }
+
+      btn.addEventListener('click', () => {
+        clearTimeout(syncTimer);
+        if (!offline) {
+          setOffline();
+        } else {
+          setSyncing();
+          syncTimer = setTimeout(setOnline, 1400);
+        }
+      });
+    })();
+  </script>
 </ProjectLayout>
