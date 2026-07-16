@@ -511,21 +511,21 @@
       <div class="bg-bg-elevated border border-accent/20 rounded-xl p-5">
         <h3 class="font-semibold text-sm text-accent uppercase tracking-wide mb-3">What this gets right</h3>
         <ul class="flex flex-col gap-2 text-sm text-text-secondary">
-          <li class="flex gap-2"><span class="text-accent font-bold">›</span> Zero network dependency on the offline path — no background sync, no service worker proxy, no queued requests</li>
-          <li class="flex gap-2"><span class="text-accent font-bold">›</span> The hash never leaves the browser. The plaintext password is available in memory for exactly the duration of the <code class="prose-inline">onSuccess</code> callback, then gone</li>
-          <li class="flex gap-2"><span class="text-accent font-bold">›</span> Both auth paths produce the same <code class="prose-inline">ServerUser</code> shape — the rest of the app is unaware which path was used</li>
-          <li class="flex gap-2"><span class="text-accent font-bold">›</span> TTL enforcement means offline access has a hard expiry that can't be extended without coming back online</li>
-          <li class="flex gap-2"><span class="text-accent font-bold">›</span> <code class="prose-inline">syncServerToLocal</code> runs on every protected route mount — active users stay fresh without any explicit refresh action</li>
+          <li><span class="text-accent font-bold">›</span> Zero network dependency on the offline path — no background sync, no service worker proxy, no queued requests</li>
+          <li><span class="text-accent font-bold">›</span> The hash never leaves the browser. The plaintext password is available in memory for exactly the duration of the <code class="prose-inline">onSuccess</code> callback, then gone</li>
+          <li><span class="text-accent font-bold">›</span> Both auth paths produce the same <code class="prose-inline">ServerUser</code> shape — the rest of the app is unaware which path was used</li>
+          <li><span class="text-accent font-bold">›</span> TTL enforcement means offline access has a hard expiry that can't be extended without coming back online</li>
+          <li><span class="text-accent font-bold">›</span> <code class="prose-inline">syncServerToLocal</code> runs on every protected route mount — active users stay fresh without any explicit refresh action</li>
         </ul>
       </div>
 
       <div class="bg-bg-elevated border border-danger/20 rounded-xl p-5">
         <h3 class="font-semibold text-sm text-danger uppercase tracking-wide mb-3">What it doesn't solve</h3>
         <ul class="flex flex-col gap-2 text-sm text-text-secondary">
-          <li class="flex gap-2"><span class="text-warn font-bold">›</span> <strong class="text-text">No server-side revocation.</strong> If an account is disabled on the server while the device is offline, the local cache has no way to know. The user can log in offline until their TTL expires</li>
-          <li class="flex gap-2"><span class="text-warn font-bold">›</span> <strong class="text-text">SHA-256 is not a password hash.</strong> It's fast, which makes it unsuitable for protecting credentials against a determined attacker with access to the OPFS database. For a higher-security requirement, this should use <code class="prose-inline">PBKDF2</code> or <code class="prose-inline">bcrypt</code> via a WASM port</li>
-          <li class="flex gap-2"><span class="text-warn font-bold">›</span> <strong class="text-text">No multi-device invalidation.</strong> Clearing the credential cache on a lost or reassigned device requires a separate admin action — there's no remote wipe mechanism</li>
-          <li class="flex gap-2"><span class="text-warn font-bold">›</span> <strong class="text-text">First login always requires connectivity.</strong> An agent who has never logged in on a given device can't do so offline — the hash only exists after a successful online login</li>
+          <li><span class="text-warn font-bold">›</span> <strong class="text-text">No server-side revocation.</strong> If an account is disabled on the server while the device is offline, the local cache has no way to know. The user can log in offline until their TTL expires</li>
+          <li><span class="text-warn font-bold">›</span> <strong class="text-text">SHA-256 is not a password hash.</strong> It's fast, which makes it unsuitable for protecting credentials against a determined attacker with access to the OPFS database. For a higher-security requirement, this should use <code class="prose-inline">PBKDF2</code> or <code class="prose-inline">bcrypt</code> via a WASM port</li>
+          <li><span class="text-warn font-bold">›</span> <strong class="text-text">No multi-device invalidation.</strong> Clearing the credential cache on a lost or reassigned device requires a separate admin action — there's no remote wipe mechanism</li>
+          <li><span class="text-warn font-bold">›</span> <strong class="text-text">First login always requires connectivity.</strong> An agent who has never logged in on a given device can't do so offline — the hash only exists after a successful online login</li>
         </ul>
       </div>
     </div>

@@ -58,7 +58,7 @@ import ProjectLayout from '../layouts/ProjectLayout.astro';
       <!-- hero mockup -->
       <div class="mt-14 rounded-2xl border border-border bg-bg-elevated p-2 shadow-2xl shadow-accent-2/10">
         <img
-          src="/public/images/cca/banner.png"
+          src="/images/cca/banner.png"
           alt="Placeholder preview of the NUVELCO CCA call center agent portal"
           class="w-full object-cover rounded-lg border border-border shrink-0 print:hidden"
         >
@@ -126,14 +126,14 @@ import ProjectLayout from '../layouts/ProjectLayout.astro';
             <h3 class="text-xl font-bold mb-3">Structured ticket intake that writes locally first</h3>
             <p class="text-text-secondary mb-5">When an agent submits a ticket, it lands in the local TanStack DB collection immediately — the UI confirms the write without waiting for a server round trip. The sync layer queues the mutation and flushes it to Postgres as soon as a connection is available.</p>
             <ul class="flex flex-col gap-2 text-sm text-text-secondary">
-              <li class="flex gap-2"><span class="text-accent font-bold">›</span> Validated intake form with Zod-backed server functions — bad data never reaches the database</li>
-              <li class="flex gap-2"><span class="text-accent font-bold">›</span> Tickets are immediately visible in the agent's queue before the server confirms</li>
-              <li class="flex gap-2"><span class="text-accent font-bold">›</span> Optimistic UI ensures no visible loading states during normal operation</li>
+              <li><span class="text-accent font-bold">›</span> Validated intake form with Zod-backed server functions — bad data never reaches the database</li>
+              <li><span class="text-accent font-bold">›</span> Tickets are immediately visible in the agent's queue before the server confirms</li>
+              <li><span class="text-accent font-bold">›</span> Optimistic UI ensures no visible loading states during normal operation</li>
             </ul>
           </div>
           <div class="shot rounded-xl border border-border flex flex-col items-center justify-center gap-2 text-center">
             <img
-              src="/public/images/cca/ticket-intake.png"
+              src="/images/cca/ticket-intake.png"
               alt="Placeholder preview of the NUVELCO CCA call center agent portal"
               class="w-full object-cover rounded-lg border border-border shrink-0 print:hidden"
             >
@@ -144,7 +144,7 @@ import ProjectLayout from '../layouts/ProjectLayout.astro';
         <div class="grid md:grid-cols-2 gap-10 items-center reveal">
           <div class="shot rounded-xl border border-border  flex flex-col items-center justify-center gap-2 text-center md:order-1">
            <img
-              src="/public/images/cca/employee-page.png"
+              src="/images/cca/employee-page.png"
               alt="Placeholder preview of the NUVELCO CCA call center agent portal"
               class="w-full object-cover rounded-lg border border-border shrink-0 print:hidden"
             >
@@ -153,9 +153,9 @@ import ProjectLayout from '../layouts/ProjectLayout.astro';
             <h3 class="text-xl font-bold mb-3">One codebase, three role-scoped views</h3>
             <p class="text-text-secondary mb-5">The same React application renders a different dashboard depending on the authenticated role. Agents see their own ticket queue; supervisors see team workload and can reassign; admins get configuration and audit access. Role gates run on both the router and server functions — UI-only guards aren't enough.</p>
             <ul class="flex flex-col gap-2 text-sm text-text-secondary">
-              <li class="flex gap-2"><span class="text-accent font-bold">›</span> TanStack Router file-based routes with per-role loader guards</li>
-              <li class="flex gap-2"><span class="text-accent font-bold">›</span> Better Auth session carries role claims, verified on every server function call</li>
-              <li class="flex gap-2"><span class="text-accent font-bold">›</span> Supervisors can reassign open tickets without touching the agent's local queue directly</li>
+              <li><span class="text-accent font-bold">›</span> TanStack Router file-based routes with per-role loader guards</li>
+              <li><span class="text-accent font-bold">›</span> Better Auth session carries role claims, verified on every server function call</li>
+              <li><span class="text-accent font-bold">›</span> Supervisors can reassign open tickets without touching the agent's local queue directly</li>
             </ul>
           </div>
         </div>
@@ -166,14 +166,14 @@ import ProjectLayout from '../layouts/ProjectLayout.astro';
             <h3 class="text-xl font-bold mb-3">A ticket lifecycle with a full audit trail</h3>
             <p class="text-text-secondary mb-5">Tickets move through a defined set of states — Open, In Progress, Pending, Resolved, Closed — and every transition is recorded with a timestamp and the acting user. Nothing gets quietly edited; the history is always queryable.</p>
             <ul class="flex flex-col gap-2 text-sm text-text-secondary">
-              <li class="flex gap-2"><span class="text-accent font-bold">›</span> State transitions enforced server-side — an agent can't resolve a ticket assigned to someone else</li>
-              <li class="flex gap-2"><span class="text-accent font-bold">›</span> Each status change creates an immutable history record, not an overwrite</li>
-              <li class="flex gap-2"><span class="text-accent font-bold">›</span> Soft-deleted tickets preserved for reporting — a closed ticket doesn't break historical counts</li>
+              <li><span class="text-accent font-bold">›</span> State transitions enforced server-side — an agent can't resolve a ticket assigned to someone else</li>
+              <li><span class="text-accent font-bold">›</span> Each status change creates an immutable history record, not an overwrite</li>
+              <li><span class="text-accent font-bold">›</span> Soft-deleted tickets preserved for reporting — a closed ticket doesn't break historical counts</li>
             </ul>
           </div>
           <div class="shot rounded-xl border border-border flex flex-col items-center justify-center gap-2 text-center">
             <img
-              src="/public/images/cca/ticket-details.png"
+              src="/images/cca/ticket-details.png"
               alt="Placeholder preview of the NUVELCO CCA call center agent portal"
               class="w-full object-cover rounded-lg border border-border shrink-0 print:hidden"
             >
@@ -184,7 +184,7 @@ import ProjectLayout from '../layouts/ProjectLayout.astro';
         <div class="grid md:grid-cols-2 gap-10 items-center reveal">
           <div class="shot rounded-xl border border-border flex flex-col items-center justify-center gap-2 text-center md:order-1">
            <img
-              src="/public/images/cca/login-page.png"
+              src="/images/cca/login-page.png"
               alt="Placeholder preview of the NUVELCO CCA call center agent portal"
               class="w-full object-cover rounded-lg border border-border shrink-0 print:hidden"
             >
@@ -193,9 +193,9 @@ import ProjectLayout from '../layouts/ProjectLayout.astro';
             <h3 class="text-xl font-bold mb-3">Auth that survives a reload, even offline</h3>
             <p class="text-text-secondary mb-5">Better Auth handles session creation and validation server-side, but the session token is also persisted in the local TanStack DB SQLite store. If the agent reloads the page while disconnected, they stay authenticated against the local session rather than being bounced to the login screen.</p>
             <ul class="flex flex-col gap-2 text-sm text-text-secondary">
-              <li class="flex gap-2"><span class="text-accent font-bold">›</span> Email/password auth via Better Auth with secure session cookies</li>
-              <li class="flex gap-2"><span class="text-accent font-bold">›</span> Local SQLite (OPFS) persists session data for offline continuity</li>
-              <li class="flex gap-2"><span class="text-accent font-bold">›</span> Session syncs to server on reconnect to validate against revocation</li>
+              <li><span class="text-accent font-bold">›</span> Email/password auth via Better Auth with secure session cookies</li>
+              <li><span class="text-accent font-bold">›</span> Local SQLite (OPFS) persists session data for offline continuity</li>
+              <li><span class="text-accent font-bold">›</span> Session syncs to server on reconnect to validate against revocation</li>
             </ul>
           </div>
         </div>

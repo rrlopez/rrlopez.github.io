@@ -253,18 +253,18 @@
       <div class="bg-bg-elevated border border-accent/20 rounded-xl p-5">
         <h3 class="font-semibold text-sm mb-3 text-accent">What this gives you</h3>
         <ul class="flex flex-col gap-2 text-sm text-text-secondary">
-          <li class="flex gap-2"><span class="text-accent">›</span> One HTTP round-trip for multi-table writes</li>
-          <li class="flex gap-2"><span class="text-accent">›</span> True DB-level atomicity via <code class="prose-inline">prisma.$transaction()</code></li>
-          <li class="flex gap-2"><span class="text-accent">›</span> No duplicated validation logic — same <code class="prose-inline">executeOperation</code> engine</li>
-          <li class="flex gap-2"><span class="text-accent">›</span> Server results returned in index order — each operation maps back to its collection</li>
+          <li><span class="text-accent">›</span> One HTTP round-trip for multi-table writes</li>
+          <li><span class="text-accent">›</span> True DB-level atomicity via <code class="prose-inline">prisma.$transaction()</code></li>
+          <li><span class="text-accent">›</span> No duplicated validation logic — same <code class="prose-inline">executeOperation</code> engine</li>
+          <li><span class="text-accent">›</span> Server results returned in index order — each operation maps back to its collection</li>
         </ul>
       </div>
       <div class="bg-bg-elevated border border-border rounded-xl p-5">
         <h3 class="font-semibold text-sm mb-3">What it doesn't do</h3>
         <ul class="flex flex-col gap-2 text-sm text-text-secondary">
-          <li class="flex gap-2"><span class="text-warn">›</span> It's not a query API — reads go through the CRUD Proxy individually</li>
-          <li class="flex gap-2"><span class="text-warn">›</span> No partial rollback — all-or-nothing per batch</li>
-          <li class="flex gap-2"><span class="text-warn">›</span> Return types are <code class="prose-inline">any[]</code> — the caller knows the shape by position</li>
+          <li><span class="text-warn">›</span> It's not a query API — reads go through the CRUD Proxy individually</li>
+          <li><span class="text-warn">›</span> No partial rollback — all-or-nothing per batch</li>
+          <li><span class="text-warn">›</span> Return types are <code class="prose-inline">any[]</code> — the caller knows the shape by position</li>
         </ul>
       </div>
     </div>

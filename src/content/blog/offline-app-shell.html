@@ -419,9 +419,9 @@ serwist.<span class="token-fn">addEventListeners</span>()</code></pre>
     <div class="bg-bg-elevated border border-border rounded-xl p-5 text-sm text-text-secondary">
       <p class="font-semibold text-text mb-2">Where <code class="prose-inline">useIsOnline</code> is used</p>
       <ul class="flex flex-col gap-1.5 mt-2">
-        <li class="flex gap-2"><span class="text-accent">›</span> <strong class="text-text">Login page</strong> — switches between <code class="prose-inline">AuthEngine.loginOnline</code> and <code class="prose-inline">AuthEngine.loginOffline</code>, changes the status badge and the form description</li>
-        <li class="flex gap-2"><span class="text-accent">›</span> <strong class="text-text">Private route guard</strong> — determines whether to resolve identity from the server context or the local auth store</li>
-        <li class="flex gap-2"><span class="text-accent">›</span> <strong class="text-text">Collection factory</strong> — every <code class="prose-inline">queryFn</code>, <code class="prose-inline">onInsert</code>, <code class="prose-inline">onUpdate</code>, and <code class="prose-inline">onDelete</code> checks <code class="prose-inline">navigator.onLine</code> before attempting a server call</li>
+        <li><span class="text-accent">›</span> <strong class="text-text">Login page</strong> — switches between <code class="prose-inline">AuthEngine.loginOnline</code> and <code class="prose-inline">AuthEngine.loginOffline</code>, changes the status badge and the form description</li>
+        <li><span class="text-accent">›</span> <strong class="text-text">Private route guard</strong> — determines whether to resolve identity from the server context or the local auth store</li>
+        <li><span class="text-accent">›</span> <strong class="text-text">Collection factory</strong> — every <code class="prose-inline">queryFn</code>, <code class="prose-inline">onInsert</code>, <code class="prose-inline">onUpdate</code>, and <code class="prose-inline">onDelete</code> checks <code class="prose-inline">navigator.onLine</code> before attempting a server call</li>
       </ul>
     </div>
   </section>
@@ -469,19 +469,19 @@ serwist.<span class="token-fn">addEventListeners</span>()</code></pre>
       <div class="bg-bg-elevated border border-accent/20 rounded-xl p-5">
         <h3 class="font-semibold text-sm text-accent uppercase tracking-wide mb-3">What this gates</h3>
         <ul class="flex flex-col gap-2 text-sm text-text-secondary">
-          <li class="flex gap-2"><span class="text-accent">›</span> TanStack DB collections (OPFS / <code class="prose-inline">IndexedDB</code>)</li>
-          <li class="flex gap-2"><span class="text-accent">›</span> <code class="prose-inline">navigator.onLine</code> access in <code class="prose-inline">useIsOnline</code></li>
-          <li class="flex gap-2"><span class="text-accent">›</span> <code class="prose-inline">sessionStorage</code> reads for hotline assignment</li>
-          <li class="flex gap-2"><span class="text-accent">›</span> <code class="prose-inline">BroadcastChannel</code> cross-tab sync</li>
-          <li class="flex gap-2"><span class="text-accent">›</span> Auth store reads that depend on client-only state</li>
+          <li><span class="text-accent">›</span> TanStack DB collections (OPFS / <code class="prose-inline">IndexedDB</code>)</li>
+          <li><span class="text-accent">›</span> <code class="prose-inline">navigator.onLine</code> access in <code class="prose-inline">useIsOnline</code></li>
+          <li><span class="text-accent">›</span> <code class="prose-inline">sessionStorage</code> reads for hotline assignment</li>
+          <li><span class="text-accent">›</span> <code class="prose-inline">BroadcastChannel</code> cross-tab sync</li>
+          <li><span class="text-accent">›</span> Auth store reads that depend on client-only state</li>
         </ul>
       </div>
       <div class="bg-bg-elevated border border-border rounded-xl p-5">
         <h3 class="font-semibold text-sm uppercase tracking-wide mb-3">What it doesn't gate</h3>
         <ul class="flex flex-col gap-2 text-sm text-text-secondary">
-          <li class="flex gap-2"><span class="text-warn">›</span> The root shell (<code class="prose-inline">RootDocument</code>) — renders on both server and client</li>
-          <li class="flex gap-2"><span class="text-warn">›</span> Public routes (login page) — handled by their own SSR guards</li>
-          <li class="flex gap-2"><span class="text-warn">›</span> <code class="prose-inline">beforeLoad</code> functions — those always run server-side</li>
+          <li><span class="text-warn">›</span> The root shell (<code class="prose-inline">RootDocument</code>) — renders on both server and client</li>
+          <li><span class="text-warn">›</span> Public routes (login page) — handled by their own SSR guards</li>
+          <li><span class="text-warn">›</span> <code class="prose-inline">beforeLoad</code> functions — those always run server-side</li>
         </ul>
       </div>
     </div>
@@ -605,21 +605,21 @@ serwist.<span class="token-fn">addEventListeners</span>()</code></pre>
       <div class="bg-bg-elevated border border-accent/20 rounded-xl p-5">
         <h3 class="font-semibold text-sm text-accent uppercase tracking-wide mb-3">What this gets right</h3>
         <ul class="flex flex-col gap-2 text-sm text-text-secondary">
-          <li class="flex gap-2"><span class="text-accent font-bold">›</span> Server functions are categorically excluded from all caching. There's no configuration that could accidentally cache a mutation response</li>
-          <li class="flex gap-2"><span class="text-accent font-bold">›</span> The prod/dev SW split is total — dev is <code class="prose-inline">NetworkOnly</code> for everything, eliminating an entire class of "it works in dev, broken in prod" caching bugs</li>
-          <li class="flex gap-2"><span class="text-accent font-bold">›</span> The SSR boundary is explicit and centralized. One component gates all browser-only code — no scattered <code class="prose-inline">typeof window</code> guards</li>
-          <li class="flex gap-2"><span class="text-accent font-bold">›</span> The connectivity probe verifies actual reachability, not just network interface status — the auth and data layers can trust the <code class="prose-inline">isOnline</code> signal</li>
-          <li class="flex gap-2"><span class="text-accent font-bold">›</span> <code class="prose-inline">skipWaiting</code> and <code class="prose-inline">clientsClaim</code> mean a newly deployed SW takes effect immediately without a manual refresh — important for agents who keep the app open all day</li>
+          <li><span class="text-accent font-bold">›</span> Server functions are categorically excluded from all caching. There's no configuration that could accidentally cache a mutation response</li>
+          <li><span class="text-accent font-bold">›</span> The prod/dev SW split is total — dev is <code class="prose-inline">NetworkOnly</code> for everything, eliminating an entire class of "it works in dev, broken in prod" caching bugs</li>
+          <li><span class="text-accent font-bold">›</span> The SSR boundary is explicit and centralized. One component gates all browser-only code — no scattered <code class="prose-inline">typeof window</code> guards</li>
+          <li><span class="text-accent font-bold">›</span> The connectivity probe verifies actual reachability, not just network interface status — the auth and data layers can trust the <code class="prose-inline">isOnline</code> signal</li>
+          <li><span class="text-accent font-bold">›</span> <code class="prose-inline">skipWaiting</code> and <code class="prose-inline">clientsClaim</code> mean a newly deployed SW takes effect immediately without a manual refresh — important for agents who keep the app open all day</li>
         </ul>
       </div>
 
       <div class="bg-bg-elevated border border-danger/20 rounded-xl p-5">
         <h3 class="font-semibold text-sm text-danger uppercase tracking-wide mb-3">Known limitations</h3>
         <ul class="flex flex-col gap-2 text-sm text-text-secondary">
-          <li class="flex gap-2"><span class="text-warn font-bold">›</span> <strong class="text-text"><code class="prose-inline">AppWrapper</code> introduces a layout shift.</strong> On first load the server renders a spinner; after hydration the real content mounts. For a field tool this is acceptable — but it would need to be reconsidered for a content-heavy public site</li>
-          <li class="flex gap-2"><span class="text-warn font-bold">›</span> <strong class="text-text">OPFS requires cross-origin isolation headers in production.</strong> Hosting platforms that strip or override custom headers (some CDN configurations, certain proxy setups) will silently break SQLite persistence. The failure mode is an empty collection on load, not a thrown error</li>
-          <li class="flex gap-2"><span class="text-warn font-bold">›</span> <strong class="text-text">The connectivity probe adds latency to the initial mount.</strong> The <code class="prose-inline">HEAD</code> request fires on every <code class="prose-inline">useEffect</code> run. On a high-latency connection this creates a brief period where the UI doesn't know its online state yet</li>
-          <li class="flex gap-2"><span class="text-warn font-bold">›</span> <strong class="text-text"><code class="prose-inline">skipWaiting</code> can cause problems with multiple open tabs.</strong> When a new SW activates and claims all clients, any tab that has already loaded the old JS bundle may make requests that the new SW handles differently. For this app the risk is low but it's worth documenting</li>
+          <li><span class="text-warn font-bold">›</span> <strong class="text-text"><code class="prose-inline">AppWrapper</code> introduces a layout shift.</strong> On first load the server renders a spinner; after hydration the real content mounts. For a field tool this is acceptable — but it would need to be reconsidered for a content-heavy public site</li>
+          <li><span class="text-warn font-bold">›</span> <strong class="text-text">OPFS requires cross-origin isolation headers in production.</strong> Hosting platforms that strip or override custom headers (some CDN configurations, certain proxy setups) will silently break SQLite persistence. The failure mode is an empty collection on load, not a thrown error</li>
+          <li><span class="text-warn font-bold">›</span> <strong class="text-text">The connectivity probe adds latency to the initial mount.</strong> The <code class="prose-inline">HEAD</code> request fires on every <code class="prose-inline">useEffect</code> run. On a high-latency connection this creates a brief period where the UI doesn't know its online state yet</li>
+          <li><span class="text-warn font-bold">›</span> <strong class="text-text"><code class="prose-inline">skipWaiting</code> can cause problems with multiple open tabs.</strong> When a new SW activates and claims all clients, any tab that has already loaded the old JS bundle may make requests that the new SW handles differently. For this app the risk is low but it's worth documenting</li>
         </ul>
       </div>
     </div>

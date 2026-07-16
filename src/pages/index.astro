@@ -89,16 +89,16 @@ import HomeLayout from '../layouts/HomeLayout.astro';
             <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.57.1.78-.25.78-.55v-1.94c-3.2.7-3.87-1.36-3.87-1.36-.53-1.34-1.29-1.7-1.29-1.7-1.05-.72.08-.7.08-.7 1.17.08 1.78 1.2 1.78 1.2 1.03 1.77 2.7 1.26 3.36.96.1-.74.4-1.26.72-1.55-2.55-.29-5.23-1.28-5.23-5.7 0-1.26.45-2.29 1.2-3.1-.12-.29-.52-1.46.11-3.04 0 0 .98-.31 3.2 1.18a11.1 11.1 0 0 1 5.83 0c2.22-1.49 3.2-1.18 3.2-1.18.63 1.58.23 2.75.11 3.04.75.81 1.2 1.84 1.2 3.1 0 4.43-2.69 5.41-5.25 5.69.41.36.77 1.07.77 2.15v3.19c0 .3.21.66.79.55A11.51 11.51 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5Z"/></svg>
             GitHub
           </a>
-          <a href={personal.social.linkedin.url} target="_blank" rel="noopener noreferrer"
+          <!-- <a href={personal.social.linkedin.url} target="_blank" rel="noopener noreferrer"
             class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-bg-elevated border border-border text-sm font-medium hover:border-accent hover:text-accent hover:-translate-y-0.5 transition-all">
             <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.45 20.45h-3.55v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.36V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.38-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28ZM5.34 7.43a2.06 2.06 0 1 1 0-4.12 2.06 2.06 0 0 1 0 4.12ZM7.12 20.45H3.56V9h3.56v11.45ZM22.22 0H1.77C.8 0 0 .78 0 1.75v20.5C0 23.22.8 24 1.77 24h20.45c.98 0 1.78-.78 1.78-1.75V1.75C24 .78 23.2 0 22.22 0Z"/></svg>
             LinkedIn
-          </a>
+          </a> -->
         </div>
 
-        <!-- print-only plain-text contact line: traditional resume header, no icons/buttons -->
+        <!-- print-only plain-text contact line: traditional resume header, no icons/buttons &nbsp;|&nbsp; {personal.social.portfolio.url} -->
         <p class="hidden print:block print:mt-2 print:text-sm">
-          {personal.contact.email} &nbsp;|&nbsp; {personal.contact.phone.display} &nbsp;|&nbsp; {personal.social.linkedin.url} &nbsp;|&nbsp; {personal.social.portfolio.url}
+          {personal.contact.email} &nbsp;|&nbsp; {personal.contact.phone.display} &nbsp;|&nbsp; {personal.social.linkedin.url} 
         </p>
       </div>
     </div>
@@ -141,11 +141,11 @@ import HomeLayout from '../layouts/HomeLayout.astro';
             <p class="font-bold">Senior Full Stack Developer · iScale</p>
             <p class="text-sm font-semibold text-accent-2 mt-0.5 mb-2.5">March 2025 — July 2026</p>
             <ul class="flex flex-col gap-2 text-sm text-text-secondary">
-              <li class="flex gap-2"><span class="text-accent font-bold">›</span> Refactored legacy applications into reusable, maintainable React components.</li>
-              <li class="flex gap-2"><span class="text-accent font-bold">›</span> Modernized UI using Material UI, React Hook Form, and shared component libraries.</li>
-              <li class="flex gap-2"><span class="text-accent font-bold">›</span> Built responsive interfaces from Figma designs and maintained an internal design system.</li>
-              <li class="flex gap-2"><span class="text-accent font-bold">›</span> Integrated Stripe, Certn, DocuSign, and backend APIs into production applications.</li>
-              <li class="flex gap-2"><span class="text-accent font-bold">›</span> Improved application architecture, performance, and developer experience.</li>
+              <li><span class="text-accent font-bold">›</span> Refactored legacy applications into reusable, maintainable React components.</li>
+              <li><span class="text-accent font-bold">›</span> Modernized UI using Material UI, React Hook Form, and shared component libraries.</li>
+              <li><span class="text-accent font-bold">›</span> Built responsive interfaces from Figma designs and maintained an internal design system.</li>
+              <li><span class="text-accent font-bold">›</span> Integrated Stripe, Certn, DocuSign, and backend APIs into production applications.</li>
+              <li><span class="text-accent font-bold">›</span> Improved application architecture, performance, and developer experience.</li>
 
               <li class="flex gap-2 print:hidden"><span class="text-accent font-bold">›</span> Configured Webpack, CI/CD pipelines, SonarQube, and engineering workflows.</li>
             </ul>
@@ -164,10 +164,10 @@ import HomeLayout from '../layouts/HomeLayout.astro';
             Built production-ready full-stack applications for international clients across e-commerce, logistics, and SaaS platforms.
             </p>           
             <ul class="flex flex-col gap-2 text-sm text-text-secondary">
-              <li class="flex gap-2"><span class="text-accent font-bold">›</span> Developed scalable backend services, microservices, scheduled jobs, and WebSocket features.</li>
-              <li class="flex gap-2"><span class="text-accent font-bold">›</span> Integrated Shopify, Amazon, Walmart, Wix, Squarespace, and other marketplace APIs.</li>
-              <li class="flex gap-2"><span class="text-accent font-bold">›</span> Built modular applications using micro-frontends and monorepo architectures.</li>
-              <li class="flex gap-2"><span class="text-accent font-bold">›</span> Improved application quality through Playwright testing and automated development workflows.</li>
+              <li><span class="text-accent font-bold">›</span> Developed scalable backend services, microservices, scheduled jobs, and WebSocket features.</li>
+              <li><span class="text-accent font-bold">›</span> Integrated Shopify, Amazon, Walmart, Wix, Squarespace, and other marketplace APIs.</li>
+              <li><span class="text-accent font-bold">›</span> Built modular applications using micro-frontends and monorepo architectures.</li>
+              <li><span class="text-accent font-bold">›</span> Improved application quality through Playwright testing and automated development workflows.</li>
 
               <li class="flex gap-2 print:hidden"><span class="text-accent font-bold">›</span> Modernized legacy applications with contemporary frontend technologies.</li>
             </ul>
@@ -186,10 +186,10 @@ import HomeLayout from '../layouts/HomeLayout.astro';
             Built and maintained an Employee Management System (EMS) used by HR teams to manage employee records and workflows.
             </p>           
             <ul class="flex flex-col gap-2 text-sm text-text-secondary">
-              <li class="flex gap-2"><span class="text-accent font-bold">›</span> Developed dynamic forms, dashboards, and data tables using the MERN stack.</li>
-              <li class="flex gap-2"><span class="text-accent font-bold">›</span> Built reusable React components with Redux and Context API.</li>
-              <li class="flex gap-2"><span class="text-accent font-bold">›</span> Resolved frontend and backend issues to improve application stability.</li>
-              <li class="flex gap-2"><span class="text-accent font-bold">›</span> Collaborated on sprint planning, feature implementation, and technical design.</li>
+              <li><span class="text-accent font-bold">›</span> Developed dynamic forms, dashboards, and data tables using the MERN stack.</li>
+              <li><span class="text-accent font-bold">›</span> Built reusable React components with Redux and Context API.</li>
+              <li><span class="text-accent font-bold">›</span> Resolved frontend and backend issues to improve application stability.</li>
+              <li><span class="text-accent font-bold">›</span> Collaborated on sprint planning, feature implementation, and technical design.</li>
 
               <li class="flex gap-2 print:hidden"><span class="text-accent font-bold">›</span> Worked within Agile workflows using Git and Jira.</li>
             </ul>
@@ -208,16 +208,16 @@ import HomeLayout from '../layouts/HomeLayout.astro';
             Delivered enterprise web applications for telecommunications and insurance clients within Agile delivery teams.
             </p>            
             <ul class="flex flex-col gap-2 text-sm text-text-secondary">
-              <li class="flex gap-2"><span class="text-accent font-bold">›</span> Built reusable frontend features for enterprise marketplace applications.</li>
-              <li class="flex gap-2"><span class="text-accent font-bold">›</span> Delivered production-ready implementations aligned with client acceptance criteria.</li>
-              <li class="flex gap-2"><span class="text-accent font-bold">›</span> Participated in sprint planning, estimation, and technical discussions.</li>
+              <li><span class="text-accent font-bold">›</span> Built reusable frontend features for enterprise marketplace applications.</li>
+              <li><span class="text-accent font-bold">›</span> Delivered production-ready implementations aligned with client acceptance criteria.</li>
+              <li><span class="text-accent font-bold">›</span> Participated in sprint planning, estimation, and technical discussions.</li>
 
               <li class="flex gap-2 print:hidden"><span class="text-accent font-bold">›</span> Collaborated through Git workflows, Jira, pull requests, and code reviews.</li>
             </ul>
           </div>
         </div>
 
-        <div class="relative flex gap-5">
+        <div class="relative flex gap-5 print:hidden">
           <div class="relative w-3 shrink-0">
             <span class="absolute left-1.5 top-3 -bottom-10 w-px bg-border"></span>
             <span class="absolute left-0 top-1 w-3 h-3 rounded-full bg-bg border-2 border-accent"></span>
@@ -227,40 +227,44 @@ import HomeLayout from '../layouts/HomeLayout.astro';
             <p class="text-sm font-semibold text-accent-2 mt-0.5 mb-2.5">December 2020 — March 2022</p>
             <p class="text-sm text-text-secondary mb-2.5">Developed recruitment and onboarding features for an online ESL hiring platform.</p>
             <ul class="flex flex-col gap-2 text-sm text-text-secondary">
-              <li class="flex gap-2"><span class="text-accent font-bold">›</span> Built onboarding workflows, resume generation, and video interview features.</li>
-              <li class="flex gap-2"><span class="text-accent font-bold">›</span> Developed REST and GraphQL APIs using Node.js and Express.</li>
-              <li class="flex gap-2"><span class="text-accent font-bold">›</span> Built responsive React interfaces and full-stack application features.</li>
+              <li><span class="text-accent font-bold">›</span> Built onboarding workflows, resume generation, and video interview features.</li>
+              <li><span class="text-accent font-bold">›</span> Developed REST and GraphQL APIs using Node.js and Express.</li>
+              <li><span class="text-accent font-bold">›</span> Built responsive React interfaces and full-stack application features.</li>
 
               <li class="flex gap-2 print:hidden"><span class="text-accent font-bold">›</span> Collaborated using Git and Agile development practices.</li>
             </ul>
           </div>
         </div>
 
-        <div class="relative flex gap-5">
+        <div class="relative flex gap-5 print:hidden">
           <div class="relative w-3 shrink-0">
             <span class="absolute left-0 top-1 w-3 h-3 rounded-full bg-bg border-2 border-accent"></span>
           </div>
           <div>
-            <p class="font-bold">Full Stack Software Engineer · Nueva Vizcaya State University</p>
+            <p class="font-bold">Web Developer · Nueva Vizcaya State University</p>
             <p class="text-sm font-semibold text-accent-2 mt-0.5 mb-2.5">January 2018 — December 2021</p>
             <p class="text-sm text-text-secondary mb-2.5">Designed and built a university-wide document tracking system that replaced paper-based workflows.</p>
             <ul class="flex flex-col gap-2 text-sm text-text-secondary">
-              <li class="flex gap-2"><span class="text-accent font-bold">›</span> Digitized document management with a centralized web application.</li>
-              <li class="flex gap-2"><span class="text-accent font-bold">›</span> Implemented searchable PDF indexing and document retrieval.</li>
-              <li class="flex gap-2"><span class="text-accent font-bold">›</span> Streamlined document routing and inter-office approvals.</li>
+              <li><span class="text-accent font-bold">›</span> Digitized document management with a centralized web application.</li>
+              <li><span class="text-accent font-bold">›</span> Implemented searchable PDF indexing and document retrieval.</li>
+              <li><span class="text-accent font-bold">›</span> Streamlined document routing and inter-office approvals.</li>
             </ul>
           </div>
         </div>
 
       </div>
+      <p class="hidden print:block print:text-sm print:mt-8 print:mb-8" style="text-align: center;">
+        For earlier experience— visit {personal.social.portfolio.url}
+      </p>
     </section>
+
 
     <!-- ===== PROJECTS =====
          Rewritten as short engineering case studies (Problem → Approach →
          Tradeoffs → Outcome) instead of feature/README lists. Layout moved
          from a 3-up grid to full-width cards with a two-column split so
          there's room for the narrative without shrinking the type. -->
-    <section id="projects" class="py-14 border-b border-border scroll-mt-16 print:hidden" aria-labelledby="projects-heading">
+    <section id="projects" class="py-14 border-b border-border scroll-mt-16" aria-labelledby="projects-heading">
       <h2 id="projects-heading" class="flex items-center gap-2 text-xl sm:text-2xl font-bold mb-2">
         <span class="w-2 h-2 rounded-full bg-accent shrink-0"></span> Featured Projects
       </h2>
@@ -270,18 +274,18 @@ import HomeLayout from '../layouts/HomeLayout.astro';
 
         <article class="flex flex-col md:flex-row gap-6 bg-bg-elevated border border-border rounded-xl p-5 hover:border-accent transition-all">
           <img
-            src="/public/images/cca/banner.png"
+            src="/images/cca/banner.png"
             alt="Placeholder preview of the NUVELCO CCA call center agent portal"
             class="w-full md:w-64 lg:w-72 h-52 md:h-auto object-cover rounded-lg border border-border shrink-0 print:hidden"
           >
           <div class="flex flex-col flex-1 min-w-0">
             <h3 class="font-bold text-lg mb-1">NUVELCO CCA Portal</h3>
-            <p class="text-sm text-text-secondary mb-3">Reliability and offline continuity &bull; Personal Project &bull; Live in Production.</p>
+            <p class="text-sm text-text-secondary mb-3 print:mb-0">Reliability and offline continuity &bull; Personal Project &bull; Live in Production.</p>
 
-            <p class="text-sm text-text-secondary mb-4">Keeps call center agents productive even when connectivity is unreliable.</p>
+            <p class="text-sm text-text-secondary mb-4 print:mb-2">Keeps call center agents productive even when connectivity is unreliable.</p>
 
-            <div class="mb-3">
-              <p class="text-[11px] font-bold uppercase tracking-wide text-accent-2 mb-1.5">Key Decisions</p>
+            <div class="mb-3 print:mb-0">
+              <p class="text-[11px] font-bold uppercase tracking-wide text-accent-2 mb-1.5 print:mb-0">Key Decisions</p>
               <div class="flex flex-wrap gap-1.5">
                 <span class="text-[11px] font-semibold text-text-secondary bg-bg-base border border-border px-2.5 py-1 rounded-full">Local-first</span>
                 <span class="text-[11px] font-semibold text-text-secondary bg-bg-base border border-border px-2.5 py-1 rounded-full">OPFS</span>
@@ -290,7 +294,7 @@ import HomeLayout from '../layouts/HomeLayout.astro';
               </div>
             </div>
 
-            <p class="text-xs text-text-secondary mb-4">Built with TanStack Start &bull; TanStack DB &bull; React 19 &bull; Prisma 7</p>
+            <p class="text-xs text-text-secondary mb-4 print:mb-0">Built with TanStack Start &bull; TanStack DB &bull; React 19 &bull; Prisma 7</p>
 
             <a href="/nuvelco-cca.html" target="_blank" rel="noopener noreferrer"
               class="inline-flex items-center gap-1.5 text-sm font-semibold text-accent hover:text-accent-2 transition-colors print:hidden">
@@ -300,20 +304,20 @@ import HomeLayout from '../layouts/HomeLayout.astro';
           </div>
         </article>
 
-        <article class="flex flex-col md:flex-row gap-6 bg-bg-elevated border border-border rounded-xl p-5 hover:border-accent transition-all">
+        <article class="flex flex-col md:flex-row gap-6 bg-bg-elevated border border-border rounded-xl p-5 hover:border-accent transition-all print:hidden">
           <img
-            src="/public/images/start-pos/banner.png"
+            src="/images/start-pos/banner.png"
             alt="Placeholder preview of the START POS multi-tenant offline-first POS platform"
             class="w-full md:w-64 lg:w-72 h-52 md:h-auto object-cover rounded-lg border border-border shrink-0 print:hidden"
           >
           <div class="flex flex-col flex-1 min-w-0">
             <h3 class="font-bold text-lg mb-1">START POS</h3>
-            <p class="text-sm text-text-secondary mb-3">Multi-tenant business platform and operational resilience &bull; Personal Project &bull; Prototype</p>
+            <p class="text-sm text-text-secondary mb-3 print:mb-0">Multi-tenant business platform and operational resilience &bull; Personal Project &bull; Prototype</p>
 
-            <p class="text-sm text-text-secondary mb-4">Offline-first POS platform that keeps checkout running during network interruptions.</p>
+            <p class="text-sm text-text-secondary mb-4 print:mb-2">Offline-first POS platform that keeps checkout running during network interruptions.</p>
 
-            <div class="mb-3">
-              <p class="text-[11px] font-bold uppercase tracking-wide text-accent-2 mb-1.5">Key Decisions</p>
+            <div class="mb-3 print:mb-0">
+              <p class="text-[11px] font-bold uppercase tracking-wide text-accent-2 mb-1.5 print:mb-0">Key Decisions</p>
               <div class="flex flex-wrap gap-1.5">
                 <span class="text-[11px] font-semibold text-text-secondary bg-bg-base border border-border px-2.5 py-1 rounded-full">Local-first sync</span>
                 <span class="text-[11px] font-semibold text-text-secondary bg-bg-base border border-border px-2.5 py-1 rounded-full">Multi-tenant</span>
@@ -322,7 +326,7 @@ import HomeLayout from '../layouts/HomeLayout.astro';
               </div>
             </div>
 
-            <p class="text-xs text-text-secondary mb-4">Built with TanStack Start &bull; React 19 &bull; TanStack DB &bull; Prisma 7 &bull; Biome</p>
+            <p class="text-xs text-text-secondary mb-4 print:mb-0">Built with TanStack Start &bull; React 19 &bull; TanStack DB &bull; Prisma 7 &bull; Biome</p>
 
             <a href="/start-pos.html" target="_blank" rel="noopener noreferrer"
               class="inline-flex items-center gap-1.5 text-sm font-semibold text-accent hover:text-accent-2 transition-colors print:hidden">
@@ -340,12 +344,12 @@ import HomeLayout from '../layouts/HomeLayout.astro';
           >
           <div class="flex flex-col flex-1 min-w-0">
             <h3 class="font-bold text-lg mb-1">@rrlopez/overlay-manager</h3>
-            <p class="text-sm text-text-secondary mb-3">Developer experience and reusable tooling &bull; Open Source &bull; Published on npm</p>
+            <p class="text-sm text-text-secondary mb-3 print:mb-0">Developer experience and reusable tooling &bull; Open Source &bull; Published on npm</p>
 
-            <p class="text-sm text-text-secondary mb-4">Lightweight library for managing modals, drawers, and toasts without provider-heavy architectures.</p>
+            <p class="text-sm text-text-secondary mb-4 print:mb-2">Lightweight library for managing modals, drawers, and toasts without provider-heavy architectures.</p>
 
-            <div class="mb-3">
-              <p class="text-[11px] font-bold uppercase tracking-wide text-accent-2 mb-1.5">Key Decisions</p>
+            <div class="mb-3 print:mb-0">
+              <p class="text-[11px] font-bold uppercase tracking-wide text-accent-2 mb-1.5 print:mb-0">Key Decisions</p>
               <div class="flex flex-wrap gap-1.5">
                 <span class="text-[11px] font-semibold text-text-secondary bg-bg-base border border-border px-2.5 py-1 rounded-full">Singleton state</span>
                 <span class="text-[11px] font-semibold text-text-secondary bg-bg-base border border-border px-2.5 py-1 rounded-full">Structural pattern</span>
@@ -355,7 +359,7 @@ import HomeLayout from '../layouts/HomeLayout.astro';
               </div>
             </div>
 
-            <p class="text-xs text-text-secondary mb-4">Built with React &bull; TypeScript &bull; NPM</p>
+            <p class="text-xs text-text-secondary mb-4 print:mb-0">Built with React &bull; TypeScript &bull; NPM</p>
 
             <a href="/overlay-manager.html" target="_blank" rel="noopener noreferrer"
               class="inline-flex items-center gap-1.5 text-sm font-semibold text-accent hover:text-accent-2 transition-colors print:hidden">
@@ -462,6 +466,7 @@ import HomeLayout from '../layouts/HomeLayout.astro';
         </div>
 
       </div>
+
     </section>
 
     <!-- ===== BLOG ===== -->
@@ -536,7 +541,7 @@ import HomeLayout from '../layouts/HomeLayout.astro';
           <h3 class="font-bold text-lg mb-2 group-hover:text-accent transition-colors">Global Overlays Without the Boilerplate — How @rrlopez/overlay-manager Works</h3>
           <p class="text-sm text-text-secondary flex-1">A deep-dive into the class-based singleton pattern, ES6 generator IDs, and back-button animation guards that power the package. Includes a step-by-step integration walkthrough.</p>
           <div class="mt-5 flex items-center justify-between text-xs text-text-secondary">
-            <span>July 2026 · 8 min read</span>
+            <span>April 2025 · 8 min read</span>
             <span class="inline-flex items-center gap-1 font-semibold text-accent group-hover:text-accent-2 transition-colors">
               Read post
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M7 17 17 7M7 7h10v10"/></svg>
@@ -593,11 +598,11 @@ import HomeLayout from '../layouts/HomeLayout.astro';
           <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.57.1.78-.25.78-.55v-1.94c-3.2.7-3.87-1.36-3.87-1.36-.53-1.34-1.29-1.7-1.29-1.7-1.05-.72.08-.7.08-.7 1.17.08 1.78 1.2 1.78 1.2 1.03 1.77 2.7 1.26 3.36.96.1-.74.4-1.26.72-1.55-2.55-.29-5.23-1.28-5.23-5.7 0-1.26.45-2.29 1.2-3.1-.12-.29-.52-1.46.11-3.04 0 0 .98-.31 3.2 1.18a11.1 11.1 0 0 1 5.83 0c2.22-1.49 3.2-1.18 3.2-1.18.63 1.58.23 2.75.11 3.04.75.81 1.2 1.84 1.2 3.1 0 4.43-2.69 5.41-5.25 5.69.41.36.77 1.07.77 2.15v3.19c0 .3.21.66.79.55A11.51 11.51 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5Z"/></svg>
           GitHub
         </a>
-        <a href={personal.social.linkedin.url} target="_blank" rel="noopener noreferrer"
+        <!-- <a href={personal.social.linkedin.url} target="_blank" rel="noopener noreferrer"
           class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-bg-elevated border border-border text-sm font-medium hover:border-accent hover:text-accent hover:-translate-y-0.5 transition-all">
           <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.45 20.45h-3.55v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.36V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.38-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28ZM5.34 7.43a2.06 2.06 0 1 1 0-4.12 2.06 2.06 0 0 1 0 4.12ZM7.12 20.45H3.56V9h3.56v11.45ZM22.22 0H1.77C.8 0 0 .78 0 1.75v20.5C0 23.22.8 24 1.77 24h20.45c.98 0 1.78-.78 1.78-1.75V1.75C24 .78 23.2 0 22.22 0Z"/></svg>
           LinkedIn
-        </a>
+        </a> -->
       </div>
     </section>
 

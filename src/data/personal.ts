@@ -19,7 +19,7 @@ export const personal = {
 
   availability: 'Open to senior roles & consulting',
 
-  avatarUrl: '/public/images/avatar.jpg',
+  avatarUrl: '/images/avatar.jpg',
 
   contact: {
     email: 'ricardoreylopez06@gmail.com',
