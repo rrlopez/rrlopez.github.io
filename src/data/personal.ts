@@ -32,17 +32,17 @@ export const personal = {
   social: {
     linkedin: {
       label: 'LinkedIn',
-      url: 'https://linkedin.com/',
+      url: 'https://linkedin.com',
       display: 'linkedin.com/in/rrlopez',
     },
     github: {
       label: 'github',
-      url: 'https://github.com/rrlopez/',
+      url: 'https://github.com/rrlopez',
       display: 'github.com/rrlopez',
     },
     portfolio: {
       label: 'Portfolio',
-      url: 'https://rrlopez.github.io/',
+      url: 'https://rrlopez.github.io',
       display: 'rrlopez.github.io',
     },
   },
