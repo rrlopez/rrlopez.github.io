@@ -214,7 +214,7 @@
   
       <div class="grid md:grid-cols-2 gap-8 items-start reveal">
         <!-- 1. Global Singleton -->
-        <div class="border border-border rounded-xl p-5 bg-bg-elevated/20">
+        <div class="min-w-0 border border-border rounded-xl p-5 bg-bg-elevated/20">
           <h3 class="text-lg font-bold mb-2">1. Global Singleton</h3>
           <p class="text-text-secondary text-sm mb-4 leading-relaxed">
             The constructor assigns <code class="text-accent bg-bg px-1 py-0.5 rounded font-mono">OverlayManager.instance = this</code>, making the live React component reachable from any module without context. Hot-reload and StrictMode double-invocation are handled by clearing and re-using the existing instance instead of creating a second one.
@@ -234,7 +234,7 @@
         </div>
   
         <!-- 2. Back button guard -->
-        <div class="border border-border rounded-xl p-5 bg-bg-elevated/20">
+        <div class="min-w-0 border border-border rounded-xl p-5 bg-bg-elevated/20">
           <h3 class="text-lg font-bold mb-2">2. Two-Step Close &amp; Animation Guard</h3>
           <p class="text-text-secondary text-sm mb-4 leading-relaxed">
             Rather than removing the entry immediately, closing sets <code class="text-accent bg-bg px-1 py-0.5 rounded font-mono">open = false</code> and lets the modal primitive (Radix, Base UI) play its exit animation before unmounting itself. The entry lingers in state until the next filter sweep removes it.
@@ -256,7 +256,7 @@
   
       <div class="grid md:grid-cols-2 gap-8 items-start mt-8 reveal">
         <!-- 3. SafeDialogGuard -->
-        <div class="border border-border rounded-xl p-5 bg-bg-elevated/20">
+        <div class="min-w-0 border border-border rounded-xl p-5 bg-bg-elevated/20">
           <h3 class="text-lg font-bold mb-2">3. SafeDialogGuard — Anti-Tamper</h3>
           <p class="text-text-secondary text-sm mb-4 leading-relaxed">
             Every rendered overlay is wrapped in <code class="text-accent bg-bg px-1 py-0.5 rounded font-mono">SafeDialogGuard</code>, a component that attaches a <code class="text-accent bg-bg px-1 py-0.5 rounded font-mono">MutationObserver</code> to <code class="text-accent bg-bg px-1 py-0.5 rounded font-mono">document.body</code>. If the DOM node is removed or hidden via inline style, it triggers a forced remount. Global click/keydown listeners provide a second line of defence.
@@ -282,7 +282,7 @@
         </div>
   
         <!-- 4. Bulk-close exports -->
-        <div class="border border-border rounded-xl p-5 bg-bg-elevated/20">
+        <div class="min-w-0 border border-border rounded-xl p-5 bg-bg-elevated/20">
           <h3 class="text-lg font-bold mb-2">4. Bulk-Close: <code class="font-mono text-sm">clearModals</code> &amp; <code class="font-mono text-sm">delChildModals</code></h3>
           <p class="text-text-secondary text-sm mb-4 leading-relaxed">
             <code class="text-accent bg-bg px-1 py-0.5 rounded font-mono">clearModals()</code> closes the entire stack at once. <code class="text-accent bg-bg px-1 py-0.5 rounded font-mono">delChildModals(id)</code> closes every overlay opened <em>after</em> a given one — useful for multi-step flows where a parent cancel should clean up all child dialogs without knowing they exist.

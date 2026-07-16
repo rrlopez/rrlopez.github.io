@@ -6,9 +6,11 @@ import HomeLayout from '../layouts/HomeLayout.astro';
 <HomeLayout title={"RJ Lopez — Senior Full Stack Engineer"} description={"Ricardo Rey Crisanto V. Lopez II (RJ) — Senior Full Stack Engineer, 7+ years building scalable SaaS platforms with the JavaScript/TypeScript ecosystem."}>
   <!-- ===== NAV ===== -->
   <nav class="sticky top-0 z-10 bg-bg/90 backdrop-blur border-b border-border print:hidden" aria-label="Section navigation">
-    <div class="max-w-6xl mx-auto px-6 py-3 flex items-center justify-between">
-      <a href="#top" class="font-bold text-text tracking-tight">RJ<span class="text-accent">.</span>dev</a>
-      <div class="flex items-center gap-5 text-sm font-medium text-text-secondary">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between relative">
+      <a href="#top" class="font-bold text-text tracking-tight shrink-0">RJ<span class="text-accent">.</span>dev</a>
+
+      <!-- Desktop links -->
+      <div class="hidden md:flex items-center gap-5 text-sm font-medium text-text-secondary">
         <a href="#experience" class="hover:text-accent transition-colors">Experience</a>
         <a href="#projects" class="hover:text-accent transition-colors">Projects</a>
         <a href="#skills" class="hover:text-accent transition-colors">Skills</a>
@@ -24,8 +26,93 @@ import HomeLayout from '../layouts/HomeLayout.astro';
           Download Resume
         </button>
       </div>
+
+      <!-- Mobile controls -->
+      <div class="flex md:hidden items-center gap-2">
+        <button
+          type="button"
+          onclick="window.print()"
+          aria-label="Download resume as PDF"
+          class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-accent text-bg hover:bg-accent-2 transition-all"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg>
+        </button>
+        <button
+          type="button"
+          id="nav-toggle"
+          aria-label="Toggle navigation menu"
+          aria-expanded="false"
+          aria-controls="mobile-menu"
+          class="inline-flex items-center justify-center w-9 h-9 rounded-lg border border-border text-text-secondary hover:text-accent hover:border-accent transition-colors"
+        >
+          <svg id="nav-icon-open" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
+          </svg>
+          <svg id="nav-icon-close" class="w-5 h-5 hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Mobile floating dropdown -->
+      <div
+        id="mobile-menu"
+        class="md:hidden absolute top-full right-4 mt-2 w-56 rounded-xl border border-border bg-bg shadow-lg origin-top-right transform transition-all duration-200 ease-out opacity-0 scale-95 -translate-y-1 invisible pointer-events-none"
+      >
+        <div class="p-2 flex flex-col gap-1 text-sm font-medium text-text-secondary">
+          <a href="#experience" class="py-2 px-3 rounded-lg hover:text-accent hover:bg-border/30 transition-colors">Experience</a>
+          <a href="#projects" class="py-2 px-3 rounded-lg hover:text-accent hover:bg-border/30 transition-colors">Projects</a>
+          <a href="#skills" class="py-2 px-3 rounded-lg hover:text-accent hover:bg-border/30 transition-colors">Skills</a>
+          <a href="#blog" class="py-2 px-3 rounded-lg hover:text-accent hover:bg-border/30 transition-colors">Blog</a>
+          <a href="#contact" class="py-2 px-3 rounded-lg hover:text-accent hover:bg-border/30 transition-colors">Contact</a>
+        </div>
+      </div>
     </div>
   </nav>
+
+  <script>
+    const toggle = document.getElementById('nav-toggle');
+    const menu = document.getElementById('mobile-menu');
+    const iconOpen = document.getElementById('nav-icon-open');
+    const iconClose = document.getElementById('nav-icon-close');
+
+    const OPEN_CLASSES = ['opacity-100', 'scale-100', 'translate-y-0'];
+    const CLOSED_CLASSES = ['opacity-0', 'scale-95', '-translate-y-1'];
+
+    function openMenu() {
+      menu?.classList.remove('invisible', 'pointer-events-none', ...CLOSED_CLASSES);
+      menu?.classList.add(...OPEN_CLASSES);
+      iconOpen?.classList.add('hidden');
+      iconClose?.classList.remove('hidden');
+      toggle?.setAttribute('aria-expanded', 'true');
+    }
+
+    function closeMenu() {
+      menu?.classList.remove(...OPEN_CLASSES);
+      menu?.classList.add(...CLOSED_CLASSES, 'pointer-events-none');
+      iconOpen?.classList.remove('hidden');
+      iconClose?.classList.add('hidden');
+      toggle?.setAttribute('aria-expanded', 'false');
+      // wait for transition before hiding from a11y tree
+      setTimeout(() => menu?.classList.add('invisible'), 200);
+    }
+
+    toggle?.addEventListener('click', () => {
+      const isOpen = toggle.getAttribute('aria-expanded') === 'true';
+      isOpen ? closeMenu() : openMenu();
+    });
+
+    menu?.querySelectorAll('a').forEach((link) => {
+      link.addEventListener('click', closeMenu);
+    });
+
+    // Close when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!menu?.contains(e.target as Node) && !toggle?.contains(e.target as Node)) {
+        closeMenu();
+      }
+    });
+  </script>
 
   <!-- ===== HEADER / HERO ===== -->
   <header id="top" class="border-b border-border">
