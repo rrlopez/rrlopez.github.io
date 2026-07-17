@@ -14,6 +14,7 @@ import ProjectLayout from '../layouts/ProjectLayout.astro';
         <a href="#architecture" class="hover:text-accent transition-colors whitespace-nowrap">Architecture</a>
         <a href="#database" class="hover:text-accent transition-colors whitespace-nowrap">Database</a>
         <a href="#challenges" class="hover:text-accent transition-colors whitespace-nowrap">Challenges</a>
+        <a href="#gallery" class="hover:text-accent transition-colors whitespace-nowrap">Gallery</a>
         <a href="#stack" class="hover:text-accent transition-colors whitespace-nowrap">Stack</a>
       </div>
       <a href="/"
@@ -59,8 +60,10 @@ import ProjectLayout from '../layouts/ProjectLayout.astro';
       <div class="mt-14 rounded-2xl border border-border bg-bg-elevated p-2 shadow-2xl shadow-accent-2/10">
         <img
           src="/images/cca/banner.png"
-          alt="Placeholder preview of the NUVELCO CCA call center agent portal"
-          class="w-full object-cover rounded-lg border border-border shrink-0 print:hidden"
+          alt="NUVELCO CCA call center agent portal overview"
+          data-lightbox="nuvelco-cca"
+          data-caption="NUVELCO CCA — Portal overview"
+          class="w-full object-cover rounded-lg border border-border shrink-0 print:hidden cursor-zoom-in"
         >
       </div>
     </div>
@@ -134,8 +137,10 @@ import ProjectLayout from '../layouts/ProjectLayout.astro';
           <div class="shot rounded-xl border border-border flex flex-col items-center justify-center gap-2 text-center">
             <img
               src="/images/cca/ticket-intake.png"
-              alt="Placeholder preview of the NUVELCO CCA call center agent portal"
-              class="w-full object-cover rounded-lg border border-border shrink-0 print:hidden"
+              alt="Ticket intake form with local-first write"
+              data-lightbox="nuvelco-cca"
+              data-caption="Ticket intake — structured form with local-first write"
+              class="w-full object-cover rounded-lg border border-border shrink-0 print:hidden cursor-zoom-in"
             >
           </div>
         </div>
@@ -145,8 +150,10 @@ import ProjectLayout from '../layouts/ProjectLayout.astro';
           <div class="shot rounded-xl border border-border  flex flex-col items-center justify-center gap-2 text-center md:order-1">
            <img
               src="/images/cca/employee-page.png"
-              alt="Placeholder preview of the NUVELCO CCA call center agent portal"
-              class="w-full object-cover rounded-lg border border-border shrink-0 print:hidden"
+              alt="Employee page with role-scoped team dashboard"
+              data-lightbox="nuvelco-cca"
+              data-caption="Employee page — role-scoped team dashboard"
+              class="w-full object-cover rounded-lg border border-border shrink-0 print:hidden cursor-zoom-in"
             >
           </div>
           <div class="md:order-2">
@@ -174,8 +181,10 @@ import ProjectLayout from '../layouts/ProjectLayout.astro';
           <div class="shot rounded-xl border border-border flex flex-col items-center justify-center gap-2 text-center">
             <img
               src="/images/cca/ticket-details.png"
-              alt="Placeholder preview of the NUVELCO CCA call center agent portal"
-              class="w-full object-cover rounded-lg border border-border shrink-0 print:hidden"
+              alt="Ticket details with lifecycle states and audit trail"
+              data-lightbox="nuvelco-cca"
+              data-caption="Ticket details — lifecycle states &amp; audit trail"
+              class="w-full object-cover rounded-lg border border-border shrink-0 print:hidden cursor-zoom-in"
             >
           </div>
         </div>
@@ -185,8 +194,10 @@ import ProjectLayout from '../layouts/ProjectLayout.astro';
           <div class="shot rounded-xl border border-border flex flex-col items-center justify-center gap-2 text-center md:order-1">
            <img
               src="/images/cca/login-page.png"
-              alt="Placeholder preview of the NUVELCO CCA call center agent portal"
-              class="w-full object-cover rounded-lg border border-border shrink-0 print:hidden"
+              alt="Login page with offline-persistent auth"
+              data-lightbox="nuvelco-cca"
+              data-caption="Login — auth that survives a reload, even offline"
+              class="w-full object-cover rounded-lg border border-border shrink-0 print:hidden cursor-zoom-in"
             >
           </div>
           <div class="md:order-2">
@@ -199,6 +210,62 @@ import ProjectLayout from '../layouts/ProjectLayout.astro';
             </ul>
           </div>
         </div>
+
+      </div>
+    </section>
+
+    <!-- ===== GALLERY ===== -->
+    <section id="gallery" class="py-20 border-b border-border scroll-mt-16" aria-labelledby="cca-gallery-heading">
+      <p class="text-sm font-semibold text-accent uppercase tracking-wide mb-3 reveal">Gallery</p>
+      <h2 id="cca-gallery-heading" class="text-2xl sm:text-3xl font-bold mb-3 max-w-2xl reveal">Screenshots from the portal.</h2>
+      <p class="text-text-secondary mb-10 max-w-2xl reveal">Click any screenshot to view it full size.</p>
+
+      <div class="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 reveal">
+
+        <button type="button" class="gallery-thumb group relative rounded-lg overflow-hidden border border-border hover:border-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-accent transition-all aspect-video"
+          data-lightbox-open="nuvelco-cca" data-lightbox-index="0"
+          aria-label="View: NUVELCO CCA portal overview" title="Portal overview">
+          <img src="/images/cca/banner.png" alt="NUVELCO CCA portal overview" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" loading="lazy">
+          <div class="absolute inset-0 bg-bg/0 group-hover:bg-bg/40 transition-colors duration-200 flex items-center justify-center">
+            <svg class="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 drop-shadow" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607ZM10.5 7.5v6m3-3h-6"/></svg>
+          </div>
+        </button>
+
+        <button type="button" class="gallery-thumb group relative rounded-lg overflow-hidden border border-border hover:border-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-accent transition-all aspect-video"
+          data-lightbox-open="nuvelco-cca" data-lightbox-index="1"
+          aria-label="View: Ticket intake — structured form with local-first write" title="Ticket intake — local-first write">
+          <img src="/images/cca/ticket-intake.png" alt="Ticket intake form" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" loading="lazy">
+          <div class="absolute inset-0 bg-bg/0 group-hover:bg-bg/40 transition-colors duration-200 flex items-center justify-center">
+            <svg class="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 drop-shadow" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607ZM10.5 7.5v6m3-3h-6"/></svg>
+          </div>
+        </button>
+
+        <button type="button" class="gallery-thumb group relative rounded-lg overflow-hidden border border-border hover:border-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-accent transition-all aspect-video"
+          data-lightbox-open="nuvelco-cca" data-lightbox-index="2"
+          aria-label="View: Ticket details — lifecycle states and audit trail" title="Ticket details — lifecycle &amp; audit trail">
+          <img src="/images/cca/ticket-details.png" alt="Ticket details with lifecycle states and audit trail" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" loading="lazy">
+          <div class="absolute inset-0 bg-bg/0 group-hover:bg-bg/40 transition-colors duration-200 flex items-center justify-center">
+            <svg class="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 drop-shadow" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607ZM10.5 7.5v6m3-3h-6"/></svg>
+          </div>
+        </button>
+
+        <button type="button" class="gallery-thumb group relative rounded-lg overflow-hidden border border-border hover:border-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-accent transition-all aspect-video"
+          data-lightbox-open="nuvelco-cca" data-lightbox-index="3"
+          aria-label="View: Employee page — role-scoped team dashboard" title="Employee page — role-scoped dashboard">
+          <img src="/images/cca/employee-page.png" alt="Employee page with role-scoped team dashboard" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" loading="lazy">
+          <div class="absolute inset-0 bg-bg/0 group-hover:bg-bg/40 transition-colors duration-200 flex items-center justify-center">
+            <svg class="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 drop-shadow" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607ZM10.5 7.5v6m3-3h-6"/></svg>
+          </div>
+        </button>
+
+        <button type="button" class="gallery-thumb group relative rounded-lg overflow-hidden border border-border hover:border-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-accent transition-all aspect-video"
+          data-lightbox-open="nuvelco-cca" data-lightbox-index="4"
+          aria-label="View: Login — auth that survives a reload, even offline" title="Login — offline-persistent auth">
+          <img src="/images/cca/login-page.png" alt="Login page with offline-persistent auth" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" loading="lazy">
+          <div class="absolute inset-0 bg-bg/0 group-hover:bg-bg/40 transition-colors duration-200 flex items-center justify-center">
+            <svg class="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 drop-shadow" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607ZM10.5 7.5v6m3-3h-6"/></svg>
+          </div>
+        </button>
 
       </div>
     </section>

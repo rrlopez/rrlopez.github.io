@@ -1,8 +1,512 @@
 ---
-import overlay_managerHtml from '../content/overlay-manager.html?raw';
 import OverlayLayout from '../layouts/OverlayLayout.astro';
+
+// Code snippets are kept as plain JS strings and rendered with set:text.
+// This avoids Astro parsing the literal { } and < > characters inside them
+// as template expressions / markup (the same reason JSX needs {'{'} escapes).
+const step1Code = "import OverlayManager from '@rrlopez/overlay-manager';\n\nexport default function App() {\n  return (\n    <>\n      <MainLayout />\n\n      {/* No name prop needed — single global instance */}\n      <OverlayManager />\n    </>\n  );\n}";
+
+const step2Code = "import { showModal } from '@rrlopez/overlay-manager';\nimport WarningPrompt from './components/WarningPrompt';\n\nasync function handleDelete(id: string) {\n  await showModal(WarningPrompt, {\n    title: 'Delete this item?',\n    description: 'This action cannot be undone.',\n    onConfirm: async () => {\n      await deleteItem(id);\n      return true; // auto-closes the dialog\n    },\n  });\n}";
+
+const singletonCode = "constructor(props) {\n  super(props)\n  this.state = { overlays: [], isMounted: false }\n\n  if (OverlayManager.instance) {\n    OverlayManager.instance.clear()\n    OverlayManager.instance.updateProps(props)\n    return OverlayManager.instance  // re-use\n  }\n\n  OverlayManager.instance = this\n}";
+
+const closeGuardCode = "delDueToBackButton(id: number) {\n  this.setState(state => {\n    const overlay = state.overlays.find(o => o.id === id)\n    if (overlay) overlay.open = false\n    return { ...state }\n  })\n  return id\n}\n\ndelOverlay(id: number) {\n  return this.delDueToBackButton(id)\n}";
+
+const safeDialogGuardCode = "// On tamper detected:\nforceRemountDialog(id: string) {\n  this.setState(state => ({\n    dialogs: state.dialogs.map(d =>\n      d.id === id\n        ? { ...d, id: `${id.split('-')[0]}-${newSegment}` }\n        : d\n    )\n  }))\n}\n\n// Global fallback on any user interaction:\nhandleGlobalInteraction = () => {\n  for (const dialog of activeDialogs) {\n    if (!document.getElementById(`guard-${dialog.id}`))\n      this.forceRemountDialog(dialog.id)\n  }\n}";
+
+const bulkCloseCode = "// Close everything\nexport const clearModals = () =>\n  OverlayManager.instance?.clear()\n\n// Close only overlays opened after `id`\ndeleteChildOverlay(id: number) {\n  const startIndex = this.state.overlays\n    .findIndex(o => id === o.id)\n\n  const overlays = this.state.overlays.map((o, i) =>\n    i > startIndex\n      ? { ...o, open: false, key: undefined }\n      : o\n  )\n  this.setState({ overlays })\n}";
 ---
 
 <OverlayLayout title={"@rrlopez/modal-manager — Simple, Global Modals for React | RJ Lopez"} description={"A lightweight utility to trigger React modals from anywhere in your code without dealing with nested component states or complex global state contexts."}>
-  <Fragment set:html={overlay_managerHtml} />
+  <!-- ===== NAV ===== -->
+  <nav class="sticky top-0 z-30 bg-bg/90 backdrop-blur border-b border-border">
+      <div class="max-w-6xl mx-auto px-6 py-3 flex items-center justify-between gap-4">
+        <a href="#top" class="font-bold text-text tracking-tight shrink-0">modal<span class="text-accent">-manager</span></a>
+        <div class="hidden md:flex items-center gap-5 text-sm font-medium text-text-secondary">
+          <a href="#demo" class="hover:text-accent transition-colors">Live Sandbox</a>
+          <a href="#usage" class="hover:text-accent transition-colors">Usage Guide</a>
+          <a href="#how-it-works" class="hover:text-accent transition-colors">How It Works</a>
+          <a href="#skills" class="hover:text-accent transition-colors">Skills Showcase</a>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <!-- GitHub Icon Link -->
+          <a href="https://github.com/rrlopez/modal-manager" target="_blank" rel="noopener noreferrer" class="p-2 rounded-lg text-text-secondary hover:text-text hover:bg-bg-elevated border border-transparent hover:border-border transition-all" aria-label="View Source on GitHub">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
+          </a>
+          <a href="index.html"
+            class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-bg-elevated border border-border text-xs font-semibold hover:border-accent hover:text-accent transition-all">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0 7-7m-7 7h18"/></svg>
+            Back to Portfolio
+          </a>
+        </div>
+      </div>
+    </nav>
+
+    <!-- ===== HERO ===== -->
+    <header id="top" class="border-b border-border relative overflow-hidden">
+      <div class="absolute inset-0 pointer-events-none opacity-40" style="background-image: radial-gradient(circle at 20% 10%, rgba(6,182,212,0.15), transparent 40%), radial-gradient(circle at 80% 30%, rgba(59,130,246,0.12), transparent 40%);"></div>
+
+      <div class="max-w-6xl mx-auto px-6 py-20 sm:py-24 relative">
+        <div class="inline-flex items-center gap-2 mb-5 px-3 py-1 rounded-full bg-bg-elevated border border-border">
+          <span class="relative flex w-2 h-2">
+            <span class="absolute inline-flex w-2 h-2 rounded-full bg-accent pulse-dot"></span>
+            <span class="relative inline-flex w-2 h-2 rounded-full bg-accent"></span>
+          </span>
+          <span class="text-xs font-medium text-text-secondary">Lightweight · Zero Dependencies · Open Source</span>
+        </div>
+
+        <h1 class="text-4xl sm:text-5xl font-bold tracking-tight max-w-3xl leading-tight">
+          Trigger React modals from anywhere in your application, instantly.
+        </h1>
+
+        <p class="mt-6 max-w-2xl text-base sm:text-lg text-text-secondary leading-relaxed">
+          Stop importing modals everywhere or prop-drilling open/close states through ten layers of UI. <code class="text-accent">@rrlopez/modal-manager</code> lets you drop a single manager component at your app's root, and fire custom modals globally using a clean, simple function call.
+        </p>
+
+        <div class="mt-8 flex flex-wrap items-center gap-3">
+          <a href="#demo" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-accent text-bg text-sm font-semibold hover:bg-accent-2 hover:-translate-y-0.5 transition-all shadow-lg shadow-accent/10">
+            Try Live Simulation
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0-7 7m7-7H3"/></svg>
+          </a>
+          <!-- GitHub Hero Action Button -->
+          <a href="https://github.com/rrlopez/modal-manager" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-bg-elevated border border-border text-sm font-medium hover:border-accent hover:text-text hover:bg-bg-elevated/80 transition-all">
+            <svg class="w-4 h-4 text-text-secondary group-hover:text-text" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
+            GitHub Repository
+          </a>
+          <a href="https://www.npmjs.com/package/@rrlopez/overlay-manager" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-transparent text-sm font-medium text-text-secondary hover:text-accent transition-all">
+            View on NPM
+          </a>
+        </div>
+
+        <!-- Installation Banner -->
+        <div class="mt-10 max-w-xl">
+          <div class="flex items-center justify-between gap-3 bg-bg-elevated border border-border rounded-xl px-5 py-3.5 font-mono text-sm">
+            <span class="text-text-secondary">$ <span class="text-text">npm i @rrlopez/overlay-manager</span></span>
+            <button id="copy-install-btn" type="button" class="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-bg border border-border text-xs font-semibold text-text-secondary hover:border-accent hover:text-accent transition-all">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V5a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-2M8 7H6a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h7a2 2 0 0 0 2-2v-2"/></svg>
+              <span id="copy-install-label">Copy</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- ===== TECH STRIP ===== -->
+    <section class="border-b border-border bg-bg-elevated/40">
+      <div class="max-w-6xl mx-auto px-6 py-5 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-xs sm:text-sm font-semibold text-text-secondary">
+        <span>React 18+</span><span class="text-border">/</span>
+        <span>TypeScript</span><span class="text-border">/</span>
+        <span>MutationObserver</span><span class="text-border">/</span>
+        <span>SafeDialogGuard</span><span class="text-border">/</span>
+        <span>Zero Dependencies</span>
+      </div>
+    </section>
+
+    <main class="max-w-6xl mx-auto px-6">
+
+      <!-- ===== LIVE DEMO ===== -->
+      <section id="demo" class="mt-16 mb-12 bg-bg-elevated/40 border border-border rounded-2xl p-6 sm:p-8 relative overflow-hidden reveal">
+        <div class="mb-6">
+          <p class="text-sm font-semibold text-accent uppercase tracking-wide mb-1">Interactive Sandbox</p>
+          <h2 class="text-2xl sm:text-3xl font-bold tracking-tight">Experience Global Declarative Triggers</h2>
+          <p class="text-text-secondary text-sm max-w-3xl mt-1">
+            Fire multiple modals from anywhere in code. Notice how they stack sequentially into the isolated tracking array and smoothly handle asynchronous closing lifecycles.
+          </p>
+        </div>
+
+        <!-- Controls Row -->
+        <div class="flex flex-wrap items-center gap-3 mb-6 bg-bg/50 border border-border p-3.5 rounded-xl">
+          <button id="btn-trigger-modal" type="button" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-accent text-bg text-sm font-bold hover:bg-accent-2 transition-all cursor-pointer">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+            showModal()
+          </button>
+          <button id="btn-back-button" type="button" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-bg-elevated border border-border text-xs font-semibold text-text hover:border-warn hover:text-warn transition-all cursor-pointer">
+            Simulate Back-Button Guard
+          </button>
+          <div class="h-5 w-[1px] bg-border hidden sm:block"></div>
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-medium text-text-secondary">Host Scope:</span>
+            <button id="btn-switch-instance" type="button" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-bg border border-border text-xs font-bold text-accent-2 hover:border-accent-2 transition-all cursor-pointer">
+              <span id="active-host-label">default_host</span>
+              <svg class="w-3 h-3 text-text-secondary" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="grid lg:grid-cols-12 gap-6 items-stretch">
+          <!-- Left: Simulation Canvas Container -->
+          <div class="lg:col-span-7 bg-bg border border-border rounded-xl flex flex-col min-h-[360px] relative overflow-hidden shadow-inner">
+            <div class="bg-bg-elevated/70 border-b border-border/80 px-4 py-2 flex items-center justify-between text-xs text-text-secondary font-mono">
+              <span>🖥️ Client App Canvas Viewport</span>
+              <span class="text-[10px] bg-accent/10 text-accent px-1.5 py-0.5 rounded border border-accent/20 font-sans font-bold uppercase">Live Interface</span>
+            </div>
+
+            <!-- App Area (Inside which modals visually spawn) -->
+            <div id="canvas-viewport" class="flex-1 flex flex-col items-center justify-center p-6 text-center relative bg-radial from-bg-elevated/30 to-bg">
+              <div id="canvas-empty-state" class="max-w-xs space-y-2">
+                <p class="text-sm font-semibold text-text-secondary">Application State Resting</p>
+                <p class="text-xs text-text-secondary/60">Click the <code class="text-accent bg-bg-elevated px-1 py-0.5 rounded font-mono">showModal()</code> button above to broadcast a new element into the global stack layer.</p>
+              </div>
+
+              <!-- Target container where live visual modals will mount -->
+              <div id="modal-mount-container" class="absolute inset-0 pointer-events-none z-10 flex items-center justify-center"></div>
+            </div>
+          </div>
+
+          <!-- Right: Realtime Reactive Array State Code Window -->
+          <div class="lg:col-span-5 bg-bg border border-border rounded-xl flex flex-col font-mono text-xs overflow-hidden shadow-2xl">
+            <div class="bg-bg-elevated/70 border-b border-border/80 px-4 py-2 flex items-center justify-between text-text-secondary">
+              <span>📋 Stack State Trace Inspector</span>
+              <div class="flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+                <span class="text-[10px] uppercase font-sans font-bold tracking-wider text-emerald-400">Syncing</span>
+              </div>
+            </div>
+            <div class="p-4 flex-1 overflow-y-auto max-h-[320px] bg-bg-elevated/10">
+              <pre id="state-json-output" class="text-accent-2 leading-relaxed selection:bg-accent-2/20"><code class="text-text-secondary">// Array empty</code></pre>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== USAGE GUIDE SECTION (NPM README MATCH) ===== -->
+      <section id="usage" class="py-12 border-b border-border scroll-mt-16 reveal">
+        <p class="text-sm font-semibold text-accent uppercase tracking-wide mb-2">Documentation</p>
+        <h2 class="text-2xl sm:text-3xl font-bold mb-4">How to Use</h2>
+        <p class="max-w-2xl text-text-secondary text-sm sm:text-base mb-8">Get up and running in two simple integration steps without configuring context wrapper nesting hierarchies.</p>
+
+        <div class="space-y-8">
+          <!-- Step 1 -->
+          <div>
+            <div class="flex items-center gap-3 mb-3">
+              <span class="flex items-center justify-center w-6 h-6 rounded-md bg-accent/10 border border-accent/20 text-xs font-bold text-accent font-mono">01</span>
+              <h3 class="text-base font-bold text-text">Mount the Root Container</h3>
+            </div>
+            <p class="text-sm text-text-secondary mb-3 max-w-3xl">
+              Place the <code class="text-accent-2 bg-bg-elevated px-1 py-0.5 rounded font-mono">OverlayManager</code> host component once at the root of your application — the outermost layout that's always mounted.
+            </p>
+            <pre class="code-block bg-bg-elevated/30 border border-border rounded-xl p-4 text-xs sm:text-sm text-text-secondary overflow-x-auto"><code set:text={step1Code} /></pre>
+          </div>
+
+          <!-- Step 2 -->
+          <div>
+            <div class="flex items-center gap-3 mb-3">
+              <span class="flex items-center justify-center w-6 h-6 rounded-md bg-accent/10 border border-accent/20 text-xs font-bold text-accent font-mono">02</span>
+              <h3 class="text-base font-bold text-text">Trigger Modals Globally From Anywhere</h3>
+            </div>
+            <p class="text-sm text-text-secondary mb-3 max-w-3xl">
+              Import <code class="text-accent-2 bg-bg-elevated px-1 py-0.5 rounded font-mono">showModal()</code> anywhere — deeply nested buttons, async API handlers, route loaders — and pass your component along with any props it needs. <code class="prose-inline">open</code> and <code class="prose-inline">onClose</code> are injected automatically.
+            </p>
+            <pre class="code-block bg-bg-elevated/30 border border-border rounded-xl p-4 text-xs sm:text-sm text-text-secondary overflow-x-auto"><code set:text={step2Code} /></pre>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== HOW IT WORKS / CODE BREAKDOWN ===== -->
+      <section id="how-it-works" class="py-12 border-b border-border scroll-mt-16">
+        <p class="text-sm font-semibold text-accent-2 uppercase tracking-wide mb-2 reveal">Code Deep Dive</p>
+        <h2 class="text-2xl sm:text-3xl font-bold mb-4 reveal">Built in ~150 lines of clean TypeScript.</h2>
+        <p class="max-w-2xl text-text-secondary text-sm sm:text-base mb-12 reveal">No state libraries, no context wrappers. Here are the four mechanisms that make it work:</p>
+
+        <div class="grid md:grid-cols-2 gap-8 items-start reveal">
+          <!-- 1. Global Singleton -->
+          <div class="min-w-0 border border-border rounded-xl p-5 bg-bg-elevated/20">
+            <h3 class="text-lg font-bold mb-2">1. Global Singleton</h3>
+            <p class="text-text-secondary text-sm mb-4 leading-relaxed">
+              The constructor assigns <code class="text-accent bg-bg px-1 py-0.5 rounded font-mono">OverlayManager.instance = this</code>, making the live React component reachable from any module without context. Hot-reload and StrictMode double-invocation are handled by clearing and re-using the existing instance instead of creating a second one.
+            </p>
+            <pre class="code-block bg-bg border border-border rounded-lg p-4 text-xs text-text-secondary/90 overflow-x-auto"><code set:text={singletonCode} /></pre>
+          </div>
+
+          <!-- 2. Back button guard -->
+          <div class="min-w-0 border border-border rounded-xl p-5 bg-bg-elevated/20">
+            <h3 class="text-lg font-bold mb-2">2. Two-Step Close &amp; Animation Guard</h3>
+            <p class="text-text-secondary text-sm mb-4 leading-relaxed">
+              Rather than removing the entry immediately, closing sets <code class="text-accent bg-bg px-1 py-0.5 rounded font-mono">open = false</code> and lets the modal primitive (Radix, Base UI) play its exit animation before unmounting itself. The entry lingers in state until the next filter sweep removes it.
+            </p>
+            <pre class="code-block bg-bg border border-border rounded-lg p-4 text-xs text-text-secondary/90 overflow-x-auto"><code set:text={closeGuardCode} /></pre>
+          </div>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-8 items-start mt-8 reveal">
+          <!-- 3. SafeDialogGuard -->
+          <div class="min-w-0 border border-border rounded-xl p-5 bg-bg-elevated/20">
+            <h3 class="text-lg font-bold mb-2">3. SafeDialogGuard — Anti-Tamper</h3>
+            <p class="text-text-secondary text-sm mb-4 leading-relaxed">
+              Every rendered overlay is wrapped in <code class="text-accent bg-bg px-1 py-0.5 rounded font-mono">SafeDialogGuard</code>, a component that attaches a <code class="text-accent bg-bg px-1 py-0.5 rounded font-mono">MutationObserver</code> to <code class="text-accent bg-bg px-1 py-0.5 rounded font-mono">document.body</code>. If the DOM node is removed or hidden via inline style, it triggers a forced remount. Global click/keydown listeners provide a second line of defence.
+            </p>
+            <pre class="code-block bg-bg border border-border rounded-lg p-4 text-xs text-text-secondary/90 overflow-x-auto"><code set:text={safeDialogGuardCode} /></pre>
+          </div>
+
+          <!-- 4. Bulk-close exports -->
+          <div class="min-w-0 border border-border rounded-xl p-5 bg-bg-elevated/20">
+            <h3 class="text-lg font-bold mb-2">4. Bulk-Close: <code class="font-mono text-sm">clearModals</code> &amp; <code class="font-mono text-sm">delChildModals</code></h3>
+            <p class="text-text-secondary text-sm mb-4 leading-relaxed">
+              <code class="text-accent bg-bg px-1 py-0.5 rounded font-mono">clearModals()</code> closes the entire stack at once. <code class="text-accent bg-bg px-1 py-0.5 rounded font-mono">delChildModals(id)</code> closes every overlay opened <em>after</em> a given one — useful for multi-step flows where a parent cancel should clean up all child dialogs without knowing they exist.
+            </p>
+            <pre class="code-block bg-bg border border-border rounded-lg p-4 text-xs text-text-secondary/90 overflow-x-auto"><code set:text={bulkCloseCode} /></pre>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== SKILLS / VALUE PROPOSITION ===== -->
+      <section id="skills" class="py-16 border-b border-border scroll-mt-16" aria-labelledby="skills-heading">
+        <p class="text-sm font-semibold text-accent uppercase tracking-wide mb-2 reveal">Portfolio Value</p>
+        <h2 id="skills-heading" class="text-2xl sm:text-3xl font-bold mb-10 max-w-xl reveal">What this project demonstrates about my frontend skills</h2>
+
+        <div class="grid sm:grid-cols-3 gap-6 reveal">
+          <div class="bg-bg-elevated/40 border border-border rounded-xl p-5">
+            <div class="w-9 h-9 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center mb-4 text-accent font-bold">
+              01
+            </div>
+            <h3 class="font-bold text-base mb-2">State Management &amp; DX</h3>
+            <p class="text-sm text-text-secondary leading-relaxed">Demonstrates a solid focus on Developer Experience (DX)—building clean utilities that solve common state problems cleanly without adding heavy bundle code sizes.</p>
+          </div>
+
+          <div class="bg-bg-elevated/40 border border-border rounded-xl p-5">
+            <div class="w-9 h-9 rounded-lg bg-accent-2/10 border border-accent-2/20 flex items-center justify-center mb-4 text-accent-2 font-bold">
+              02
+            </div>
+            <h3 class="font-bold text-base mb-2">Memory Management</h3>
+            <p class="text-sm text-text-secondary leading-relaxed">Shows clear awareness of frontend performance—manually dealing with lifecycle hooks to purge static arrays, prevent memory leakage, and keep runtimes lightweight.</p>
+          </div>
+
+          <div class="bg-bg-elevated/40 border border-border rounded-xl p-5">
+            <div class="w-9 h-9 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mb-4 text-warn font-bold">
+              03
+            </div>
+            <h3 class="font-bold text-base mb-2">DOM Integrity &amp; Defensive Engineering</h3>
+            <p class="text-sm text-text-secondary leading-relaxed">Shows security-minded thinking at the UI layer — using <code class="text-accent bg-bg px-1 rounded font-mono text-xs">MutationObserver</code> and global interaction listeners to detect and recover from DOM tampering, ensuring overlays can't be silently dismissed by external scripts or DevTools manipulation.</p>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- ===== SCROLL TO TOP BUTTON ===== -->
+    <button
+      id="scroll-top-btn"
+      type="button"
+      aria-label="Scroll to top"
+      class="fixed bottom-6 right-6 z-40 p-3 rounded-full bg-accent text-bg shadow-lg opacity-0 translate-y-2 pointer-events-none transition-all duration-300 hover:bg-accent-2 cursor-pointer"
+    >
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7"/>
+      </svg>
+    </button>
+
+    <!-- ===== FOOTER ===== -->
+    <footer class="border-t border-border py-10 text-center text-sm text-text-secondary">
+      <p>&copy; 2026 Ricardo Rey Crisanto V. Lopez II. Built using semantic HTML5 &amp; Tailwind CSS.</p>
+    </footer>
+
+    <script>
+      // ---- Section scroll reveal handler ----
+      const revealEls = document.querySelectorAll('.reveal');
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('in-view');
+            io.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.1 });
+      revealEls.forEach((el) => {io.observe(el)});
+
+      // ---- Scroll to top button visibility toggle ----
+      const scrollTopBtn = document.getElementById('scroll-top-btn');
+      if (scrollTopBtn) {
+        scrollTopBtn.addEventListener('click', () => {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+        window.addEventListener('scroll', () => {
+          if (window.scrollY > 300) {
+            scrollTopBtn.classList.remove('opacity-0', 'translate-y-2', 'pointer-events-none');
+            scrollTopBtn.classList.add('opacity-100', 'translate-y-0', 'pointer-events-auto');
+          } else {
+            scrollTopBtn.classList.remove('opacity-100', 'translate-y-0', 'pointer-events-auto');
+            scrollTopBtn.classList.add('opacity-0', 'translate-y-2', 'pointer-events-none');
+          }
+        });
+      }
+
+      // ---- Copy install script utility ----
+      const copyBtn = document.getElementById('copy-install-btn');
+      if (copyBtn) {
+        copyBtn.addEventListener('click', async () => {
+          const label = document.getElementById('copy-install-label');
+          try {
+            await navigator.clipboard.writeText('npm i @rrlopez/overlay-manager');
+            if (label) label.textContent = 'Copied!';
+            setTimeout(() => { if (label) label.textContent = 'Copy'; }, 1600);
+          } catch {
+            if (label) label.textContent = 'Ctrl+C to copy';
+          }
+        });
+      }
+
+      // ---- Advanced Live Sandbox Logic Loop ----
+      (() => {
+        let _id = 0;
+        function* generateId(): Generator<number, never, unknown> {
+          while (true) {
+            _id += 1;
+            yield _id;
+          }
+        }
+
+        const idGenerator = generateId();
+
+        type SandboxModal = { id: number; instance: string; open: boolean };
+        type SandboxHost = { name: string; primary: boolean };
+
+        const hostInstances: SandboxHost[] = [
+          { name: 'default_host', primary: true },
+          { name: 'sidebar_host', primary: false }
+        ];
+        let modalStack: SandboxModal[] = [];
+
+        const mountContainer = document.getElementById('modal-mount-container');
+        const emptyStateEl = document.getElementById('canvas-empty-state');
+        const jsonOutputEl = document.getElementById('state-json-output');
+        const hostLabelEl = document.getElementById('active-host-label');
+
+        if (!mountContainer || !emptyStateEl || !jsonOutputEl || !hostLabelEl) {
+          // Sandbox markup isn't present on this render; skip wiring it up.
+          return;
+        }
+
+        // The guard above proves these are non-null, but TS can't carry that
+        // narrowing into the function declarations below (they're hoisted and
+        // could technically be invoked before the guard runs), so assert once
+        // here into fresh bindings that the rest of the IIFE actually uses.
+        const mount = mountContainer as HTMLElement;
+        const emptyState = emptyStateEl as HTMLElement;
+        const jsonOutput = jsonOutputEl as HTMLElement;
+        const hostLabel = hostLabelEl as HTMLElement;
+
+        function updateStateTrace() {
+          const liveTraceData = {
+            ModalManager: {
+              activeInstance: hostInstances[0].name,
+              _instanceArray: hostInstances.map(h => h.name),
+              globalState: {
+                modals: modalStack.map(m => ({
+                  id: m.id,
+                  open: m.open,
+                  targetHost: m.instance
+                }))
+              }
+            }
+          };
+          jsonOutput.innerHTML = `// Current·Singleton·Heap\n${JSON.stringify(liveTraceData, null, 2)}`
+        }
+
+        function removeModalFromMemory(id: number) {
+          modalStack = modalStack.filter(m => m.id !== id);
+          const visualNode = mount.querySelector(`[data-modal-id="${id}"]`);
+          if (visualNode) visualNode.remove();
+
+          if (modalStack.length === 0) {
+            emptyState.style.display = 'block';
+          }
+          updateStateTrace();
+        }
+
+        function runDismissAnimation(id: number) {
+          const match = modalStack.find(m => m.id === id);
+          if (!match?.open) return;
+
+          match.open = false;
+          updateStateTrace();
+
+          const visualNode = mount.querySelector(`[data-modal-id="${id}"]`) as HTMLElement | null;
+          if (visualNode) {
+            const overlayBg = visualNode.querySelector('.modal-bg') as HTMLElement | null;
+            const overlayBox = visualNode.querySelector('.modal-box') as HTMLElement | null;
+
+            if (overlayBg) overlayBg.style.opacity = '0';
+            if (overlayBox) {
+              overlayBox.style.transform = 'scale(0.96)';
+              overlayBox.style.opacity = '0';
+            }
+            visualNode.style.transition = 'all 250ms ease';
+
+            setTimeout(() => removeModalFromMemory(id), 250);
+          } else {
+            removeModalFromMemory(id);
+          }
+        }
+
+        function renderModalElement(modalObj: SandboxModal) {
+          emptyState.style.display = 'none';
+
+          const overlayWrapper = document.createElement('div');
+          overlayWrapper.dataset.modalId = String(modalObj.id);
+          overlayWrapper.className = 'absolute inset-0 z-20 flex items-center justify-center p-4 pointer-events-auto';
+
+          const backdrop = document.createElement('div');
+          backdrop.className = 'modal-bg absolute inset-0 bg-bg/80 backdrop-blur-xs transition-opacity duration-300 ease-out';
+          backdrop.addEventListener('click', () => runDismissAnimation(modalObj.id));
+
+          const modalBox = document.createElement('div');
+          modalBox.className = 'modal-box animate-scale-up relative bg-bg-elevated border border-border w-full max-w-xs rounded-xl p-5 shadow-2xl text-left transition-all duration-300';
+
+          modalBox.innerHTML = `
+            <div class="flex items-start justify-between gap-4 mb-2">
+              <h4 class="font-bold text-sm tracking-tight text-text">Global Modal Context</h4>
+              <button class="modal-close-btn p-1 rounded-md hover:bg-bg border border-transparent hover:border-border text-text-secondary hover:text-danger transition-all cursor-pointer" aria-label="Close modal">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+              </button>
+            </div>
+            <p class="text-xs text-text-secondary leading-relaxed mb-4">
+              Rendered dynamically by calling <code class="text-accent bg-bg px-1 py-0.5 rounded font-mono">showModal()</code>. No local component state setup required.
+            </p>
+            <div class="flex items-center justify-between text-[10px] font-mono bg-bg px-2.5 py-1.5 rounded-lg border border-border">
+              <span class="text-text-secondary">Node Token ID: <b class="text-accent">${modalObj.id}</b></span>
+              <span class="text-text-secondary">Instance: <b class="text-accent-2">${modalObj.instance}</b></span>
+            </div>
+          `;
+
+          modalBox.querySelector('.modal-close-btn')?.addEventListener('click', () => runDismissAnimation(modalObj.id));
+
+          overlayWrapper.appendChild(backdrop);
+          overlayWrapper.appendChild(modalBox);
+          mount.appendChild(overlayWrapper);
+        }
+
+        // Trigger handler
+        document.getElementById('btn-trigger-modal')?.addEventListener('click', () => {
+          const nextId = idGenerator.next().value;
+          const currentHost = hostInstances[0].name;
+
+          const newModal = { id: nextId, instance: currentHost, open: true };
+          modalStack.push(newModal);
+
+          renderModalElement(newModal);
+          updateStateTrace();
+        });
+
+        // Simulate system browser routing event / back-button guard
+        document.getElementById('btn-back-button')?.addEventListener('click', () => {
+          const topActiveModal = [...modalStack].reverse().find(m => m.open);
+          if (topActiveModal) {
+            runDismissAnimation(topActiveModal.id);
+          }
+        });
+
+        // Toggle targeted singleton context instances
+        document.getElementById('btn-switch-instance')?.addEventListener('click', () => {
+          const rotated = hostInstances.pop();
+          if (rotated) hostInstances.unshift(rotated);
+          hostLabel.textContent = hostInstances[0].name;
+          updateStateTrace();
+        });
+
+        // Bootstrap first view parameters
+        updateStateTrace();
+      })();
+    </script>
 </OverlayLayout>

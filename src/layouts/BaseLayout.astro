@@ -1,6 +1,7 @@
 ---
 import '../styles/global.css';
 import ScrollToTop from '../components/ScrollToTop.astro';
+import Lightbox from '../components/Lightbox.astro';
 
 interface Props {
   title: string;
@@ -23,6 +24,9 @@ const { title, description = '', themeClass = '' } = Astro.props;
   </head>
   <body class:list={['bg-bg text-text leading-relaxed antialiased', themeClass]}>
     <ScrollToTop />
-    <slot />
+    <Lightbox />
+    <div id="page-wrap">
+      <slot />
+    </div>
   </body>
 </html>

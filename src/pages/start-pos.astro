@@ -14,6 +14,7 @@ import ProjectLayout from '../layouts/ProjectLayout.astro';
         <a href="#offline" class="hover:text-accent transition-colors whitespace-nowrap">Offline-First</a>
         <a href="#architecture" class="hover:text-accent transition-colors whitespace-nowrap">Architecture</a>
         <a href="#database" class="hover:text-accent transition-colors whitespace-nowrap">Database</a>
+        <a href="#gallery" class="hover:text-accent transition-colors whitespace-nowrap">Gallery</a>
         <a href="#challenges" class="hover:text-accent transition-colors whitespace-nowrap">Challenges</a>
         <a href="#roadmap" class="hover:text-accent transition-colors whitespace-nowrap">Roadmap</a>
       </div>
@@ -61,8 +62,10 @@ import ProjectLayout from '../layouts/ProjectLayout.astro';
         <div class="rounded-xl border border-border shot flex flex-col items-center justify-center gap-3 text-center">
           <img
             src="/images/start-pos/banner.png"
-            alt="Placeholder preview of the START POS multi-tenant offline-first POS platform"
-            class="w-full object-cover rounded-lg border border-border shrink-0 print:hidden"
+            alt="START POS platform overview"
+            data-lightbox="start-pos"
+            data-caption="START POS — Platform overview"
+            class="w-full object-cover rounded-lg border border-border shrink-0 print:hidden cursor-zoom-in"
           >
         </div>
       </div>
@@ -197,8 +200,10 @@ import ProjectLayout from '../layouts/ProjectLayout.astro';
           <div class="shot rounded-xl border border-border flex flex-col items-center justify-center gap-2 text-center ">
             <img
               src="/images/start-pos/products-page.png"
-              alt="Placeholder preview of the START POS multi-tenant offline-first POS platform"
-              class="w-full object-cover rounded-lg border border-border shrink-0 print:hidden"
+              alt="Inventory — products and variants per branch"
+              data-lightbox="start-pos"
+              data-caption="Inventory — products &amp; variants per branch"
+              class="w-full object-cover rounded-lg border border-border shrink-0 print:hidden cursor-zoom-in"
             >
           </div>
           <div>
@@ -217,8 +222,10 @@ import ProjectLayout from '../layouts/ProjectLayout.astro';
           <div class="shot rounded-xl border border-border flex flex-col items-center justify-center gap-2 text-center md:order-1">
             <img
               src="/images/start-pos/addon-view.png"
-              alt="Placeholder preview of the START POS multi-tenant offline-first POS platform"
-              class="w-full object-cover rounded-lg border border-border shrink-0 print:hidden"
+              alt="POS checkout — split payments and add-ons"
+              data-lightbox="start-pos"
+              data-caption="POS checkout — split payments &amp; add-ons"
+              class="w-full object-cover rounded-lg border border-border shrink-0 print:hidden cursor-zoom-in"
             >
           </div>
           <div class="md:order-2">
@@ -254,8 +261,10 @@ import ProjectLayout from '../layouts/ProjectLayout.astro';
           <div class="shot rounded-xl border border-border flex flex-col items-center justify-center gap-2 text-center md:order-1">
             <img
               src="/images/start-pos/order-view.png"
-              alt="Placeholder preview of the START POS multi-tenant offline-first POS platform"
-              class="w-full object-cover rounded-lg border border-border shrink-0 print:hidden"
+              alt="Restaurant — order tabs and kitchen queue"
+              data-lightbox="start-pos"
+              data-caption="Restaurant — order tabs &amp; kitchen queue"
+              class="w-full object-cover rounded-lg border border-border shrink-0 print:hidden cursor-zoom-in"
             >
           </div>
           <div class="md:order-2">
@@ -325,8 +334,10 @@ import ProjectLayout from '../layouts/ProjectLayout.astro';
           <div class="shot rounded-xl border border-border flex flex-col items-center justify-center gap-2 text-center md:order-1">
             <img
               src="/images/start-pos/settings-page.png"
-              alt="Placeholder preview of the START POS multi-tenant offline-first POS platform"
-              class="w-full object-cover rounded-lg border border-border shrink-0 print:hidden"
+              alt="Settings — data-driven config scoped per business, branch, user"
+              data-lightbox="start-pos"
+              data-caption="Settings — data-driven config scoped per business, branch &amp; user"
+              class="w-full object-cover rounded-lg border border-border shrink-0 print:hidden cursor-zoom-in"
             >
           </div>
           <div class="md:order-2">
@@ -373,6 +384,62 @@ import ProjectLayout from '../layouts/ProjectLayout.astro';
             </ul>
           </div>
         </div> -->
+
+      </div>
+    </section>
+
+    <!-- ===== GALLERY ===== -->
+    <section id="gallery" class="py-20 border-b border-border scroll-mt-16" aria-labelledby="gallery-heading">
+      <p class="text-sm font-semibold text-accent uppercase tracking-wide mb-3 reveal">Gallery</p>
+      <h2 id="gallery-heading" class="text-2xl sm:text-3xl font-bold mb-3 max-w-2xl reveal">Screenshots from the platform.</h2>
+      <p class="text-text-secondary mb-10 max-w-2xl reveal">Click any screenshot to view it full size.</p>
+
+      <div class="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 reveal">
+
+        <button type="button" class="gallery-thumb group relative rounded-lg overflow-hidden border border-border hover:border-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-accent transition-all aspect-video"
+          data-lightbox-open="start-pos" data-lightbox-index="0"
+          aria-label="View: START POS platform overview" title="Platform overview">
+          <img src="/images/start-pos/banner.png" alt="START POS platform overview" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" loading="lazy">
+          <div class="absolute inset-0 bg-bg/0 group-hover:bg-bg/40 transition-colors duration-200 flex items-center justify-center">
+            <svg class="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 drop-shadow" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607ZM10.5 7.5v6m3-3h-6"/></svg>
+          </div>
+        </button>
+
+        <button type="button" class="gallery-thumb group relative rounded-lg overflow-hidden border border-border hover:border-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-accent transition-all aspect-video"
+          data-lightbox-open="start-pos" data-lightbox-index="1"
+          aria-label="View: Inventory — products and variants per branch" title="Inventory — products &amp; variants per branch">
+          <img src="/images/start-pos/products-page.png" alt="Inventory — products and variants" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" loading="lazy">
+          <div class="absolute inset-0 bg-bg/0 group-hover:bg-bg/40 transition-colors duration-200 flex items-center justify-center">
+            <svg class="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 drop-shadow" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607ZM10.5 7.5v6m3-3h-6"/></svg>
+          </div>
+        </button>
+
+        <button type="button" class="gallery-thumb group relative rounded-lg overflow-hidden border border-border hover:border-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-accent transition-all aspect-video"
+          data-lightbox-open="start-pos" data-lightbox-index="2"
+          aria-label="View: POS checkout — split payments and add-ons" title="POS checkout — split payments &amp; add-ons">
+          <img src="/images/start-pos/addon-view.png" alt="POS checkout with split payments and add-ons" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" loading="lazy">
+          <div class="absolute inset-0 bg-bg/0 group-hover:bg-bg/40 transition-colors duration-200 flex items-center justify-center">
+            <svg class="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 drop-shadow" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607ZM10.5 7.5v6m3-3h-6"/></svg>
+          </div>
+        </button>
+
+        <button type="button" class="gallery-thumb group relative rounded-lg overflow-hidden border border-border hover:border-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-accent transition-all aspect-video"
+          data-lightbox-open="start-pos" data-lightbox-index="3"
+          aria-label="View: Restaurant — order tabs and kitchen queue" title="Restaurant — order tabs &amp; kitchen queue">
+          <img src="/images/start-pos/order-view.png" alt="Restaurant order tabs and kitchen queue" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" loading="lazy">
+          <div class="absolute inset-0 bg-bg/0 group-hover:bg-bg/40 transition-colors duration-200 flex items-center justify-center">
+            <svg class="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 drop-shadow" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607ZM10.5 7.5v6m3-3h-6"/></svg>
+          </div>
+        </button>
+
+        <button type="button" class="gallery-thumb group relative rounded-lg overflow-hidden border border-border hover:border-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-accent transition-all aspect-video"
+          data-lightbox-open="start-pos" data-lightbox-index="4"
+          aria-label="View: Settings — data-driven config per business, branch and user" title="Settings — data-driven config per business, branch &amp; user">
+          <img src="/images/start-pos/settings-page.png" alt="Settings — data-driven config scoped per business, branch, user" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" loading="lazy">
+          <div class="absolute inset-0 bg-bg/0 group-hover:bg-bg/40 transition-colors duration-200 flex items-center justify-center">
+            <svg class="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 drop-shadow" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607ZM10.5 7.5v6m3-3h-6"/></svg>
+          </div>
+        </button>
 
       </div>
     </section>
