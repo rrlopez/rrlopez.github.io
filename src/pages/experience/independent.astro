@@ -1,0 +1,376 @@
+---
+import ProjectLayout from '../../layouts/ProjectLayout.astro';
+---
+
+<ProjectLayout
+  title={"Independent Full Stack Software Engineer — RJ Lopez"}
+  description={"Projects built during RJ Lopez's Independent Full Stack Software Engineering period — spanning web platforms, mobile apps, and backend services."}
+>
+
+  <!-- ===== NAV ===== -->
+  <nav class="sticky top-0 z-30 bg-bg/90 backdrop-blur border-b border-border" aria-label="Page navigation">
+    <div class="max-w-6xl mx-auto px-6 py-3 flex items-center justify-between gap-4">
+      <span class="font-bold text-text tracking-tight shrink-0">
+        Independent<span class="text-accent">.</span>
+      </span>
+      <div class="hidden md:flex items-center gap-5 text-sm font-medium text-text-secondary overflow-x-auto">
+        <a href="#rpas"         class="hover:text-accent transition-colors whitespace-nowrap">RPAS</a>
+        <a href="#padayon"      class="hover:text-accent transition-colors whitespace-nowrap">Padayon</a>
+        <a href="#meal-planner" class="hover:text-accent transition-colors whitespace-nowrap">Meal Planner</a>
+        <a href="#scheduler"    class="hover:text-accent transition-colors whitespace-nowrap">Scheduler</a>
+      </div>
+      <a
+        href="/#experience"
+        class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-bg-elevated border border-border text-xs font-semibold hover:border-accent hover:text-accent transition-all shrink-0"
+      >
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0 7-7m-7 7h18"/>
+        </svg>
+        Back to Portfolio
+      </a>
+    </div>
+  </nav>
+
+  <!-- ===== HERO ===== -->
+  <header id="top" class="border-b border-border relative overflow-hidden">
+    <div
+      class="absolute inset-0 pointer-events-none opacity-40"
+      style="background-image: radial-gradient(circle at 15% 20%, rgba(99,102,241,0.18), transparent 45%), radial-gradient(circle at 85% 70%, rgba(16,185,129,0.14), transparent 45%);"
+    ></div>
+    <div class="max-w-6xl mx-auto px-6 py-20 sm:py-28 relative">
+
+      <div class="inline-flex items-center gap-2 mb-5 px-3 py-1 rounded-full bg-bg-elevated border border-border">
+        <span class="relative flex w-2 h-2">
+          <span class="absolute inline-flex w-2 h-2 rounded-full bg-accent-2 opacity-75 animate-ping"></span>
+          <span class="relative inline-flex w-2 h-2 rounded-full bg-accent-2"></span>
+        </span>
+        <span class="text-xs font-medium text-text-secondary">March 2023 — March 2025</span>
+      </div>
+
+      <h1 class="text-4xl sm:text-5xl font-bold tracking-tight max-w-3xl leading-tight">
+        Independent Full Stack<br class="hidden sm:block" />
+        <span class="text-accent">Software Engineer</span>
+      </h1>
+
+      <p class="mt-5 max-w-2xl text-lg text-text-secondary">
+        Two years of freelance work building production-ready applications across mobile, web, and backend — for clients spanning logistics, education, and research.
+      </p>
+
+      <div class="mt-10 flex flex-wrap gap-10">
+        <div>
+          <p class="text-3xl font-bold text-accent">4</p>
+          <p class="text-sm text-text-secondary">Projects shipped</p>
+        </div>
+        <div>
+          <p class="text-3xl font-bold text-accent">2 yrs</p>
+          <p class="text-sm text-text-secondary">Engagement period</p>
+        </div>
+        <div>
+          <p class="text-3xl font-bold text-accent">3</p>
+          <p class="text-sm text-text-secondary">Platforms (web · iOS · Android)</p>
+        </div>
+      </div>
+
+      <div class="mt-8 flex flex-wrap gap-2">
+        {["React Native", "Expo", "Next.js", "Node.js", "Supabase", "TypeScript", "NativeWind", "Tailwind CSS", "REST APIs", "n8n"].map((t) => (
+          <span class="text-xs font-semibold px-3 py-1 rounded-full bg-bg-elevated border border-border text-text-secondary">{t}</span>
+        ))}
+      </div>
+    </div>
+  </header>
+
+  <!-- ================================================================
+       PROJECTS
+  ================================================================ -->
+  <main class="max-w-6xl mx-auto px-6">
+
+    <!-- ============================================================
+         01 — RPAS
+    ============================================================ -->
+    <section id="rpas" class="py-16 border-b border-border scroll-mt-20">
+
+      <!-- heading row -->
+      <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
+        <div>
+          <p class="text-xs font-bold uppercase tracking-widest text-accent-2 mb-2">Project 01</p>
+          <h2 class="text-3xl sm:text-4xl font-bold">RPAS</h2>
+          <p class="text-text-secondary mt-1 text-sm">Research Paper Archive System &nbsp;·&nbsp; Web Platform</p>
+        </div>
+        <div class="flex flex-wrap gap-2 sm:justify-end">
+          {["Supabase", "Vanilla JS", "HTML / CSS", "n8n"].map((t) => (
+            <span class="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-bg-elevated border border-border text-text-secondary">{t}</span>
+          ))}
+        </div>
+      </div>
+
+      <p class="text-text-secondary mb-10 max-w-2xl text-sm leading-relaxed">
+        A multi-role research paper archive and request-tracking platform for an academic institution —
+        handling submission workflows, review routing, real-time notifications, and an AI assistant.
+      </p>
+
+      <!-- banner (full width) -->
+      <div class="rounded-2xl border border-border bg-bg-elevated p-2 shadow-2xl shadow-accent-2/10 mb-4">
+        <img
+          src="/images/rpas/banner.png"
+          alt="RPAS — dashboard overview"
+          data-lightbox="independent"
+          data-caption="RPAS — Dashboard overview"
+          class="w-full object-cover rounded-lg border border-border cursor-zoom-in"
+          onerror="this.closest('.rounded-2xl').classList.add('placeholder-slot'); this.remove();"
+        />
+      </div>
+
+      <!-- 3-up row -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
+        {[
+          { src: "/images/rpas/admin-dashboard.png",  caption: "Admin dashboard",          alt: "RPAS admin dashboard" },
+          { src: "/images/rpas/researcher-view.png",  caption: "Researcher submission",     alt: "Researcher submission view" },
+          { src: "/images/rpas/analyst-view.png",     caption: "Analyst review panel",      alt: "Analyst review panel" },
+        ].map(({ src, caption, alt }) => (
+          <div class="rounded-xl border border-border bg-bg-elevated p-1.5">
+            <img
+              src={src}
+              alt={alt}
+              data-lightbox="independent"
+              data-caption={`RPAS — ${caption}`}
+              class="w-full aspect-video object-cover rounded-lg border border-border cursor-zoom-in"
+              onerror="this.closest('.rounded-xl').classList.add('placeholder-slot'); this.remove();"
+            />
+          </div>
+        ))}
+      </div>
+
+      <!-- 2-up row -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {[
+          { src: "/images/rpas/messages.png",     caption: "Messaging inbox",   alt: "RPAS messaging inbox" },
+          { src: "/images/rpas/ai-assistant.png", caption: "Alder AI assistant", alt: "Alder AI assistant" },
+        ].map(({ src, caption, alt }) => (
+          <div class="rounded-xl border border-border bg-bg-elevated p-1.5">
+            <img
+              src={src}
+              alt={alt}
+              data-lightbox="independent"
+              data-caption={`RPAS — ${caption}`}
+              class="w-full aspect-video object-cover rounded-lg border border-border cursor-zoom-in"
+              onerror="this.closest('.rounded-xl').classList.add('placeholder-slot'); this.remove();"
+            />
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <!-- ============================================================
+         02 — PADAYON
+    ============================================================ -->
+    <section id="padayon" class="py-16 border-b border-border scroll-mt-20">
+
+      <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
+        <div>
+          <p class="text-xs font-bold uppercase tracking-widest text-accent-2 mb-2">Project 02</p>
+          <h2 class="text-3xl sm:text-4xl font-bold">Padayon</h2>
+          <p class="text-text-secondary mt-1 text-sm">Ride &amp; Delivery Mobile App &nbsp;·&nbsp; iOS &amp; Android</p>
+        </div>
+        <div class="flex flex-wrap gap-2 sm:justify-end">
+          {["React Native", "Expo", "NativeWind", "TypeScript"].map((t) => (
+            <span class="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-bg-elevated border border-border text-text-secondary">{t}</span>
+          ))}
+        </div>
+      </div>
+
+      <p class="text-text-secondary mb-10 max-w-2xl text-sm leading-relaxed">
+        A dual-role mobile app for riders and passengers — real-time booking, trip tracking,
+        and in-app notifications for a local logistics client.
+      </p>
+
+      <!-- banner -->
+      <div class="rounded-2xl border border-border bg-bg-elevated p-2 shadow-2xl shadow-accent-2/10 mb-6">
+        <img
+          src="/images/padayon/banner.png"
+          alt="Padayon app — overview"
+          data-lightbox="independent"
+          data-caption="Padayon — App overview"
+          class="w-full object-cover rounded-lg border border-border cursor-zoom-in"
+          onerror="this.closest('.rounded-2xl').classList.add('placeholder-slot'); this.remove();"
+        />
+      </div>
+
+      <!-- 5 portrait screens -->
+      <p class="text-xs font-bold uppercase tracking-widest text-text-secondary mb-4">Screens</p>
+      <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+        {[
+          { src: "/images/padayon/onboarding.png", caption: "Onboarding",   alt: "Padayon onboarding screen" },
+          { src: "/images/padayon/login.png",       caption: "Login",        alt: "Padayon login screen" },
+          { src: "/images/padayon/user-home.png",   caption: "User home",    alt: "Padayon user home" },
+          { src: "/images/padayon/booking.png",     caption: "Booking flow", alt: "Padayon booking flow" },
+          { src: "/images/padayon/rider-view.png",  caption: "Rider view",   alt: "Padayon rider view" },
+        ].map(({ src, caption, alt }) => (
+          <div class="rounded-xl border border-border bg-bg-elevated p-1.5">
+            <img
+              src={src}
+              alt={alt}
+              data-lightbox="independent"
+              data-caption={`Padayon — ${caption}`}
+              class="w-full object-cover rounded-lg border border-border cursor-zoom-in"
+              style="aspect-ratio: 9/19.5;"
+              onerror="this.closest('.rounded-xl').classList.add('placeholder-slot'); this.remove();"
+            />
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <!-- ============================================================
+         03 — MEAL PLANNER
+    ============================================================ -->
+    <section id="meal-planner" class="py-16 border-b border-border scroll-mt-20">
+
+      <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
+        <div>
+          <p class="text-xs font-bold uppercase tracking-widest text-accent-2 mb-2">Project 03</p>
+          <h2 class="text-3xl sm:text-4xl font-bold">Meal Planner</h2>
+          <p class="text-text-secondary mt-1 text-sm">Nutrition &amp; Meal Planning App &nbsp;·&nbsp; iOS &amp; Android</p>
+        </div>
+        <div class="flex flex-wrap gap-2 sm:justify-end">
+          {["Expo", "React Native", "TypeScript", "NativeWind", "Turborepo"].map((t) => (
+            <span class="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-bg-elevated border border-border text-text-secondary">{t}</span>
+          ))}
+        </div>
+      </div>
+
+      <p class="text-text-secondary mb-10 max-w-2xl text-sm leading-relaxed">
+        A mobile meal planning and nutrition tracking app — users build weekly meal plans,
+        log meals, and track macros. Built as a monorepo with Turborepo.
+      </p>
+
+      <!-- banner -->
+      <div class="rounded-2xl border border-border bg-bg-elevated p-2 shadow-2xl shadow-accent-2/10 mb-6">
+        <img
+          src="/images/meal-planner/banner.png"
+          alt="Meal Planner — overview"
+          data-lightbox="independent"
+          data-caption="Meal Planner — App overview"
+          class="w-full object-cover rounded-lg border border-border cursor-zoom-in"
+          onerror="this.closest('.rounded-2xl').classList.add('placeholder-slot'); this.remove();"
+        />
+      </div>
+
+      <!-- 5 portrait screens -->
+      <p class="text-xs font-bold uppercase tracking-widest text-text-secondary mb-4">Screens</p>
+      <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+        {[
+          { src: "/images/meal-planner/home.png",      caption: "Home / today",      alt: "Meal Planner home" },
+          { src: "/images/meal-planner/meal-log.png",  caption: "Meal log",          alt: "Meal log screen" },
+          { src: "/images/meal-planner/planner.png",   caption: "Weekly planner",    alt: "Weekly planner screen" },
+          { src: "/images/meal-planner/nutrition.png", caption: "Nutrition summary", alt: "Nutrition breakdown" },
+          { src: "/images/meal-planner/settings.png",  caption: "Settings",          alt: "Settings screen" },
+        ].map(({ src, caption, alt }) => (
+          <div class="rounded-xl border border-border bg-bg-elevated p-1.5">
+            <img
+              src={src}
+              alt={alt}
+              data-lightbox="independent"
+              data-caption={`Meal Planner — ${caption}`}
+              class="w-full object-cover rounded-lg border border-border cursor-zoom-in"
+              style="aspect-ratio: 9/19.5;"
+              onerror="this.closest('.rounded-xl').classList.add('placeholder-slot'); this.remove();"
+            />
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <!-- ============================================================
+         04 — SCHEDULER
+    ============================================================ -->
+    <section id="scheduler" class="py-16 scroll-mt-20">
+
+      <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
+        <div>
+          <p class="text-xs font-bold uppercase tracking-widest text-accent-2 mb-2">Project 04</p>
+          <h2 class="text-3xl sm:text-4xl font-bold">Scheduler</h2>
+          <p class="text-text-secondary mt-1 text-sm">API Scheduler &amp; Automation Service &nbsp;·&nbsp; Backend</p>
+        </div>
+        <div class="flex flex-wrap gap-2 sm:justify-end">
+          {["Node.js", "REST APIs", "Cron Jobs", "Microservices"].map((t) => (
+            <span class="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-bg-elevated border border-border text-text-secondary">{t}</span>
+          ))}
+        </div>
+      </div>
+
+      <p class="text-text-secondary mb-10 max-w-2xl text-sm leading-relaxed">
+        A backend scheduling service for automating API calls, syncing marketplace data,
+        and orchestrating jobs across integrated e-commerce platforms.
+      </p>
+
+      <!-- banner -->
+      <div class="rounded-2xl border border-border bg-bg-elevated p-2 shadow-2xl shadow-accent-2/10 mb-4">
+        <img
+          src="/images/scheduler/banner.png"
+          alt="Scheduler — overview"
+          data-lightbox="independent"
+          data-caption="Scheduler — Service overview"
+          class="w-full object-cover rounded-lg border border-border cursor-zoom-in"
+          onerror="this.closest('.rounded-2xl').classList.add('placeholder-slot'); this.remove();"
+        />
+      </div>
+
+      <!-- 3-up -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        {[
+          { src: "/images/scheduler/job-list.png",    caption: "Scheduled jobs",  alt: "Scheduled jobs list" },
+          { src: "/images/scheduler/job-detail.png",  caption: "Job config",      alt: "Job configuration detail" },
+          { src: "/images/scheduler/run-history.png", caption: "Run history",     alt: "Run history and logs" },
+        ].map(({ src, caption, alt }) => (
+          <div class="rounded-xl border border-border bg-bg-elevated p-1.5">
+            <img
+              src={src}
+              alt={alt}
+              data-lightbox="independent"
+              data-caption={`Scheduler — ${caption}`}
+              class="w-full aspect-video object-cover rounded-lg border border-border cursor-zoom-in"
+              onerror="this.closest('.rounded-xl').classList.add('placeholder-slot'); this.remove();"
+            />
+          </div>
+        ))}
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="border-t border-border py-10 text-center">
+    <p class="text-sm text-text-secondary mb-5">
+      March 2023 – March 2025 &nbsp;·&nbsp; Independent Full Stack Software Engineer
+    </p>
+    <a
+      href="/#experience"
+      class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-bg-elevated border border-border text-sm font-semibold hover:border-accent hover:text-accent hover:-translate-y-0.5 transition-all"
+    >
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0 7-7m-7 7h18"/>
+      </svg>
+      Back to Portfolio
+    </a>
+  </footer>
+
+  <style>
+    /* Placeholder shown when an image fails to load */
+    .placeholder-slot {
+      min-height: 160px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .placeholder-slot::after {
+      content: "[ screenshot placeholder ]";
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--color-text-secondary, #94a3b8);
+      opacity: 0.35;
+    }
+  </style>
+
+</ProjectLayout>

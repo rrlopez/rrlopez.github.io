@@ -33,21 +33,68 @@ body {
 	animation: pulse-ring 1.8s ease-out infinite;
 }
 
+/* ── Scroll-reveal ── */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slide-in-left {
+  from { opacity: 0; transform: translateX(-16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.reveal {
+  opacity: 0;
+}
+
+.reveal.is-visible {
+  animation: fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.reveal-fade.is-visible {
+  animation: fade-in 0.5s ease forwards;
+}
+
+.reveal-left.is-visible {
+  animation: slide-in-left 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* staggered children: each direct child gets a delay */
+.reveal-stagger > * { opacity: 0; }
+.reveal-stagger.is-visible > *:nth-child(1)  { animation: fade-up 0.5s 0.05s cubic-bezier(0.16,1,0.3,1) forwards; }
+.reveal-stagger.is-visible > *:nth-child(2)  { animation: fade-up 0.5s 0.12s cubic-bezier(0.16,1,0.3,1) forwards; }
+.reveal-stagger.is-visible > *:nth-child(3)  { animation: fade-up 0.5s 0.19s cubic-bezier(0.16,1,0.3,1) forwards; }
+.reveal-stagger.is-visible > *:nth-child(4)  { animation: fade-up 0.5s 0.26s cubic-bezier(0.16,1,0.3,1) forwards; }
+.reveal-stagger.is-visible > *:nth-child(5)  { animation: fade-up 0.5s 0.33s cubic-bezier(0.16,1,0.3,1) forwards; }
+.reveal-stagger.is-visible > *:nth-child(6)  { animation: fade-up 0.5s 0.40s cubic-bezier(0.16,1,0.3,1) forwards; }
+.reveal-stagger.is-visible > *:nth-child(7)  { animation: fade-up 0.5s 0.47s cubic-bezier(0.16,1,0.3,1) forwards; }
+.reveal-stagger.is-visible > *:nth-child(8)  { animation: fade-up 0.5s 0.54s cubic-bezier(0.16,1,0.3,1) forwards; }
+
 @media (prefers-reduced-motion: reduce) {
-	* {
-		transition: none !important;
-		scroll-behavior: auto !important;
-	}
+  * {
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
 
-	.pulse-dot,
-	.pulse-dot-warn,
-	.flow-line {
-		animation: none !important;
-	}
+  .pulse-dot,
+  .pulse-dot-warn,
+  .flow-line {
+    animation: none !important;
+  }
 
-	.reveal {
-		opacity: 1 !important;
-		animation: none !important;
-	}
+  .reveal,
+  .reveal-fade,
+  .reveal-left,
+  .reveal-stagger,
+  .reveal-stagger > * {
+    opacity: 1 !important;
+    animation: none !important;
+  }
 }
 

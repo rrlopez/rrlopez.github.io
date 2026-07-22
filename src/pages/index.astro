@@ -122,11 +122,11 @@ import HomeLayout from '../layouts/HomeLayout.astro';
         src={personal.avatarUrl}
         alt={`Placeholder avatar for ${personal.fullName}`}
         width="160" height="160"
-        class="w-32 h-32 sm:w-40 sm:h-40 rounded-full border-2 border-accent/40 shrink-0 object-cover print:hidden"
+        class="w-32 h-32 sm:w-40 sm:h-40 rounded-full border-2 border-accent/40 shrink-0 object-cover print:hidden reveal reveal-fade"
       >
 
       <div class="text-center sm:text-left">
-        <div class="inline-flex items-center gap-2 mb-3 px-3 py-1 rounded-full bg-bg-elevated border border-border print:hidden">
+        <div class="inline-flex items-center gap-2 mb-3 px-3 py-1 rounded-full bg-bg-elevated border border-border print:hidden reveal reveal-fade">
           <span class="relative flex w-2 h-2">
             <span class="absolute inline-flex w-2 h-2 rounded-full bg-accent pulse-dot"></span>
             <span class="relative inline-flex w-2 h-2 rounded-full bg-accent"></span>
@@ -134,33 +134,33 @@ import HomeLayout from '../layouts/HomeLayout.astro';
           <span class="text-xs font-medium text-text-secondary">{personal.availability}</span>
         </div>
 
-        <h1 class="text-3xl sm:text-4xl font-bold tracking-tight">
+        <h1 class="text-3xl sm:text-4xl font-bold tracking-tight reveal">
           {personal.fullName} <span class="text-accent">({personal.nickname})</span>
         </h1>
-        <p class="mt-2 text-base sm:text-lg text-text-secondary font-medium">
+        <p class="mt-2 text-base sm:text-lg text-text-secondary font-medium reveal">
           {personal.title} <span class="text-accent-2">·</span> {personal.yearsExperience}+ Years Experience
         </p>
-        <p class="mt-1 text-sm text-text-secondary flex items-center justify-center sm:justify-start gap-1.5">
+        <p class="mt-1 text-sm text-text-secondary flex items-center justify-center sm:justify-start gap-1.5 reveal">
           <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21c-4.5-4.5-7-8.06-7-11a7 7 0 1 1 14 0c0 2.94-2.5 6.5-7 11Z"/><circle cx="12" cy="10" r="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
           {personal.location.display}
         </p>
 
-        <p class="mt-4 max-w-xl text-text-secondary">
+        <p class="mt-4 max-w-xl text-text-secondary reveal">
           {personal.bio}
         </p>
-        <p class="mt-3 max-w-xl text-text-secondary italic print:hidden">
+        <p class="mt-3 max-w-xl text-text-secondary italic print:hidden reveal">
           {personal.tagline}
         </p>
 
         <!-- quick stats -->
-        <div class="mt-6 flex justify-center sm:justify-start gap-6 sm:gap-8 print:hidden">
+        <div class="mt-6 flex justify-center sm:justify-start gap-6 sm:gap-8 print:hidden reveal-stagger">
           {personal.stats.map((stat)=>(<div class="text-center sm:text-left">
             <p class="text-2xl font-bold text-accent">{stat.value}</p>
             <p class="text-xs text-text-secondary">{stat.label}</p>
           </div>))}
         </div>
 
-        <div class="mt-6 flex flex-wrap justify-center sm:justify-start gap-3 print:hidden">
+        <div class="mt-6 flex flex-wrap justify-center sm:justify-start gap-3 print:hidden reveal">
           <a href={`mailto:${personal.contact.email}`}
             class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-bg-elevated border border-border text-sm font-medium hover:border-accent hover:text-accent hover:-translate-y-0.5 transition-all">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 0 0 2.22 0L21 8M5 19h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2Z"/></svg>
@@ -196,14 +196,32 @@ import HomeLayout from '../layouts/HomeLayout.astro';
          the first few seconds — before the project details. Kept short on
          purpose per the brief; renders as a comma list in print, like the
          Skills tags, so it doubles as a "core focus" line on the resume. -->
-    <section class="border-b border-border bg-bg-elevated/40" aria-label="Core technologies print:hidden">
+    <section class="border-b border-border bg-bg-elevated/40 reveal" aria-label="Core technologies print:hidden">
       <div class="max-w-6xl mx-auto px-6 py-6 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-sm font-semibold text-text-secondary print:hidden">
-        <span>Offline-First Applications</span><span class="text-border">/</span>
-        <span>SaaS &amp; Multi-Tenant Platforms</span><span class="text-border">/</span>
-        <span>Clean, Maintainable Architecture</span><span class="text-border">/</span>
-        <span>Engineering Systems</span><span class="text-border">/</span>
-        <span>Modern TypeScript Ecosystem</span><span class="text-border">/</span>
-        <span>Developer Experience Mindset</span><span class="text-border">/</span>
+        <span class="inline-flex items-center gap-2">
+          <svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h11M9 21V3m11 10-4-4m0 0-4 4m4-4v11"/></svg>
+          Offline-First Applications
+        </span><span class="text-border">/</span>
+        <span class="inline-flex items-center gap-2">
+          <svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Zm0 0a9 9 0 0 0 9-9H3a9 9 0 0 0 9 9Z"/></svg>
+          SaaS &amp; Multi-Tenant Platforms
+        </span><span class="text-border">/</span>
+        <span class="inline-flex items-center gap-2">
+          <svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7h18M5 21h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2Zm4-10h6"/></svg>
+          Clean, Maintainable Architecture
+        </span><span class="text-border">/</span>
+        <span class="inline-flex items-center gap-2">
+          <svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2Z"/></svg>
+          Engineering Systems
+        </span><span class="text-border">/</span>
+        <span class="inline-flex items-center gap-2">
+          <svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0L21 9M7 21l4-4m-4 4 6-14m8-4 4 4-10 10"/></svg>
+          Modern TypeScript Ecosystem
+        </span><span class="text-border">/</span>
+        <span class="inline-flex items-center gap-2">
+          <svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M14.25 9.75 16.5 12l-2.25 2.25m-4.5 0L7.5 12l2.25-2.25M6 20.25h12A2.25 2.25 0 0 0 20.25 18V6A2.25 2.25 0 0 0 18 3.75H6A2.25 2.25 0 0 0 3.75 6v12A2.25 2.25 0 0 0 6 20.25Z"/></svg>
+          Developer Experience Mindset
+        </span><span class="text-border">/</span>
       </div>
     </section>
 
@@ -213,13 +231,15 @@ import HomeLayout from '../layouts/HomeLayout.astro';
          Each entry now opens with what the product/team was, before the
          impact bullets, so the reader gets context before detail. -->
     <section id="experience" class="py-14 border-b border-border scroll-mt-16" aria-labelledby="experience-heading">
-      <h2 id="experience-heading" class="flex items-center gap-2 text-xl sm:text-2xl font-bold mb-7">
-        <span class="w-2 h-2 rounded-full bg-accent shrink-0"></span> Work History
+      <h2 id="experience-heading" class="flex items-center gap-2 text-xl sm:text-2xl font-bold mb-7 reveal">
+        <!-- briefcase icon -->
+        <svg class="w-5 h-5 text-accent shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2Zm0 0V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v1"/></svg>
+        Work History
       </h2>
 
       <div class="flex flex-col gap-10 print:gap-1">
 
-        <div class="relative flex gap-5">
+        <div class="relative flex gap-5 reveal-left">
           <div class="relative w-3 shrink-0">
             <span class="absolute left-1.5 top-3 -bottom-10 w-px bg-border"></span>
             <span class="absolute left-0 top-1 w-3 h-3 rounded-full bg-bg border-2 border-accent"></span>
@@ -239,13 +259,16 @@ import HomeLayout from '../layouts/HomeLayout.astro';
           </div>
         </div>
 
-        <div class="relative flex gap-5">
+        <div class="relative flex gap-5 reveal-left">
           <div class="relative w-3 shrink-0">
             <span class="absolute left-1.5 top-3 -bottom-10 w-px bg-border"></span>
             <span class="absolute left-0 top-1 w-3 h-3 rounded-full bg-bg border-2 border-accent"></span>
           </div>
           <div class="pb-2">
-            <p class="font-bold">Independent Full Stack Software Engineer</p>
+            <!-- <a href="/experience/independent" class="group inline-flex items-center gap-2 font-bold hover:text-accent transition-colors print:pointer-events-none"> -->
+              Independent Full Stack Software Engineer
+              <!-- <svg class="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity print:hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M7 17 17 7M7 7h10v10"/></svg>
+            </a> -->
             <p class="text-sm font-semibold text-accent-2 mt-0.5 mb-2.5">March 2023 — March 2025</p>
             <p class="text-sm text-text-secondary mb-2.5">
             Built production-ready full-stack applications for international clients across e-commerce, logistics, and SaaS platforms.
@@ -258,10 +281,14 @@ import HomeLayout from '../layouts/HomeLayout.astro';
 
               <li class="flex gap-2 print:hidden"><span class="text-accent font-bold">›</span> Modernized legacy applications with contemporary frontend technologies.</li>
             </ul>
+            <!-- <a href="/experience/independent" class="inline-flex items-center gap-1.5 mt-4 text-sm font-semibold text-accent hover:text-accent-2 transition-colors print:hidden">
+              View projects
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M7 17 17 7M7 7h10v10"/></svg>
+            </a> -->
           </div>
         </div>
 
-        <div class="relative flex gap-5">
+        <div class="relative flex gap-5 reveal-left">
           <div class="relative w-3 shrink-0">
             <span class="absolute left-1.5 top-3 -bottom-10 w-px bg-border"></span>
             <span class="absolute left-0 top-1 w-3 h-3 rounded-full bg-bg border-2 border-accent"></span>
@@ -283,7 +310,7 @@ import HomeLayout from '../layouts/HomeLayout.astro';
           </div>
         </div>
 
-        <div class="relative flex gap-5">
+        <div class="relative flex gap-5 reveal-left">
           <div class="relative w-3 shrink-0">
             <span class="absolute left-1.5 top-3 -bottom-10 w-px bg-border"></span>
             <span class="absolute left-0 top-1 w-3 h-3 rounded-full bg-bg border-2 border-accent"></span>
@@ -304,7 +331,7 @@ import HomeLayout from '../layouts/HomeLayout.astro';
           </div>
         </div>
 
-        <div class="relative flex gap-5 print:hidden">
+        <div class="relative flex gap-5 print:hidden reveal-left">
           <div class="relative w-3 shrink-0">
             <span class="absolute left-1.5 top-3 -bottom-10 w-px bg-border"></span>
             <span class="absolute left-0 top-1 w-3 h-3 rounded-full bg-bg border-2 border-accent"></span>
@@ -323,7 +350,7 @@ import HomeLayout from '../layouts/HomeLayout.astro';
           </div>
         </div>
 
-        <div class="relative flex gap-5 print:hidden">
+        <div class="relative flex gap-5 print:hidden reveal-left">
           <div class="relative w-3 shrink-0">
             <span class="absolute left-0 top-1 w-3 h-3 rounded-full bg-bg border-2 border-accent"></span>
           </div>
@@ -352,18 +379,22 @@ import HomeLayout from '../layouts/HomeLayout.astro';
          from a 3-up grid to full-width cards with a two-column split so
          there's room for the narrative without shrinking the type. -->
     <section id="projects" class="py-14 border-b border-border scroll-mt-16" aria-labelledby="projects-heading">
-      <h2 id="projects-heading" class="flex items-center gap-2 text-xl sm:text-2xl font-bold mb-2">
-        <span class="w-2 h-2 rounded-full bg-accent shrink-0"></span> Featured Projects
+      <h2 id="projects-heading" class="flex items-center gap-2 text-xl sm:text-2xl font-bold mb-2 reveal">
+        <!-- folder-code icon -->
+        <svg class="w-5 h-5 text-accent shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Zm5 6 2 2 4-4"/></svg>
+        Featured Projects
       </h2>
-      <p class="max-w-2xl text-text-secondary mb-7 print:hidden">Personal projects that showcase my approach to building reliable, maintainable software systems.</p>
+      <p class="max-w-2xl text-text-secondary mb-7 print:hidden reveal">Personal projects that showcase my approach to building reliable, maintainable software systems.</p>
 
       <div class="flex flex-col gap-5">
 
-        <article class="flex flex-col md:flex-row gap-6 bg-bg-elevated border border-border rounded-xl p-5 hover:border-accent transition-all">
+        <article class="flex flex-col md:flex-row gap-6 bg-bg-elevated border border-border rounded-xl p-5 hover:border-accent transition-all reveal">
           <img
             src="/images/cca/banner.png"
             alt="Placeholder preview of the NUVELCO CCA call center agent portal"
-            class="w-full md:w-64 lg:w-72 h-52 md:h-auto object-cover rounded-lg border border-border shrink-0 print:hidden"
+            data-lightbox="projects"
+            data-caption="NUVELCO CCA Portal — call center agent portal"
+            class="w-full md:w-64 lg:w-72 h-52 md:h-auto object-cover rounded-lg border border-border shrink-0 print:hidden cursor-zoom-in"
           >
           <div class="flex flex-col flex-1 min-w-0">
             <h3 class="font-bold text-lg mb-1">NUVELCO CCA Portal</h3>
@@ -391,11 +422,13 @@ import HomeLayout from '../layouts/HomeLayout.astro';
           </div>
         </article>
 
-        <article class="flex flex-col md:flex-row gap-6 bg-bg-elevated border border-border rounded-xl p-5 hover:border-accent transition-all print:hidden">
+        <article class="flex flex-col md:flex-row gap-6 bg-bg-elevated border border-border rounded-xl p-5 hover:border-accent transition-all print:hidden reveal">
           <img
             src="/images/start-pos/banner.png"
             alt="Placeholder preview of the START POS multi-tenant offline-first POS platform"
-            class="w-full md:w-64 lg:w-72 h-52 md:h-auto object-cover rounded-lg border border-border shrink-0 print:hidden"
+            data-lightbox="projects"
+            data-caption="START POS — multi-tenant offline-first POS platform"
+            class="w-full md:w-64 lg:w-72 h-52 md:h-auto object-cover rounded-lg border border-border shrink-0 print:hidden cursor-zoom-in"
           >
           <div class="flex flex-col flex-1 min-w-0">
             <h3 class="font-bold text-lg mb-1">START POS</h3>
@@ -423,11 +456,13 @@ import HomeLayout from '../layouts/HomeLayout.astro';
           </div>
         </article>
 
-        <article class="flex flex-col md:flex-row gap-6 bg-bg-elevated border border-border rounded-xl p-5 hover:border-accent transition-all">
+        <article class="flex flex-col md:flex-row gap-6 bg-bg-elevated border border-border rounded-xl p-5 hover:border-accent transition-all reveal">
           <img
             src="https://placehold.co/600x320/0f172a/10b981?text=overlay-manager"
             alt="Placeholder preview of the overlay-manager open-source npm package"
-            class="w-full md:w-64 lg:w-72 h-52 md:h-auto object-cover rounded-lg border border-border shrink-0 print:hidden"
+            data-lightbox="projects"
+            data-caption="@rrlopez/overlay-manager — lightweight overlay management library"
+            class="w-full md:w-64 lg:w-72 h-52 md:h-auto object-cover rounded-lg border border-border shrink-0 print:hidden cursor-zoom-in"
           >
           <div class="flex flex-col flex-1 min-w-0">
             <h3 class="font-bold text-lg mb-1">@rrlopez/overlay-manager</h3>
@@ -467,21 +502,35 @@ import HomeLayout from '../layouts/HomeLayout.astro';
          recruiter scans in seconds, and this doesn't help that scan the way
          Experience/Skills do. -->
     <section id="philosophy" class="py-14 border-b border-border scroll-mt-16 print:hidden" aria-labelledby="philosophy-heading">
-      <h2 id="philosophy-heading" class="flex items-center gap-2 text-xl sm:text-2xl font-bold mb-3">
-        <span class="w-2 h-2 rounded-full bg-accent shrink-0"></span> How I Approach Engineering
+      <h2 id="philosophy-heading" class="flex items-center gap-2 text-xl sm:text-2xl font-bold mb-3 reveal">
+        <!-- lightbulb icon -->
+        <svg class="w-5 h-5 text-accent shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 21h6m-6-4h6M12 3a6 6 0 0 1 4.472 10.074A3 3 0 0 0 15 16H9a3 3 0 0 0-1.472-2.926A6 6 0 0 1 12 3Z"/></svg>
+        How I Approach Engineering
       </h2>
-      <p class="max-w-2xl text-text-secondary mb-8">A few things that shape how I design and build systems — all visible in the projects above.</p>
+      <p class="max-w-2xl text-text-secondary mb-8 reveal">A few things that shape how I design and build systems — all visible in the projects above.</p>
 
-      <div class="grid sm:grid-cols-3 gap-7">
-        <div>
+      <div class="grid sm:grid-cols-3 gap-7 reveal-stagger">
+        <div class="bg-bg-elevated border border-border rounded-xl p-5">
+          <!-- minimize / simplicity icon -->
+          <div class="w-9 h-9 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center mb-3">
+            <svg class="w-4.5 h-4.5 text-accent" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14"/></svg>
+          </div>
           <p class="font-bold mb-1.5">Simplicity over cleverness</p>
           <p class="text-sm text-text-secondary">I default to the boring, well-understood solution and only reach for complexity when the problem actually demands it. Code that's easy to delete is easier to maintain than code that's clever.</p>
         </div>
-        <div>
+        <div class="bg-bg-elevated border border-border rounded-xl p-5">
+          <!-- shield / resilience icon -->
+          <div class="w-9 h-9 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center mb-3">
+            <svg class="w-4.5 h-4.5 text-accent" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/></svg>
+          </div>
           <p class="font-bold mb-1.5">Design for failure, not just the happy path</p>
           <p class="text-sm text-text-secondary">Dropped connections and stale state aren't edge cases — they're normal operating conditions for real users, which is why I build offline-first and let systems degrade gracefully by default.</p>
         </div>
-        <div>
+        <div class="bg-bg-elevated border border-border rounded-xl p-5">
+          <!-- cog / automation icon -->
+          <div class="w-9 h-9 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center mb-3">
+            <svg class="w-4.5 h-4.5 text-accent" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 0 0-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 0 0-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 0 0-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 0 0-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 0 0 1.066-2.573c-.94-1.543.826-3.31 2.37-2.37a1.724 1.724 0 0 0 2.572-1.065Z"/><circle cx="12" cy="12" r="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
           <p class="font-bold mb-1.5">Automate the repeatable</p>
           <p class="text-sm text-text-secondary">Linting, formatting, compliance reports, pre-commit gates — anything a human shouldn't have to remember by hand gets automated, so review time goes to logic instead of style.</p>
         </div>
@@ -494,13 +543,15 @@ import HomeLayout from '../layouts/HomeLayout.astro';
          infrastructure/architecture, quality & automation) so it reads as
          "here's how I execute on the philosophy" rather than a checklist. -->
     <section id="skills" class="py-14 border-b border-border scroll-mt-16" aria-labelledby="skills-heading">
-      <h2 id="skills-heading" class="flex items-center gap-2 text-xl sm:text-2xl font-bold mb-7">
-        <span class="w-2 h-2 rounded-full bg-accent shrink-0"></span> Technical Skills
+      <h2 id="skills-heading" class="flex items-center gap-2 text-xl sm:text-2xl font-bold mb-7 reveal">
+        <!-- code-bracket icon -->
+        <svg class="w-5 h-5 text-accent shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m8 9-3 3 3 3m8-6 3 3-3 3M14 5l-4 14"/></svg>
+        Technical Skills
       </h2>
 
       <div class="grid sm:grid-cols-2 gap-7">
 
-        <div>
+        <div class="reveal">
           <h3 class="text-xs uppercase tracking-wider font-semibold text-text-secondary mb-3">Core Stack</h3>
           <div class="flex flex-wrap gap-2">
             <span class="text-sm bg-bg-elevated border border-border px-3.5 py-1.5 rounded-full hover:border-accent hover:-translate-y-0.5 transition-all">React</span>
@@ -515,7 +566,7 @@ import HomeLayout from '../layouts/HomeLayout.astro';
           </div>
         </div>
 
-        <div>
+        <div class="reveal">
           <h3 class="text-xs uppercase tracking-wider font-semibold text-text-secondary mb-3">Data &amp; APIs</h3>
           <div class="flex flex-wrap gap-2">
             <span class="text-sm bg-bg-elevated border border-border px-3.5 py-1.5 rounded-full hover:border-accent hover:-translate-y-0.5 transition-all">PostgreSQL</span>
@@ -527,7 +578,7 @@ import HomeLayout from '../layouts/HomeLayout.astro';
           </div>
         </div>
 
-        <div>
+        <div class="reveal">
           <h3 class="text-xs uppercase tracking-wider font-semibold text-text-secondary mb-3">Platform &amp; Tooling</h3>
           <div class="flex flex-wrap gap-2">
             <span class="text-sm bg-bg-elevated border border-border px-3.5 py-1.5 rounded-full hover:border-accent hover:-translate-y-0.5 transition-all">Docker</span>
@@ -539,7 +590,7 @@ import HomeLayout from '../layouts/HomeLayout.astro';
           </div>
         </div>
 
-        <div>
+        <div class="reveal">
           <h3 class="text-xs uppercase tracking-wider font-semibold text-text-secondary mb-3">Quality &amp; Automation</h3>
           <div class="flex flex-wrap gap-2">
             <span class="text-sm bg-bg-elevated border border-border px-3.5 py-1.5 rounded-full hover:border-accent hover:-translate-y-0.5 transition-all">Playwright</span>
@@ -558,11 +609,13 @@ import HomeLayout from '../layouts/HomeLayout.astro';
 
     <!-- ===== BLOG ===== -->
     <section id="blog" class="py-14 border-b border-border scroll-mt-16 print:hidden" aria-labelledby="blog-heading">
-      <h2 id="blog-heading" class="flex items-center gap-2 text-xl sm:text-2xl font-bold mb-7">
-        <span class="w-2 h-2 rounded-full bg-accent shrink-0"></span> Writing
+      <h2 id="blog-heading" class="flex items-center gap-2 text-xl sm:text-2xl font-bold mb-7 reveal">
+        <!-- pencil-square / writing icon -->
+        <svg class="w-5 h-5 text-accent shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"/></svg>
+        Writing
       </h2>
 
-      <div class="grid sm:grid-cols-2 gap-5">
+      <div class="grid sm:grid-cols-2 gap-5 reveal-stagger">
 
         <a href="/blog/offline-app-shell.html"
           class="group flex flex-col bg-bg-elevated border border-border rounded-xl p-6 hover:border-accent hover:-translate-y-1 hover:shadow-xl hover:shadow-accent/10 transition-all">
@@ -641,11 +694,13 @@ import HomeLayout from '../layouts/HomeLayout.astro';
 
     <!-- ===== EDUCATION ===== -->
     <section id="education" class="py-14 scroll-mt-16" aria-labelledby="education-heading">
-      <h2 id="education-heading" class="flex items-center gap-2 text-xl sm:text-2xl font-bold mb-7">
-        <span class="w-2 h-2 rounded-full bg-accent shrink-0"></span> Education
+      <h2 id="education-heading" class="flex items-center gap-2 text-xl sm:text-2xl font-bold mb-7 reveal">
+        <!-- academic-cap icon -->
+        <svg class="w-5 h-5 text-accent shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.627 48.627 0 0 1 12 20.904a48.627 48.627 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.57 50.57 0 0 0-2.658-.813A59.906 59.906 0 0 1 12 3.493a59.903 59.903 0 0 1 10.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0 1 12 13.489a50.702 50.702 0 0 1 7.74-3.342M6.75 15a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Zm0 0v-3.675A55.378 55.378 0 0 1 12 8.443m-7.007 11.55A5.981 5.981 0 0 0 6.75 15.75v-1.5"/></svg>
+        Education
       </h2>
 
-      <div class="grid sm:grid-cols-2 gap-5">
+      <div class="grid sm:grid-cols-2 gap-5 reveal-stagger">
         <div class="bg-bg-elevated border border-border rounded-xl p-5">
           <p class="font-bold">Bachelor of Science in Computer Science</p>
           <p class="text-sm text-text-secondary mt-1">Nueva Vizcaya State University · 2017</p>
@@ -659,10 +714,12 @@ import HomeLayout from '../layouts/HomeLayout.astro';
 
     <!-- ===== CONTACT ===== -->
     <section id="contact" class="py-14 border-t border-border scroll-mt-16 text-center" aria-labelledby="contact-heading">
-      <h2 id="contact-heading" class="flex items-center justify-center gap-2 text-xl sm:text-2xl font-bold mb-3 print:hidden">
-        <span class="w-2 h-2 rounded-full bg-accent shrink-0"></span> Get In Touch
+      <h2 id="contact-heading" class="flex items-center justify-center gap-2 text-xl sm:text-2xl font-bold mb-3 print:hidden reveal">
+        <!-- envelope icon -->
+        <svg class="w-5 h-5 text-accent shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 0 0 2.22 0L21 8M5 19h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2Z"/></svg>
+        Get In Touch
       </h2>
-      <p class="max-w-md mx-auto text-text-secondary mb-7 print:hidden">
+      <p class="max-w-md mx-auto text-text-secondary mb-7 print:hidden reveal">
         Open to senior full-stack roles and select consulting engagements. Reach out below and I'll get back to you shortly.
       </p>
 
@@ -702,4 +759,40 @@ import HomeLayout from '../layouts/HomeLayout.astro';
   <footer class="border-t border-border py-8 text-center text-sm text-text-secondary print:hidden">
     <p>&copy; 2026 {personal.fullName}. Build with Astro &amp; Tailwind CSS v4.</p>
   </footer>
+
+  <!-- ===== SCROLL-REVEAL OBSERVER ===== -->
+  <script is:inline>
+    (function () {
+      // Elements already in viewport on load should animate immediately;
+      // everything else fires when it enters.
+      var CLASSES = ['reveal', 'reveal-fade', 'reveal-left', 'reveal-stagger'];
+      var selector = CLASSES.map(function (c) { return '.' + c; }).join(',');
+
+      function activate(el) {
+        el.classList.add('is-visible');
+      }
+
+      if (!('IntersectionObserver' in window)) {
+        // Fallback: just show everything instantly
+        document.querySelectorAll(selector).forEach(activate);
+        return;
+      }
+
+      var observer = new IntersectionObserver(
+        function (entries) {
+          entries.forEach(function (entry) {
+            if (entry.isIntersecting) {
+              activate(entry.target);
+              observer.unobserve(entry.target);
+            }
+          });
+        },
+        { threshold: 0.08, rootMargin: '0px 0px -40px 0px' }
+      );
+
+      document.querySelectorAll(selector).forEach(function (el) {
+        observer.observe(el);
+      });
+    })();
+  </script>
 </HomeLayout>
